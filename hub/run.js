@@ -6,15 +6,13 @@
  * Env: FEEDBAI_APP_ID, FEEDBAI_APP_PRIVATE_KEY, FEEDBAI_MATRIX_TOKEN, FEEDBAI_MATRIX_USER,
  *      optional FEEDBAI_MATRIX_HOMESERVER, FEEDBAI_BLUESKY_IDENTIFIER/_PASSWORD.
  */
-import { execFileSync } from 'node:child_process'
-import { mkdtempSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { mergeConfigs, selectSources } from '../src/config.js'
+import { fileIssues } from '../src/issues.js'
+import { githubClient } from '../src/github.js'
 import { installedRepos, repoConfig } from './github.js'
 import { acceptInvites, roomAllowed } from './matrix.js'
 
-const CLI = fileURLToPath(new URL('../src/cli.js', import.meta.url))
 const SINCE = '1h' // runs are idempotent; the window only needs to cover missed schedules
 
 /** Hub-safe copy of a repo's config: the hub's own accounts only, no joins, only allowed rooms. */
@@ -30,30 +28,33 @@ export const sanitize = async (config, allowed) => {
   return { projects }
 }
 
-const main = async () => {
-  const env = process.env
+/**
+ * One hub run, runtime-agnostic (fetch only): call it from Node (hub/run.js), cron,
+ * or a serverless scheduled handler. The hub's accounts come from FEEDBAI_MATRIX_* /
+ * FEEDBAI_BLUESKY_* in process.env; repos' configs never bring their own.
+ */
+export const runHub = async ({ env = process.env, fetchImpl, log = console.log } = {}) => {
   const homeserver = env.FEEDBAI_MATRIX_HOMESERVER ?? 'https://matrix.org'
   const token = env.FEEDBAI_MATRIX_TOKEN
-  const joined = await acceptInvites({ homeserver, token })
-  if (joined.length) console.log(`joined ${joined.length} room(s)`)
+  const joined = await acceptInvites({ homeserver, token, fetchImpl })
+  if (joined.length) log(`joined ${joined.length} room(s)`)
 
-  for (const repo of await installedRepos({ appId: env.FEEDBAI_APP_ID, privateKey: env.FEEDBAI_APP_PRIVATE_KEY })) {
+  for (const repo of await installedRepos({ appId: env.FEEDBAI_APP_ID, privateKey: env.FEEDBAI_APP_PRIVATE_KEY, fetchImpl })) {
     try {
-      const config = await repoConfig(repo)
+      const config = await repoConfig({ ...repo, fetchImpl })
       if (!config) continue
-      const safe = await sanitize(config, (room) => roomAllowed({ homeserver, token, room, repo: repo.fullName }))
-      const file = join(mkdtempSync(join(tmpdir(), 'feedbai-hub-')), 'feedbai.config.json')
-      writeFileSync(file, JSON.stringify(safe))
-      const output = execFileSync('node', [CLI, 'issues', '--config', file, '--since', SINCE], {
-        env: { ...env, GH_TOKEN: repo.token, GH_REPO: repo.fullName, XDG_CONFIG_HOME: join(file, '..') },
-        encoding: 'utf8',
+      const safe = await sanitize(config, (room) => roomAllowed({ homeserver, token, room, repo: repo.fullName, fetchImpl }))
+      const { urls, errors } = await fileIssues({
+        entries: selectSources(mergeConfigs(safe)),
+        client: githubClient({ token: repo.token, repo: repo.fullName, fetchImpl }),
+        since: SINCE,
       })
-      console.log(`${repo.fullName}: ${output.trim()}`)
+      log(`${repo.fullName}: ${urls.length} filed${errors.length ? `, ${errors.length} source error(s)` : ''}`)
+      for (const e of errors) log(`  ${e.error}`)
     } catch (error) {
-      // exit code 2 = some sources failed; report and continue with the next repo
-      console.error(`${repo.fullName}: ${(error.stdout ?? '').trim()} ${error.message.split('\n')[0]}`)
+      log(`${repo.fullName}: ${error.message}`) // one broken repo never stops the others
     }
   }
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) await main()
+if (process.argv?.[1] && process.argv[1] === fileURLToPath(import.meta.url)) await runHub()

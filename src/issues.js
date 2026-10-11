@@ -1,5 +1,6 @@
-import { execFileSync } from 'node:child_process'
 import { threads, truncate } from './digest.js'
+import { collect } from './feedback.js'
+import { withRoles } from './roles.js'
 import { t } from './i18n.js'
 
 /**
@@ -21,24 +22,14 @@ const ITEM_RE = /<!-- feedbai:item=(.+?) -->/g
 
 const oneLine = (text) => text.replace(/\s+/g, ' ').trim()
 
-/** gh CLI runner; injectable for tests. */
-export const gh = (args, input) =>
-  execFileSync('gh', args, { encoding: 'utf8', input, stdio: ['pipe', 'pipe', 'inherit'] })
-
-/**
- * item id -> issue number, from feedback issue bodies and all issue comments.
- * Uses the REST API (consistent right after writes), not search-backed listing.
- */
-export const indexIssues = (run) => {
-  const lines = (args) => run(['api', '--paginate', ...args]).split('\n').filter(Boolean).map((line) => JSON.parse(line))
-  const bodies = lines([`repos/{owner}/{repo}/issues?labels=${LABEL}&state=all&per_page=100`, '--jq', '.[] | [.number, .body] | @json'])
-  const comments = lines(['repos/{owner}/{repo}/issues/comments?per_page=100', '--jq', '.[] | [.issue_url, .body] | @json'])
+/** item id -> issue number, from feedback issue bodies and all issue comments (REST: consistent after writes). */
+export const indexIssues = async (client) => {
   const index = new Map()
   const add = (number, text) => {
     for (const m of (text ?? '').matchAll(ITEM_RE)) if (!index.has(m[1])) index.set(m[1], number)
   }
-  for (const [number, body] of bodies.sort((a, b) => a[0] - b[0])) add(number, body)
-  for (const [url, body] of comments) add(Number(url.split('/').pop()), body)
+  for (const issue of (await client.issues(LABEL)).sort((a, b) => a.number - b.number)) add(issue.number, issue.body)
+  for (const comment of await client.comments()) add(Number(comment.issue_url.split('/').pop()), comment.body)
   return index
 }
 
@@ -71,12 +62,35 @@ export const planIssues = (items, index) => {
   return actions
 }
 
-export const applyIssues = (actions, run) =>
-  actions.map((action) =>
-    action.type === 'create'
-      ? run(['issue', 'create', '--label', LABEL, '--title', action.title, '--body-file', '-'], action.body).trim()
-      : run(['issue', 'comment', String(action.issue), '--body-file', '-'], action.body).trim(),
-  )
+export const applyIssues = async (actions, client) => {
+  const urls = []
+  for (const action of actions) {
+    const result =
+      action.type === 'create'
+        ? await client.createIssue({ title: action.title, body: action.body, labels: [LABEL] })
+        : await client.comment(action.issue, action.body)
+    urls.push(result.html_url)
+  }
+  return urls
+}
 
-export const ensureLabel = (run) =>
-  run(['label', 'create', LABEL, '--force', '--color', '0E8A16', '--description', t('issues.labelDescription')])
+/** Mentions that reply to older messages get those messages too, so issues are self-contained. */
+const withContext = async (items, entries) => {
+  const ids = new Set(items.map((entry) => entry.id))
+  for (const entry of items.filter((e) => e.toSelf && e.replyTo && !ids.has(e.replyTo))) {
+    const from = entries.find((e) => e.project.id === entry.project && e.source.id === entry.source)
+    const chain = (await from?.provider.ancestors?.({ ...from, entry })) ?? []
+    for (const parent of withRoles(chain, from)) if (!ids.has(parent.id)) ids.add(parent.id) && items.push(parent)
+  }
+  return items.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+}
+
+/** Fetch feedback for `entries` and file it in `client`'s repo. Returns { actions, urls, errors }. */
+export const fileIssues = async ({ entries, client, since = '1d', limit, dryRun = false }) => {
+  const { groups, errors } = await collect(entries, { since, limit })
+  const items = await withContext(groups.flatMap((g) => g.items), entries)
+  const actions = planIssues(items, await indexIssues(client))
+  if (dryRun || !actions.length) return { actions, urls: [], errors }
+  await client.ensureLabel({ name: LABEL, color: '0E8A16', description: t('issues.labelDescription') })
+  return { actions, urls: await applyIssues(actions, client), errors }
+}

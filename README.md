@@ -3,7 +3,7 @@
 One way for AI agents (Claude Code, Codex, pi, …) to read user feedback about a project from where users actually talk — Matrix rooms and Bluesky for now — so they can triage it and turn it into issues, fixes and PRs.
 
 - **Projects declare their channels** in a `feedbai.config.json` committed to the repo (no secrets).
-- **You declare your accounts once** in `~/.config/feedbai/config.json`; secrets live in `~/.config/feedbai/secrets.env` (mode 600).
+- **You declare your accounts once** in `~/.config/feedbai/config.json`; secrets live in `~/.config/feedbai/secrets.env` (mode 600). Public Matrix rooms need none: the [hub](hub/README.md) reads them for you.
 - **Agents run one CLI** (`feedbai fetch`) and get normalized items in Markdown, JSON or NDJSON.
 
 No dependencies; Node ≥ 22.
@@ -60,10 +60,18 @@ From there, any agent that works on issues takes over — e.g. [Pullfrog](https:
 
 ## Add feedbai to your project's room
 
-feedbai is not a server bot: it reads with whichever Matrix account is logged in where it runs. So "inviting feedbai" means inviting an account feedbai uses.
+**With the hosted hub** (no account, secrets or server):
 
-1. Create a dedicated bot account (e.g. `@yourproject-feedbai:matrix.org`) and invite it to the room; it must join once (or add the source with `--join`).
-2. In the project repo: `feedbai add matrix '#yourproject:matrix.org'`, then commit `feedbai.config.json`.
+1. Invite `@feedbai:matrix.org` to the room.
+2. In the project repo: `feedbai add matrix '#yourproject:matrix.org'`, then commit `feedbai.config.json`. Anyone running `feedbai` in the repo now reads the room through the hub, without a Matrix account (public rooms).
+3. Install the [feedbai GitHub App](https://github.com/apps/feedbai) on the repo: messages that mention `@feedbai` become `feedback` issues within ~10 minutes.
+
+How the hub works, its rules, and running your own: [`hub/README.md`](hub/README.md). `FEEDBAI_HUB=off` disables it; `FEEDBAI_HUB=<url>` points at another hub.
+
+**With your own bot account** (private rooms, or no third party in between):
+
+1. Create a bot account (e.g. `@yourproject-feedbai:matrix.org`) and invite it to the room; it must join once (or add the source with `--join`).
+2. `feedbai add matrix '#yourproject:matrix.org'`, then commit `feedbai.config.json`.
 3. Whoever reads the feedback (people or agents) logs in once: `feedbai login matrix --user @yourproject-feedbai:matrix.org`.
 4. Always-on, without a laptop: copy [`.github/workflows/feedbai.yml`](.github/workflows/feedbai.yml) and store the bot's token as `FEEDBAI_MATRIX_TOKEN` / `FEEDBAI_MATRIX_USER` repository secrets. Mentions of the bot then become issues every hour.
 

@@ -16,7 +16,7 @@ const BACKOFF = 1.5
  */
 export default async ({ opts }) => {
   const consumer = consumerName(opts)
-  const usable = entries(opts).filter((e) => ['ok', 'none'].includes(authState(e)))
+  const usable = entries(opts).filter((e) => ['ok', 'none', 'hub'].includes(authState(e)))
   const base = Number(opts.interval ?? DEFAULT_INTERVAL)
   const max = Math.max(base, MAX_INTERVAL)
   let interval = base

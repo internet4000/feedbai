@@ -31,8 +31,10 @@ export const collect = async (entries, { since, limit, consumer, fetchImpl, now 
   results.forEach((result, i) => {
     const { project, source, account } = entries[i]
     if (result.status === 'fulfilled') {
-      const items = withRoles(result.value, { project, account })
-      groups.push({ project: project.id, source: source.id, platform: source.type, items })
+      // Providers return items, or { items, notices } when there is something the reader should know
+      const { items: raw, notices = [] } = Array.isArray(result.value) ? { items: result.value } : result.value
+      const items = withRoles(raw, { project, account })
+      groups.push({ project: project.id, source: source.id, platform: source.type, items, ...(notices.length && { notices }) })
       if (useState) state.sources[key(entries[i])] = now.toISOString()
     } else {
       errors.push({ project: project.id, source: source.id, error: t('error.sourceFailed', { source: source.id, reason: result.reason.message }) })

@@ -47,7 +47,7 @@ export default async ({ opts }) => {
   const list = selectSources(loadConfig({ explicit: opts.config }).config).filter((e) => ids.includes(e.project.id))
   if (!list.length) return out(onboarding(project, file))
 
-  const usable = list.filter((e) => ['ok', 'none'].includes(authState(e)))
+  const usable = list.filter((e) => ['ok', 'none', 'hub'].includes(authState(e)))
   const since = opts.since ?? 'last'
   const consumer = consumerName(opts)
   const title = feedbackTitle(usable, since, consumer)

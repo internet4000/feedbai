@@ -22,12 +22,27 @@ const state = async ({ homeserver, token, roomId, type, fetchImpl }) =>
  * Otherwise any repo installing the App could pull a private room's messages into its issues.
  */
 export const roomAllowed = async ({ homeserver, token, room, repo, fetchImpl }) => {
-  const alias = parseRoom(room)
-  const roomId = alias.startsWith('!')
-    ? alias
-    : (await request(api(homeserver, `/directory/room/${encodeURIComponent(alias)}`), { fetchImpl })).room_id
-  const rules = await state({ homeserver, token, roomId, type: 'm.room.join_rules', fetchImpl })
-  if (rules.join_rule === 'public') return true
+  const roomId = await resolve({ homeserver, room, fetchImpl })
+  if (await isPublic({ homeserver, token, roomId, fetchImpl })) return true
   const { topic = '' } = await state({ homeserver, token, roomId, type: 'm.room.topic', fetchImpl })
   return topic.toLowerCase().includes(repo.toLowerCase())
 }
+
+/**
+ * Anyone may read a public room through the hub's API: its messages are open to anyone who joins.
+ * Throws (status 403) when the bot is not in the room, so callers can say "invite the bot".
+ */
+export const roomPublic = async ({ homeserver, token, room, fetchImpl }) => {
+  const roomId = await resolve({ homeserver, room, fetchImpl })
+  const rules = await request(api(homeserver, `/rooms/${encodeURIComponent(roomId)}/state/m.room.join_rules`), { token, fetchImpl })
+  return rules.join_rule === 'public'
+}
+
+const resolve = async ({ homeserver, room, fetchImpl }) => {
+  const alias = parseRoom(room)
+  if (alias.startsWith('!')) return alias
+  return (await request(api(homeserver, `/directory/room/${encodeURIComponent(alias)}`), { fetchImpl })).room_id
+}
+
+const isPublic = async ({ homeserver, token, roomId, fetchImpl }) =>
+  (await state({ homeserver, token, roomId, type: 'm.room.join_rules', fetchImpl })).join_rule === 'public'
