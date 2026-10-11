@@ -1,0 +1,47 @@
+# Sveltia / Decap CMS collection for a project's feedbai.config.json.
+# Copy into your site's admin/config.yml (adjust `backend`).
+# Accounts are personal and intentionally not editable here.
+backend:
+  name: github
+  repo: owner/repo
+  branch: main
+media_folder: static/media
+collections:
+  - name: feedbai
+    label: Feedback sources
+    files:
+      - name: config
+        label: feedbai.config.json
+        file: feedbai.config.json
+        format: json
+        fields:
+          - name: projects
+            label: Projects
+            widget: list
+            fields:
+              - { name: id, label: Id, widget: string }
+              - { name: name, label: Name, widget: string, required: false }
+              - { name: repository, label: Repository, widget: string, required: false }
+              - name: sources
+                label: Sources
+                widget: list
+                typeKey: type
+                types:
+                  - name: matrix
+                    label: Matrix room
+                    fields:
+                      - { name: id, label: Id, widget: string }
+                      - { name: room, label: Room (alias, id or matrix.to link), widget: string }
+                      - { name: join, label: Auto-join, widget: boolean, default: false, required: false }
+                      - { name: limit, label: Limit, widget: number, value_type: int, default: 50, required: false }
+                      - { name: account, label: Account id, widget: string, required: false }
+                  - name: bluesky
+                    label: Bluesky
+                    fields:
+                      - { name: id, label: Id, widget: string }
+                      - { name: mode, label: Mode, widget: select, options: [search, author, thread, mentions] }
+                      - { name: query, label: Search query, widget: string, required: false }
+                      - { name: actor, label: Author handle, widget: string, required: false }
+                      - { name: post, label: Thread post link, widget: string, required: false }
+                      - { name: limit, label: Limit, widget: number, value_type: int, default: 50, required: false }
+                      - { name: account, label: Account id, widget: string, required: false }

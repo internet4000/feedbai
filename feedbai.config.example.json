@@ -1,0 +1,16 @@
+{
+  "$schema": "./schemas/config.schema.json",
+  "accounts": [],
+  "projects": [
+    {
+      "id": "radio4000",
+      "name": "Radio4000",
+      "repository": "https://github.com/internet4000/radio4000",
+      "sources": [
+        { "id": "matrix", "type": "matrix", "room": "https://matrix.to/#/#radio4000:matrix.org", "limit": 50 },
+        { "id": "bsky-account", "type": "bluesky", "mode": "author", "actor": "radio4000.com" },
+        { "id": "bsky-search", "type": "bluesky", "mode": "search", "query": "radio4000" }
+      ]
+    }
+  ]
+}
