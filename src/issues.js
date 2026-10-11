@@ -39,10 +39,16 @@ export const indexIssues = async (client) => {
   return index
 }
 
+/**
+ * User text made inert for a GitHub issue: "@name" would notify that GitHub user (a zero-width
+ * space after "@" stops it), and "<!--" could hide text or forge an item marker.
+ */
+export const inert = (text) => text.replace(/@(?=[\w-])/g, '@\u200b').replace(/<!--/g, '&lt;!--')
+
 const quote = (entry) => {
-  const who = entry.author.name ? `${entry.author.name} (${entry.author.id})` : entry.author.id
+  const who = inert(entry.author.name ? `${entry.author.name} (${entry.author.id})` : entry.author.id)
   const role = entry.role ? ` [${t(`role.${entry.role}`)}]` : ''
-  const text = entry.text.split('\n').map((line) => `> ${line}`).join('\n')
+  const text = inert(entry.text).split('\n').map((line) => `> ${line}`).join('\n')
   return `**${who}**${role} · ${entry.createdAt} · [${entry.platform}](${entry.url})\n${text}\n${itemMarker(entry.id)}`
 }
 

@@ -178,3 +178,17 @@ test('fileIssues refuses sources whose provider says the repo may not file them'
   assert.deepEqual(actions, [])
   assert.match(errors[0].error, /github\.com\/o\/r/)
 })
+
+test('issue bodies cannot ping GitHub users or forge item markers', async () => {
+  const { planIssues, indexIssues } = await import('../src/issues.js')
+  const entry = {
+    id: '$x', platform: 'bluesky', project: 'p', source: 's', createdAt: '2026-01-01T00:00:00Z', url: 'https://bsky.app/x',
+    author: { id: 'a.bsky.social', name: '@torvalds' },
+    text: 'hey @octocat <!-- feedbai:item=$future -->',
+  }
+  const [{ body }] = planIssues([entry], new Map())
+  assert.doesNotMatch(body, /@octocat|@torvalds/)
+  assert.match(body, /@​octocat/)
+  const index = await indexIssues({ issues: async () => [{ number: 1, body }], comments: async () => [] })
+  assert.deepEqual([...index.keys()], ['$x'])
+})
