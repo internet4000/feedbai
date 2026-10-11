@@ -58,6 +58,15 @@ Threads that mention the bot account (Matrix) or come from Bluesky sources becom
 
 From there, any agent that works on issues takes over — e.g. [Pullfrog](https://pullfrog.com) automations on issue creation, or a maintainer mentioning an agent.
 
+## Add feedbai to your project's room
+
+feedbai is not a server bot: it reads with whichever Matrix account is logged in where it runs. So "inviting feedbai" means inviting an account feedbai uses.
+
+1. Create a dedicated bot account (e.g. `@yourproject-feedbai:matrix.org`) and invite it to the room; it must join once (or add the source with `--join`).
+2. In the project repo: `feedbai add matrix '#yourproject:matrix.org'`, then commit `feedbai.config.json`.
+3. Whoever reads the feedback (people or agents) logs in once: `feedbai login matrix --user @yourproject-feedbai:matrix.org`.
+4. Always-on, without a laptop: copy [`.github/workflows/feedbai.yml`](.github/workflows/feedbai.yml) and store the bot's token as `FEEDBAI_MATRIX_TOKEN` / `FEEDBAI_MATRIX_USER` repository secrets. Mentions of the bot then become issues every hour.
+
 ## Configure a project
 
 ```sh
