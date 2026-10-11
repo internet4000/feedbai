@@ -46,6 +46,7 @@ const md = ({ groups, errors }, { title, depth = 2, digest } = {}) => {
   const parts = [title ?? t('md.header', { count: total })]
   for (const group of groups) {
     parts.push(`${heading} ${t('md.source', { ...group, count: group.items.length })}`)
+    for (const notice of group.notices ?? []) parts.push(`> ⚠ ${notice}`)
     parts.push(mdItems(group.items, digest))
   }
   if (errors.length) parts.push(`${heading} ${t('md.errors')}`, errors.map((e) => `- ${e.error}`).join('\n'))
@@ -55,6 +56,9 @@ const md = ({ groups, errors }, { title, depth = 2, digest } = {}) => {
 const json = (result) => JSON.stringify(result, null, 2) + '\n'
 
 const ndjson = ({ groups, errors }) =>
-  [...groups.flatMap((g) => g.items), ...errors.map((e) => ({ error: e }))].map((x) => JSON.stringify(x)).join('\n') + '\n'
+  [
+    ...groups.flatMap((g) => [...(g.notices ?? []).map((notice) => ({ project: g.project, source: g.source, notice })), ...g.items]),
+    ...errors.map((e) => ({ error: e })),
+  ].map((x) => JSON.stringify(x)).join('\n') + '\n'
 
 export const formats = { md, json, ndjson }

@@ -20,8 +20,8 @@ export const hubUrl = (env = process.env) =>
 const fetchViaHub = async ({ hub, project, source, since, limit, fetchImpl }) => {
   const url = `${hub}/v1/matrix?${query({ room: source.room, since: since?.toISOString(), limit })}`
   try {
-    const { items = [] } = await request(url, { fetchImpl })
-    return items.map((fields) => item({ ...fields, platform: 'matrix', project: project.id, source: source.id }))
+    const { items = [], notices = [] } = await request(url, { fetchImpl })
+    return { items: items.map((fields) => item({ ...fields, platform: 'matrix', project: project.id, source: source.id })), notices }
   } catch (error) {
     if (!error.data?.error) throw error
     throw new Error(t('error.hubRoom', { room: source.room, reason: error.data.error }))
@@ -57,6 +57,18 @@ const toItem = ({ event, names, roomId, project, source }) => {
 /** Replies start with a quoted copy of the parent ("> <@user> text") for old clients; replyTo already links it. */
 const stripReplyFallback = (body) => body.replace(/^(> .*\n)+\n/, '')
 
+/**
+ * Rooms with history visibility "joined"/"invited" hide everything sent before the account
+ * joined: /messages just ends early. Say so, or a short history looks like all there is.
+ */
+const hiddenHistory = async ({ homeserver, roomId, room, account, oldest, auth }) => {
+  const url = api(homeserver, `/rooms/${encodeURIComponent(roomId)}/state/m.room.history_visibility`)
+  const { history_visibility: visibility } = await request(url, auth).catch(() => ({}))
+  if (visibility !== 'joined' && visibility !== 'invited') return []
+  const missing = oldest ? t('notice.before', { date: new Date(oldest).toISOString() }) : t('notice.anything')
+  return [t('notice.matrixHistoryHidden', { room, visibility, missing, account: account.user ?? account.id })]
+}
+
 /** Messages with a text body, edits included (they carry the new text); redactions have none. */
 const isFeedback = (event) => event.type === 'm.room.message' && typeof event.content?.body === 'string'
 
@@ -87,6 +99,8 @@ export default {
     const items = []
     const names = {}
     let from
+    let oldest // timestamp of the oldest event the account can see
+    let exhausted = false // ran out of history before `since`/`limit`
     while (items.length < limit) {
       const url = api(homeserver, `/rooms/${encodeURIComponent(roomId)}/messages?`) +
         query({ dir: 'b', limit: Math.min(PAGE, limit), filter, from })
@@ -106,13 +120,19 @@ export default {
           reachedSince = true
           break
         }
+        oldest = event.origin_server_ts
         if (isFeedback(event)) items.push(toItem({ event, names, roomId, project, source }))
         if (items.length >= limit) break
       }
-      if (reachedSince || !page.end || !page.chunk?.length) break
+      if (reachedSince || items.length >= limit) break
+      if (!page.end || !page.chunk?.length) {
+        exhausted = true
+        break
+      }
       from = page.end
     }
-    return items.reverse()
+    const notices = exhausted ? await hiddenHistory({ homeserver, roomId, room, account, oldest, auth }) : []
+    return { items: items.reverse(), notices }
   },
 
   /** The messages a reply points back to, oldest first (up to `depth`), as context for it. */

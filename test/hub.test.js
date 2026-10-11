@@ -114,7 +114,7 @@ test('without an account, Matrix sources read through the hub (FEEDBAI_HUB=off d
   process.env.FEEDBAI_HUB = 'https://hub.test'
   try {
     assert.equal(matrix.authStatus(null), 'hub')
-    const items = await matrix.fetch({ project: { id: 'p' }, source: { id: 's', room: '#r:x' }, account: null, since: null, limit: 10, fetchImpl })
+    const { items } = await matrix.fetch({ project: { id: 'p' }, source: { id: 's', room: '#r:x' }, account: null, since: null, limit: 10, fetchImpl })
     assert.deepEqual(items.map((i) => [i.project, i.source, i.text]), [['p', 's', 'hi']])
     assert.equal(hubUrl({ FEEDBAI_HUB: 'off' }), null)
   } finally {

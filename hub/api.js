@@ -31,8 +31,8 @@ export const readMatrix = async ({ params, env, fetchImpl }) => {
     }
     const account = { id: 'hub', type: 'matrix', homeserver, user: bot, secrets: { token: 'FEEDBAI_MATRIX_TOKEN' } }
     const source = { id: 'matrix', type: 'matrix', room }
-    const items = await matrix.fetch({ project: { id: 'hub' }, source, account, since, limit, fetchImpl })
-    return json(200, { room, items })
+    const { items, notices } = await matrix.fetch({ project: { id: 'hub' }, source, account, since, limit, fetchImpl })
+    return json(200, { room, items, notices })
   } catch (error) {
     if (error.status === 403) return json(403, { error: `the hub's bot is not in ${room}: ${invite}` })
     if (error.status === 404) return json(404, { error: `no such room ${room}` })

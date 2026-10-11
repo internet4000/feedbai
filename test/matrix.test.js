@@ -29,13 +29,30 @@ test('resolves alias, paginates back to `since`, reads edits as new text, return
       ],
     }],
   ])
-  const items = await matrix.fetch({ ...ctx, since: new Date(1000), limit: 10, fetchImpl })
+  const { items, notices } = await matrix.fetch({ ...ctx, since: new Date(1000), limit: 10, fetchImpl })
   assert.deepEqual(items.map((i) => i.text), ['second', 'fix', 'third'])
+  assert.deepEqual(notices, []) // reached `since`: nothing is missing
   assert.equal(items[1].edits, '$2')
   assert.equal(items[2].replyTo, '$2')
   assert.equal(items[2].author.name, 'Ana')
   assert.match(items[0].url, /^https:\/\/matrix\.to\/#\/!room%3Ahs\.test\/%242$/)
   assert.equal(fetchImpl.calls[1].init.headers.authorization, 'Bearer secret')
+})
+
+test('says when the room hides history from before the account joined', async () => {
+  const room = (visibility) =>
+    fakeFetch([
+      [(u) => u.includes('/directory/room/'), { room_id: '!room:hs.test' }],
+      [(u) => u.includes('m.room.history_visibility'), { history_visibility: visibility }],
+      [(u) => u.includes('/messages'), { chunk: [event('$1', Date.parse('2026-10-01T00:00:00Z'), { body: 'hi' })] }], // no `end`: history ends here
+    ])
+  const read = (visibility) => matrix.fetch({ ...ctx, account: { ...account, user: '@bot:hs.test' }, since: new Date('2026-09-01'), limit: 10, fetchImpl: room(visibility) })
+  const { items, notices } = await read('joined')
+  assert.equal(items.length, 1)
+  assert.equal(notices.length, 1)
+  assert.match(notices[0], /history visibility "joined"/)
+  assert.match(notices[0], /@bot:hs\.test cannot see messages from before 2026-10-01T00:00:00\.000Z/)
+  assert.deepEqual((await read('shared')).notices, [])
 })
 
 test('requires a token (when the hub is off) and explains 403', async () => {
