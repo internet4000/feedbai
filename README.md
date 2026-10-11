@@ -11,7 +11,7 @@ No dependencies; Node ≥ 22.
 ## Install
 
 ```sh
-git clone <this repo> && cd feedbai && npm link   # puts `feedbai` on your PATH
+npm i -g feedbai   # or: npx feedbai …
 ```
 
 ## Configure a project

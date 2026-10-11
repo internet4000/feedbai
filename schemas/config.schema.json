@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/sctlib/feedbai/schemas/config.schema.json",
+  "$id": "https://raw.githubusercontent.com/internet4000/feedbai/main/schemas/config.schema.json",
   "title": "feedbai config",
   "type": "object",
   "properties": {
