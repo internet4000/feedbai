@@ -11,7 +11,7 @@ No dependencies; Node ≥ 22.
 ## Install
 
 ```sh
-npm i -g feedbai   # or: npx feedbai …
+npm i -g @internet4000/feedbai   # or: npx @internet4000/feedbai …
 ```
 
 ## Configure a project
@@ -94,3 +94,7 @@ For agents without skill support, add to the project's `AGENTS.md`: *"User feedb
 ## Languages
 
 CLI messages are in `src/locales/<lang>.json`, picked from `FEEDBAI_LANG` or `LANG`, falling back to English.
+
+## Release
+
+Publishing a GitHub release runs [`publish-to-npm-registry.yml`](.github/workflows/publish-to-npm-registry.yml) (tests, then `npm publish` via npm trusted publishing). Bump `version` in `package.json` first.
