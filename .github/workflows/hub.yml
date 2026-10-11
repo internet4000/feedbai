@@ -1,0 +1,27 @@
+# feedbai hub: files feedback issues for every repo that installed the feedbai GitHub App.
+# Off until the repository variable FEEDBAI_HUB_ENABLED is "true" (needs the secrets below).
+name: feedbai hub
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: feedbai-hub
+  cancel-in-progress: false
+jobs:
+  hub:
+    if: vars.FEEDBAI_HUB_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+      - run: node hub/run.js
+        env:
+          FEEDBAI_APP_ID: ${{ secrets.FEEDBAI_APP_ID }}
+          FEEDBAI_APP_PRIVATE_KEY: ${{ secrets.FEEDBAI_APP_PRIVATE_KEY }}
+          FEEDBAI_MATRIX_TOKEN: ${{ secrets.FEEDBAI_HUB_MATRIX_TOKEN }}
+          FEEDBAI_MATRIX_USER: ${{ secrets.FEEDBAI_HUB_MATRIX_USER }}
