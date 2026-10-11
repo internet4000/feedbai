@@ -33,7 +33,7 @@ Lines starting with `> ⚠` under a source (`notices` in JSON) mean feedback is 
 
 1. Get new feedback (`feedbai --as <agent>`, or lines from `watch`).
 2. Triage each item or thread: **bug**, **feature request**, **question/support**, **praise**, **noise**. Merge duplicates; follow `replyTo`/`thread`.
-3. Make GitHub issues the shared memory, so other sessions and agents don't triage the same thing again. `feedbai issues` files threads that mention the bot (and Bluesky items) automatically and idempotently; for everything else:
+3. Make GitHub issues the shared memory, so other sessions and agents don't triage the same thing again. `feedbai issues` files threads that mention the bot (and Bluesky mentions/threads) automatically and idempotently. Bluesky searches and author feeds are never filed: read them for the overall sentiment (what people like, recurring complaints) and summarize that in your report; file an issue only for a concrete, actionable item. For everything else:
    - Search first: `gh issue list --label feedback --search "<item url>"` and by topic.
    - Existing issue: comment with the new item's link and a one-line summary.
    - New bug/feature: `gh issue create --label feedback` with a short summary, the item `url`s (no personal data beyond the public link), and your proposed fix. Create the `feedback` label if missing.

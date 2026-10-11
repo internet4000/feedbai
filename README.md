@@ -54,7 +54,7 @@ feedbai issues --dry-run    # what would be filed
 feedbai issues              # file it (needs `gh`)
 ```
 
-Threads that mention the bot account (Matrix) or come from Bluesky sources become GitHub issues labelled `feedback`; later messages in the same thread become comments. Runs are idempotent, so schedule it freely. [`.github/workflows/feedbai.yml`](.github/workflows/feedbai.yml) runs it hourly with the account taken from repository secrets (`FEEDBAI_MATRIX_TOKEN`, `FEEDBAI_MATRIX_USER`; for Bluesky `FEEDBAI_BLUESKY_IDENTIFIER`, `FEEDBAI_BLUESKY_PASSWORD`).
+Threads that mention the bot account (Matrix), Bluesky mentions and Bluesky `thread` sources become GitHub issues labelled `feedback`; later messages in the same thread become comments. Bluesky `search` and `author` sources are never filed: they are for reading the general sentiment with `feedbai`/`watch`. Runs are idempotent, so schedule it freely. [`.github/workflows/feedbai.yml`](.github/workflows/feedbai.yml) runs it hourly with the account taken from repository secrets (`FEEDBAI_MATRIX_TOKEN`, `FEEDBAI_MATRIX_USER`; for Bluesky `FEEDBAI_BLUESKY_IDENTIFIER`, `FEEDBAI_BLUESKY_PASSWORD`).
 
 From there, any agent that works on issues takes over — e.g. [Pullfrog](https://pullfrog.com) automations on issue creation, or a maintainer mentioning an agent.
 
