@@ -28,7 +28,7 @@ const page = (env) => `<!doctype html>
 <li>To get issues, install the <a href="${env.FEEDBAI_APP_URL}">feedbai GitHub App</a> on your repo. Issues appear within about 10 minutes.</li>
 </ol>
 <p>API: <code>/v1/matrix?room=#room:server</code>, <code>/v1/bluesky/search?query=…</code>, same items as <code>feedbai fetch --format json</code>.</p>
-<p><a href="https://github.com/internet4000/feedbai">github.com/internet4000/feedbai</a></p>
+<p>Only messages addressed to the bot are filed; the hub stores no messages. <a href="https://github.com/internet4000/feedbai/blob/main/PRIVACY.md">Privacy</a> · <a href="https://github.com/internet4000/feedbai/blob/main/SECURITY.md">Security</a> · <a href="https://github.com/internet4000/feedbai">github.com/internet4000/feedbai</a></p>
 `
 
 export default {

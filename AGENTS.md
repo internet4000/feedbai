@@ -10,5 +10,6 @@ Zero-dependency Node (>=22) CLI. Run `npm test` before committing.
 - `src/providers/<type>.js` — one module per channel (Matrix, Bluesky, GitHub Discussions…); core code never names a platform. Adding one: [docs/channels/adding-a-channel.md](docs/channels/adding-a-channel.md); `test/providers.test.js` checks the contract.
 - All user-facing strings live in `src/locales/<lang>.json` and go through `t()`.
 - Secrets are never stored in configs: accounts hold env var *names*; values live in `~/.config/feedbai/secrets.env` (0600).
+- Trust boundaries ([SECURITY.md](SECURITY.md)): project configs and messages are untrusted. A project config never picks accounts; private rooms reach issues only via `mayFile`; user text in issues goes through `inert`, every item through `clean`. Keep new code inside these rules and add a test when touching them. Personal data: [PRIVACY.md](PRIVACY.md).
 
 To *use* feedbai on a project, see `skills/feedbai/SKILL.md`.

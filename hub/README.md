@@ -21,9 +21,11 @@ New channels (GitHub Discussions, Fediverse, …) are added when a project needs
 
 **Rules** (any repo can install the App, so its config is untrusted):
 - the hub always reads with its own bot account; `accounts` and `join` in a repo's config are ignored
-- a repo may read a Matrix room only if the room is public, or its topic names the repo (`github.com/owner/repo`)
+- a repo may file a Matrix room only if the room is public, or its topic names the repo (`github.com/owner/repo`, whole name); the same rule applies to `feedbai issues` anywhere
 - the bot joins rooms only when invited; kick it to stop
 - GitHub access is the App's installation token: issues write + contents read, per repo
+
+Personal data, retention and removal requests: [PRIVACY.md](../PRIVACY.md). Security model: [SECURITY.md](../SECURITY.md).
 
 **Run your own** (free software): create a bot account and a GitHub App (Issues: read & write, Contents: read), then either enable [`.github/workflows/hub.yml`](../.github/workflows/hub.yml) in a fork (secrets `FEEDBAI_APP_ID`, `FEEDBAI_APP_PRIVATE_KEY`, `FEEDBAI_HUB_MATRIX_TOKEN`, `FEEDBAI_HUB_MATRIX_USER`; variable `FEEDBAI_HUB_ENABLED=true`), or run `node hub/run.js` from cron with the same values as `FEEDBAI_APP_ID`, `FEEDBAI_APP_PRIVATE_KEY`, `FEEDBAI_MATRIX_TOKEN`, `FEEDBAI_MATRIX_USER`. No database: GitHub issues and their hidden markers are the state.
 
