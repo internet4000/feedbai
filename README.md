@@ -48,6 +48,8 @@ The global config uses the same shape, so you can also list projects there (e.g.
 
 Optional on every source: `limit` (default 50), `account` (account id; defaults to the first account of that type). Matrix: `join: true` to join the room before reading — otherwise join it once yourself.
 
+Matrix rooms with history visibility `joined` (e.g. `#radio4000:matrix.org`) only show messages sent after your account joined: join early, stay joined, and poll with `--since last`.
+
 Encrypted Matrix rooms are not supported (no E2EE); public community rooms usually aren't encrypted.
 
 ## Accounts
