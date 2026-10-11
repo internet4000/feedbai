@@ -11,6 +11,7 @@
  * @property {string} createdAt  ISO date
  * @property {string} [replyTo]  id of the item this replies to
  * @property {string} [thread]   id of the thread root
+ * @property {'self'|'maintainer'} [role]  set by roles.js
  */
 
 export const item = (fields) => ({

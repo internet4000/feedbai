@@ -3,7 +3,7 @@ import { detectProject } from '../project.js'
 import { discover } from '../discover.js'
 import { collect } from '../feedback.js'
 import { formats } from '../format.js'
-import { readState, stateKey } from '../state.js'
+import { readState, stateKey, consumerName } from '../state.js'
 import { t } from '../i18n.js'
 import { authState, authText, describe, out } from './shared.js'
 
@@ -31,10 +31,10 @@ const onboarding = (project, file) => {
 }
 
 /** Title of the feedback section: since when are we showing items? */
-const feedbackTitle = (list, since) => {
+const feedbackTitle = (list, since, consumer) => {
   if (since !== 'last') return t('home.feedback.since', { since })
   const state = readState()
-  const cursors = list.map((e) => state.sources[stateKey(e.project, e.source)]).filter(Boolean).sort()
+  const cursors = list.map((e) => state.sources[stateKey(e.project, e.source, consumer)]).filter(Boolean).sort()
   return cursors.length ? t('home.feedback.new', { since: cursors[0] }) : t('home.feedback.first')
 }
 
@@ -49,8 +49,9 @@ export default async ({ opts }) => {
 
   const usable = list.filter((e) => ['ok', 'none'].includes(authState(e)))
   const since = opts.since ?? 'last'
-  const title = feedbackTitle(usable, since)
-  const result = await collect(usable, { since, limit: opts.limit })
+  const consumer = consumerName(opts)
+  const title = feedbackTitle(usable, since, consumer)
+  const result = await collect(usable, { since, consumer, limit: opts.limit })
   const found = discover(project.root, list.map((e) => e.source))
 
   out([
@@ -58,8 +59,8 @@ export default async ({ opts }) => {
     t('home.config', { file }),
     `${t('home.sources')}\n\n${list.map((e) => `- ${e.source.id} · ${describe(e.source)} — ${authText(e)}`).join('\n')}`,
     found.length && `${t('home.alsoFound')}\n\n${suggestions(found)}`,
-    formats.md(result, { title, depth: 3 }).trim(),
-    t('home.next'),
+    formats.md(result, { title, depth: 3, digest: opts.digest }).trim(),
+    t('home.next', { consumer }),
   ].filter(Boolean).join('\n\n'))
   if (result.errors.length) process.exitCode = 2
 }

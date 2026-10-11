@@ -11,4 +11,8 @@ export const writeState = (state, file = STATE_FILE) => {
   writeFileSync(file, JSON.stringify(state, null, 2) + '\n')
 }
 
-export const stateKey = (project, source) => `${project.id}/${source.id}`
+/** Who is reading: each agent (claude, codex, pi, ...) keeps its own cursors. */
+export const consumerName = (opts = {}) => opts.as || process.env.FEEDBAI_AGENT || 'default'
+
+export const stateKey = (project, source, consumer = 'default') =>
+  `${consumer === 'default' ? '' : `${consumer}:`}${project.id}/${source.id}`
