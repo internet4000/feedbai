@@ -19,9 +19,12 @@ const PATTERNS = [
   },
 ]
 
+/** Tests, specs and examples link to made-up or other projects' channels. */
+const EXCLUDE = [':!*test*', ':!*spec*', ':!*example*', ':!*fixture*']
+
 const grep = (regex, root) => {
   try {
-    return execFileSync('git', ['grep', '-hoIE', regex], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
+    return execFileSync('git', ['grep', '-hoIE', regex, '--', '.', ...EXCLUDE], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })
       .split('\n')
       .filter(Boolean)
   } catch {
