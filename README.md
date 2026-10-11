@@ -3,7 +3,7 @@
 One way for AI agents (Claude Code, Codex, pi, …) to read user feedback about a project from where users actually talk — Matrix rooms and Bluesky for now — so they can triage it and turn it into issues, fixes and PRs.
 
 - **Projects declare their channels** in a `feedbai.config.json` committed to the repo (no secrets).
-- **You declare your accounts once** in `~/.config/feedbai/config.json`; secrets live in `~/.config/feedbai/secrets.env` (mode 600). Public Matrix rooms need none: the [hub](hub/README.md) reads them for you.
+- **You declare your accounts once** in `~/.config/feedbai/config.json`; secrets live in `~/.config/feedbai/secrets.env` (mode 600). Public Matrix rooms and Bluesky searches need none: the [hub](hub/README.md) reads them for you.
 - **Agents run one CLI** (`feedbai fetch`) and get normalized items in Markdown, JSON or NDJSON.
 
 No dependencies; Node ≥ 22.

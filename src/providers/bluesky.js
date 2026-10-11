@@ -2,6 +2,7 @@ import { request, query } from '../http.js'
 import { getSecret } from '../secrets.js'
 import { item, requireFields } from '../model.js'
 import { t } from '../i18n.js'
+import { hubUrl, readViaHub } from '../hub.js'
 
 const PUBLIC_APPVIEW = 'https://public.api.bsky.app'
 const DEFAULT_SERVICE = 'https://bsky.social'
@@ -15,6 +16,9 @@ const MODES = {
   thread: { fields: ['post'], auth: false },
   mentions: { fields: [], auth: true },
 }
+
+/** Modes the hub can read for people without an account (mentions are per account). */
+const HUB_MODES = ['search']
 
 const xrpc = (base, method, params) => `${base}/xrpc/${method}?${query(params)}`
 
@@ -44,8 +48,9 @@ const fromPost = (post, ctx) => toItem({ ...post, ...ctx })
 
 const password = (account) => getSecret(account?.secrets?.password)
 
-/** One session per account per process. */
+/** One session per account per process; dropped on expiry (long-lived runtimes like Workers outlive the ~2h token). */
 const sessions = new Map()
+const expired = (error) => error.status === 401 || error.data?.error === 'ExpiredToken'
 const session = async (account, fetchImpl) => {
   if (!sessions.has(account.id)) {
     const service = account.service ?? DEFAULT_SERVICE
@@ -151,14 +156,30 @@ export default {
 
   authStatus: (account) => (!account ? 'none' : password(account) ? 'ok' : 'missing'),
 
+  viaHub: (source) => HUB_MODES.includes(source.mode) && Boolean(hubUrl()),
+
   async fetch({ project, source, account, since, limit, fetchImpl }) {
     const authed = account && password(account)
+    if (!authed && HUB_MODES.includes(source.mode) && !account && hubUrl()) {
+      const params = { query: source.query, since: since?.toISOString(), limit }
+      return readViaHub({ path: '/v1/bluesky/search', params, platform: 'bluesky', project, source, fetchImpl })
+    }
     if (MODES[source.mode].auth && !authed) {
       throw new Error(t('error.authRequired', { source: source.id, mode: source.mode, type: 'bluesky' }))
     }
-    const { base, token } = authed ? await session(account, fetchImpl) : { base: PUBLIC_APPVIEW }
-    const api = (method, params) => request(xrpc(base, method, params), { token, fetchImpl })
-    const items = await fetchers[source.mode]({ api, source, since, limit, ctx: { project, source } })
+    const run = async () => {
+      const { base, token } = authed ? await session(account, fetchImpl) : { base: PUBLIC_APPVIEW }
+      const api = (method, params) => request(xrpc(base, method, params), { token, fetchImpl })
+      return fetchers[source.mode]({ api, source, since, limit, ctx: { project, source } })
+    }
+    let items
+    try {
+      items = await run()
+    } catch (error) {
+      if (!authed || !expired(error)) throw error
+      sessions.delete(account.id)
+      items = await run()
+    }
     return items.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
   },
 

@@ -1,10 +1,10 @@
 /**
- * feedbai hub on Cloudflare Workers: the cron trigger runs `runHub`; `/` explains how to join, `/v1/matrix` serves public rooms (api.js).
+ * feedbai hub on Cloudflare Workers: the cron trigger runs `runHub`; `/` explains how to join, `/v1/…` reads public channels for people without accounts (api.js).
  * Secrets (wrangler secret put): FEEDBAI_APP_ID, FEEDBAI_APP_PRIVATE_KEY, FEEDBAI_MATRIX_TOKEN,
  * optional FEEDBAI_BLUESKY_IDENTIFIER/_PASSWORD. Vars (../wrangler.jsonc): FEEDBAI_MATRIX_USER, FEEDBAI_APP_URL.
  */
 import { runHub } from './run.js'
-import { readMatrix } from './api.js'
+import { readMatrix, readBlueskySearch } from './api.js'
 
 const page = (env) => `<!doctype html>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -26,11 +26,12 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
     if (url.pathname === '/') return new Response(page(env), { headers: { 'content-type': 'text/html; charset=utf-8' } })
-    if (url.pathname !== '/v1/matrix' || request.method !== 'GET') return new Response('Not found', { status: 404 })
+    const read = { '/v1/matrix': readMatrix, '/v1/bluesky/search': readBlueskySearch }[url.pathname]
+    if (!read || request.method !== 'GET') return new Response('Not found', { status: 404 })
     // Public data, cached briefly so a busy room costs one Matrix read per minute
     const cached = await caches.default.match(request)
     if (cached) return cached
-    const response = await readMatrix({ params: url.searchParams, env })
+    const response = await read({ params: url.searchParams, env })
     if (response.ok) ctx.waitUntil(caches.default.put(request, response.clone()))
     return response
   },

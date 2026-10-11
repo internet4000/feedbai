@@ -2,6 +2,7 @@ import { request, query } from '../http.js'
 import { getSecret } from '../secrets.js'
 import { item, requireFields } from '../model.js'
 import { t } from '../i18n.js'
+import { hubUrl, readViaHub } from '../hub.js'
 
 const DEFAULT_HOMESERVER = 'https://matrix.org'
 const PAGE = 100
@@ -12,21 +13,6 @@ export const parseRoom = (room) => decodeURIComponent(room.replace(/^https:\/\/m
 const api = (homeserver, path) => `${homeserver.replace(/\/$/, '')}/_matrix/client/v3${path}`
 
 const token = (account) => getSecret(account?.secrets?.token)
-
-/** Without an account, read public rooms through the feedbai hub (its bot must be in the room). FEEDBAI_HUB=off disables. */
-export const hubUrl = (env = process.env) =>
-  env.FEEDBAI_HUB === 'off' ? null : (env.FEEDBAI_HUB || 'https://feedbai.internet4000.com').replace(/\/$/, '')
-
-const fetchViaHub = async ({ hub, project, source, since, limit, fetchImpl }) => {
-  const url = `${hub}/v1/matrix?${query({ room: source.room, since: since?.toISOString(), limit })}`
-  try {
-    const { items = [], notices = [] } = await request(url, { fetchImpl })
-    return { items: items.map((fields) => item({ ...fields, platform: 'matrix', project: project.id, source: source.id })), notices }
-  } catch (error) {
-    if (!error.data?.error) throw error
-    throw new Error(t('error.hubRoom', { room: source.room, reason: error.data.error }))
-  }
-}
 
 const resolveRoomId = async (homeserver, room, fetchImpl) => {
   if (room.startsWith('!')) return room
@@ -84,8 +70,10 @@ export default {
   async fetch({ project, source, account, since, limit, fetchImpl }) {
     const accessToken = token(account)
     if (!accessToken) {
-      const hub = !account && hubUrl()
-      if (hub) return fetchViaHub({ hub, project, source, since, limit, fetchImpl })
+      if (!account && hubUrl()) {
+        const params = { room: source.room, since: since?.toISOString(), limit }
+        return readViaHub({ path: '/v1/matrix', params, platform: 'matrix', project, source, fetchImpl })
+      }
       throw new Error(t('error.authRequired', { source: source.id, mode: 'room', type: 'matrix' }))
     }
     const homeserver = account.homeserver ?? DEFAULT_HOMESERVER

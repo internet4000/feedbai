@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Set up a hub's secrets from a local page: create its GitHub App (manifest flow) and log its
- * Matrix bot in. Secrets go straight into `wrangler secret put`; nothing is printed or saved.
+ * Set up a hub's secrets from a local page: create its GitHub App (manifest flow), log its
+ * Matrix bot in, and store its Bluesky app password. Secrets go straight into `wrangler secret put`; nothing is printed or saved.
  * Usage: node hub/setup.js --url https://feedbai.internet4000.com [--owner <github org>] [--name feedbai]
  */
 import { createServer } from 'node:http'
@@ -64,7 +64,13 @@ const home = () => html(`
 <input name="user" placeholder="@feedbai:matrix.org" required size="30"><br>
 <input name="password" type="password" placeholder="password" required size="30"><br>
 <input name="homeserver" value="https://matrix.org" size="30"><br>
-<button>Log in bot</button></form>`)
+<button>Log in bot</button></form>
+<h2>3. Bluesky account (optional)</h2>
+<form action="/bluesky" method="post">
+<p>Lets people search Bluesky through the hub without an account. Use an app password (bsky.app → Settings → Privacy and security → App passwords). Set the handle as FEEDBAI_BLUESKY_IDENTIFIER in wrangler.jsonc.</p>
+<input name="identifier" placeholder="feedbai.bsky.social" required size="30"><br>
+<input name="password" type="password" placeholder="app password" required size="30"><br>
+<button>Store app password</button></form>`)
 
 const readForm = async (req) => {
   let body = ''
@@ -87,6 +93,13 @@ const routes = {
     await putSecret('FEEDBAI_APP_PRIVATE_KEY', app.pem)
     console.log(`GitHub App created: ${app.html_url} (id ${app.id}). Set FEEDBAI_APP_URL to ${app.html_url} in wrangler.jsonc.`)
     return html(`<p>Created <a href="${escape(app.html_url)}">${escape(app.slug)}</a> and stored its id and key in the Worker.</p><p><a href="/">Back</a></p>`)
+  },
+  'POST /bluesky': async (req) => {
+    const { identifier, password } = await readForm(req)
+    const { handle } = await providers.bluesky.login({ identifier, password })
+    await putSecret('FEEDBAI_BLUESKY_PASSWORD', password)
+    console.log(`Bluesky ${handle}: app password stored. FEEDBAI_BLUESKY_IDENTIFIER should be ${handle}.`)
+    return html(`<p>Stored the app password for <b>${escape(handle)}</b>.</p><p><a href="/">Back</a></p>`)
   },
   'POST /matrix': async (req) => {
     const { user, password, homeserver } = await readForm(req)

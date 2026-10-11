@@ -6,7 +6,7 @@ Hosted at **https://feedbai.internet4000.com** (Cloudflare Worker, every 10 minu
 
 **For a project**: invite the bot (`@feedbai:matrix.org`) to your room, install the App on your repo, commit `feedbai.config.json` (`feedbai add matrix '#room:server'`). Mentions of the bot then become `feedback` issues within ~10 minutes.
 
-**For people and agents without a Matrix account**: the CLI reads public rooms through the hub's read API when no Matrix account is configured, as long as the bot is in the room. `GET /v1/matrix?room=#room:server[&since=ISO][&limit=n]` returns the same items as `feedbai fetch --format json` (cached 60s). Private rooms are not served.
+**For people and agents without a Matrix account**: the CLI reads public rooms through the hub's read API when no Matrix account is configured, as long as the bot is in the room. `GET /v1/matrix?room=#room:server[&since=ISO][&limit=n]` returns the same items as `feedbai fetch --format json` (cached 60s). Private rooms are not served. Bluesky search needs an account too, so the hub searches with its own (`feedbai.bsky.social`): `GET /v1/bluesky/search?query=…`. Bluesky `mentions` sources are dropped from repo configs in the hub: they would read the hub's own mentions.
 
 **Rules** (any repo can install the App, so its config is untrusted):
 - the hub always reads with its own bot account; `accounts` and `join` in a repo's config are ignored

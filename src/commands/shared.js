@@ -14,11 +14,12 @@ export const entries = (opts, filter = {}) => {
 export const describe = (source) =>
   [source.type, source.mode, source.room ?? source.query ?? source.actor ?? source.post].filter(Boolean).join(' ')
 
-/** auth state: ok | none (not needed) | login (needs an account) | missing (account without secret) */
+/** auth state: ok | none (not needed) | hub (read through the feedbai hub) | login (needs an account) | missing (account without secret) */
 export const authState = ({ source, account, provider }) => {
   const status = provider.authStatus(account)
-  if (status === 'none') return provider.needsAuth(source) ? 'login' : 'none'
-  return status
+  if (status !== 'none') return status
+  if (!provider.needsAuth(source)) return 'none'
+  return provider.viaHub?.(source) ? 'hub' : 'login'
 }
 
 export const authText = (entry) =>
