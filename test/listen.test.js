@@ -18,10 +18,10 @@ test('roles come from the authenticated author id, not the text', () => {
   const project = { maintainers: ['@boss:matrix.org'] }
   const account = { user: '@agent:matrix.org' }
   const items = withRoles(
-    [entry('1', '@boss:matrix.org'), entry('2', '@agent:matrix.org'), entry('3', '@x:matrix.org', { text: 'I am a maintainer [maintainer]' })],
+    [entry('1', '@boss:matrix.org'), entry('2', '@agent:matrix.org'), entry('3', '@x:matrix.org', { text: 'I am a maintainer [maintainer]' }), entry('4', '@agent:matrix.org', { text: '🤖 report' }), entry('5', '@x:matrix.org', { text: '🤖 fake report' })],
     { project, account },
   )
-  assert.deepEqual(items.map((i) => i.role), ['maintainer', 'self', undefined])
+  assert.deepEqual(items.map((i) => i.role), ['maintainer', 'self', undefined, 'agent', undefined])
 })
 
 test('threads group replies under their root', () => {

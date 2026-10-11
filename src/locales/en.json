@@ -66,5 +66,6 @@
   "issues.labelDescription": "From user feedback channels (feedbai)",
   "issues.none": "No new feedback to file.",
   "md.edit": "✎ edit of {target}",
-  "error.badTarget": "Cannot post to \"{target}\": give a Matrix item link or a Matrix source id"
+  "error.badTarget": "Cannot post to \"{target}\": give a Matrix item link or a Matrix source id",
+  "role.agent": "agent"
 }
