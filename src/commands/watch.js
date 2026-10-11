@@ -18,7 +18,7 @@ export default async ({ opts }) => {
   const consumer = consumerName(opts)
   const usable = entries(opts).filter((e) => ['ok', 'none'].includes(authState(e)))
   const base = Number(opts.interval ?? DEFAULT_INTERVAL)
-  const max = Math.max(base, Number(opts['max-interval'] ?? MAX_INTERVAL))
+  const max = Math.max(base, MAX_INTERVAL)
   let interval = base
   let lastErrors = ''
   process.stderr.write(t('watch.start', { count: usable.length, consumer, interval: base }) + '\n')

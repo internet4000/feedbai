@@ -31,6 +31,7 @@ const toItem = ({ event, names, roomId, project, source }) => {
     url: `https://matrix.to/#/${encodeURIComponent(roomId)}/${encodeURIComponent(event.event_id)}`,
     createdAt: new Date(event.origin_server_ts).toISOString(),
     replyTo: relates['m.in_reply_to']?.event_id,
+    mentions: event.content['m.mentions']?.user_ids,
     thread: relates.rel_type === 'm.thread' ? relates.event_id : undefined,
   })
 }

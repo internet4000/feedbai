@@ -11,15 +11,14 @@ export const SCHEMA_URL = 'https://raw.githubusercontent.com/internet4000/feedba
 const write = (file, config) => writeFileSync(file, JSON.stringify(config, null, 2) + '\n')
 
 /** Create feedbai.config.json at the project root, with inferred project metadata. */
-export const initConfig = ({ cwd, id, name, repository } = {}) => {
+export const initConfig = ({ cwd } = {}) => {
   const existing = findProjectConfig(cwd)
   const detected = detectProject(cwd)
   const file = join(detected.root, PROJECT_CONFIG_NAME)
   if (existing ?? existsSync(file)) throw new Error(t('error.configExists', { file: existing ?? file }))
   const project = {
-    id: id ?? detected.id,
-    ...(name && { name }),
-    ...((repository ?? detected.repository) && { repository: repository ?? detected.repository }),
+    id: detected.id,
+    ...(detected.repository && { repository: detected.repository }),
     sources: [],
   }
   write(file, { $schema: SCHEMA_URL, projects: [project] })

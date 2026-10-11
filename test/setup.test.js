@@ -56,3 +56,18 @@ test('add creates the config, names sources, and remove deletes them', () => {
   ;[project] = readJson(file).projects
   assert.equal(project.sources.length, 2)
 })
+
+test('issues: only threads mentioning the bot start an issue; known items are skipped; replies become comments', async () => {
+  const { planIssues } = await import('../src/issues.js')
+  const item = (id, extra = {}) => ({
+    id, platform: 'matrix', project: 'p', source: 's', author: { id: '@u:x' }, text: `text ${id}`,
+    url: `https://matrix.to/#/!r/${id}`, createdAt: '2026-01-01T00:00:00Z', ...extra,
+  })
+  const items = [item('a'), item('b', { toSelf: true }), item('c', { replyTo: 'b' }), item('d', { replyTo: 'old' })]
+  const plan = planIssues(items, new Map([['old', 7]]))
+  assert.deepEqual(plan.map((a) => [a.type, a.issue]), [['create', undefined], ['comment', 7]])
+  assert.match(plan[0].title, /text b/)
+  assert.match(plan[0].body, /feedbai:item=b -->[\s\S]*feedbai:item=c -->/)
+  assert.doesNotMatch(plan[0].body, /item=a /)
+  assert.equal(planIssues(items, new Map([['a', 1], ['b', 2], ['c', 2], ['d', 7]])).length, 0)
+})

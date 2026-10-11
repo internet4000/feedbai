@@ -12,8 +12,19 @@ export const roleOf = (entry, { project, account }) => {
   return undefined
 }
 
+/** Matrix localpart / Bluesky handle as typed in a message, e.g. "soup123" from "@soup123:matrix.org". */
+const selfNames = (account) => selfIds(account).map((id) => id.replace(/^@/, '').split(':')[0]).filter(Boolean)
+
+export const mentionsSelf = (entry, { account }) => {
+  const ids = selfIds(account)
+  if (entry.mentions?.some((id) => ids.includes(id))) return true
+  const text = entry.text.toLowerCase()
+  return selfNames(account).some((name) => new RegExp(`(^|[^\\w])@?${name.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\w]|$)`).test(text))
+}
+
 export const withRoles = (items, context) =>
   items.map((entry) => {
     const role = roleOf(entry, context)
-    return role ? { ...entry, role } : entry
+    const toSelf = role !== 'self' && mentionsSelf(entry, context)
+    return { ...entry, ...(role && { role }), ...(toSelf && { toSelf }) }
   })

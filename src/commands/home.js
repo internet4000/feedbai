@@ -59,7 +59,7 @@ export default async ({ opts }) => {
     t('home.config', { file }),
     `${t('home.sources')}\n\n${list.map((e) => `- ${e.source.id} · ${describe(e.source)} — ${authText(e)}`).join('\n')}`,
     found.length && `${t('home.alsoFound')}\n\n${suggestions(found)}`,
-    formats.md(result, { title, depth: 3, digest: opts.digest }).trim(),
+    formats.md(result, { title, depth: 3 }).trim(),
     t('home.next', { consumer }),
   ].filter(Boolean).join('\n\n'))
   if (result.errors.length) process.exitCode = 2
