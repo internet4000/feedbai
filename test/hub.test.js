@@ -35,6 +35,7 @@ test('sanitize drops accounts, joins and rooms the repo may not read', async () 
       { id: 'ok', type: 'matrix', room: '#ok:x', join: true, account: 'mine' },
       { id: 'no', type: 'matrix', room: '#private:x' },
       { id: 'b', type: 'bluesky', mode: 'search', query: 'q' },
+      { id: 'm', type: 'bluesky', mode: 'mentions' },
     ] }],
   }
   const safe = await sanitize(config, async (room) => room === '#ok:x')
@@ -108,7 +109,8 @@ test('read API serves public rooms the bot is in, and says what to do otherwise'
 })
 
 test('without an account, Matrix sources read through the hub (FEEDBAI_HUB=off disables)', async () => {
-  const { default: matrix, hubUrl } = await import('../src/providers/matrix.js')
+  const { default: matrix } = await import('../src/providers/matrix.js')
+  const { hubUrl } = await import('../src/hub.js')
   const item = { id: '$1', platform: 'matrix', project: 'hub', source: 'matrix', author: { id: '@u:x' }, text: 'hi', url: 'u', createdAt: '2026-01-01T00:00:00.000Z' }
   const fetchImpl = fakeFetch([[(u) => u.startsWith('https://hub.test/v1/matrix?room=%23r%3Ax'), { items: [item] }]])
   process.env.FEEDBAI_HUB = 'https://hub.test'
@@ -130,4 +132,25 @@ test('Bluesky searches and author feeds are read for sentiment, never filed as i
   assert.equal(files({ type: 'bluesky', mode: 'mentions' }), true)
   assert.equal(files({ type: 'bluesky', mode: 'thread', post: 'p' }), true)
   assert.equal(files({ type: 'matrix', room: '#r:x' }), true)
+})
+
+test('read API searches Bluesky with the hub account, or says it has none', async () => {
+  const { readBlueskySearch } = await import('../hub/api.js')
+  const ask = async (env, fetchImpl) => {
+    const res = await readBlueskySearch({ params: new URLSearchParams({ query: '#r4' }), env, fetchImpl })
+    return { status: res.status, body: await res.json() }
+  }
+  assert.equal((await ask({})).status, 503)
+  process.env.FEEDBAI_BLUESKY_PASSWORD = 'hub-pass'
+  try {
+    const fetchImpl = fakeFetch([
+      [(u) => u.endsWith('createSession'), { accessJwt: 'jwt', handle: 'feedbai.bsky.social' }],
+      [(u) => u.includes('searchPosts'), { posts: [{ uri: 'at://x/app.bsky.feed.post/1', author: { handle: 'ana.test' }, record: { text: 'love it', createdAt: '2026-01-01T00:00:00Z' } }] }],
+    ])
+    const ok = await ask({ FEEDBAI_BLUESKY_IDENTIFIER: 'feedbai.bsky.social', FEEDBAI_BLUESKY_PASSWORD: 'hub-pass' }, fetchImpl)
+    assert.equal(ok.status, 200)
+    assert.deepEqual(ok.body.items.map((i) => i.text), ['love it'])
+  } finally {
+    delete process.env.FEEDBAI_BLUESKY_PASSWORD
+  }
 })

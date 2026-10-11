@@ -42,7 +42,35 @@ test('author mode is public and stops at `since`', async () => {
   assert.equal(fetchImpl.calls.length, 1)
 })
 
-test('search without an account is refused', async () => {
+test('search without an account reads through the hub, or is refused when the hub is off', async () => {
   const source = { id: 's', type: 'bluesky', mode: 'search', query: 'x' }
-  await assert.rejects(bluesky.fetch({ project: { id: 'r4' }, source, account: null, limit: 1 }), /requires an authenticated/)
+  const read = (fetchImpl) => bluesky.fetch({ project: { id: 'r4' }, source, account: null, limit: 1, fetchImpl })
+  try {
+    process.env.FEEDBAI_HUB = 'off'
+    await assert.rejects(read(), /requires an authenticated/)
+    process.env.FEEDBAI_HUB = 'https://hub.test'
+    const hubItem = { ...post('1', '2026-01-01T00:00:00Z', 'via hub'), id: 'at://x', author: { id: 'ana.test' }, text: 'via hub', url: 'u', createdAt: '2026-01-01T00:00:00Z' }
+    const fetchImpl = fakeFetch([[(u) => u.startsWith('https://hub.test/v1/bluesky/search?query=x'), { items: [hubItem] }]])
+    const { items } = await read(fetchImpl)
+    assert.deepEqual(items.map((i) => [i.project, i.source, i.text]), [['r4', 's', 'via hub']])
+    assert.equal(bluesky.viaHub({ mode: 'mentions' }), false) // mentions are per account
+  } finally {
+    delete process.env.FEEDBAI_HUB
+  }
+})
+
+test('an expired session is renewed once (long-lived runtimes outlive the token)', async () => {
+  let sessionsCreated = 0
+  let searches = 0
+  const fetchImpl = fakeFetch([
+    [(u) => u.endsWith('createSession'), () => ({ accessJwt: `jwt${++sessionsCreated}`, handle: 'me.test' })],
+    [(u, init) => u.includes('searchPosts') && init.headers.authorization === 'Bearer jwt1' && ++searches > 1, { error: 'ExpiredToken' }, 400],
+    [(u) => u.includes('searchPosts'), { posts: [post('1', '2026-01-01T00:00:00Z', 'a')] }],
+  ])
+  const renewing = { ...account, id: 'renewing' }
+  const source = { id: 's', type: 'bluesky', mode: 'search', query: 'q' }
+  await bluesky.fetch({ project: { id: 'r4' }, source, account: renewing, limit: 1, fetchImpl })
+  const items = await bluesky.fetch({ project: { id: 'r4' }, source, account: renewing, limit: 1, fetchImpl })
+  assert.equal(items.length, 1)
+  assert.equal(sessionsCreated, 2)
 })

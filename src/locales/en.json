@@ -69,9 +69,9 @@
   "error.badTarget": "Cannot post to \"{target}\": give a Matrix item link or a Matrix source id",
   "role.agent": "agent",
   "error.noGithub": "feedbai issues needs a GitHub repo and token: set GH_TOKEN (or log in with `gh auth login`) and run it inside a GitHub-hosted repo (or set GH_REPO=owner/repo).",
-  "auth.hub": "ok via the feedbai hub, no account needed (public rooms its bot was invited to; `feedbai login matrix` reads with your own)",
-  "error.hubRoom": "Cannot read {room} via the feedbai hub: {reason}",
+  "auth.hub": "ok via the feedbai hub, no account needed (`feedbai login …` reads with your own)",
   "notice.matrixHistoryHidden": "{room} hides history from new members (history visibility \"{visibility}\"): {account} cannot see {missing}, so older feedback is missing. Messages sent under this setting stay hidden. For later ones, a room admin can set history visibility to \"shared\" (Element: Room settings → Security & Privacy → Who can read history? → Members only (since the point in time of selecting this option)); for now, someone who was in the room earlier can read it with their own account (`feedbai login matrix`).",
   "notice.before": "messages from before {date}",
-  "notice.anything": "any message in this period (none sent since it joined, or all hidden)"
+  "notice.anything": "any message in this period (none sent since it joined, or all hidden)",
+  "error.hub": "Source {source}: the feedbai hub cannot read it: {reason}"
 }

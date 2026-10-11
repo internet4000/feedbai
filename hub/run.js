@@ -15,12 +15,14 @@ import { acceptInvites, roomAllowed } from './matrix.js'
 
 const SINCE = '1h' // runs are idempotent; the window only needs to cover missed schedules
 
-/** Hub-safe copy of a repo's config: the hub's own accounts only, no joins, only allowed rooms. */
+/** Hub-safe copy of a repo's config: the hub's own accounts only, no joins, only allowed rooms, no mentions. */
 export const sanitize = async (config, allowed) => {
   const projects = []
   for (const project of config.projects ?? []) {
     const sources = []
     for (const { account, join, ...source } of project.sources ?? []) {
+      // Bluesky mentions are the reading account's: here the hub's own, never a repo's
+      if (source.type === 'bluesky' && source.mode === 'mentions') continue
       if (source.type !== 'matrix' || (await allowed(source.room))) sources.push(source)
     }
     projects.push({ ...project, sources })

@@ -9,6 +9,7 @@
   "routes": [{ "pattern": "feedbai.internet4000.com", "custom_domain": true }],
   "vars": {
     "FEEDBAI_MATRIX_USER": "@feedbai:matrix.org",
+    "FEEDBAI_BLUESKY_IDENTIFIER": "feedbai.bsky.social",
     "FEEDBAI_APP_URL": "https://github.com/apps/feedbai"
   },
   // Preview builds (wrangler preview, per branch): no cron, no secrets, so the page
@@ -16,6 +17,7 @@
   "previews": {
     "vars": {
       "FEEDBAI_MATRIX_USER": "@feedbai:matrix.org",
+      "FEEDBAI_BLUESKY_IDENTIFIER": "feedbai.bsky.social",
       "FEEDBAI_APP_URL": "https://github.com/apps/feedbai"
     }
   },
