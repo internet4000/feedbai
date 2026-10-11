@@ -1,0 +1,17 @@
+{
+  "name": "feedbai",
+  "version": "0.1.0",
+  "description": "Unified retrieval of user feedback (Matrix, Bluesky, ...) for AI agents working on projects",
+  "type": "module",
+  "bin": {
+    "feedbai": "src/cli.js"
+  },
+  "files": ["src", "schemas", "skills"],
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT"
+}
