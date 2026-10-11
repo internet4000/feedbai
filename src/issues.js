@@ -25,14 +25,20 @@ const oneLine = (text) => text.replace(/\s+/g, ' ').trim()
 export const gh = (args, input) =>
   execFileSync('gh', args, { encoding: 'utf8', input, stdio: ['pipe', 'pipe', 'inherit'] })
 
-/** item id -> issue number, from every feedback issue body and comment. */
+/**
+ * item id -> issue number, from feedback issue bodies and all issue comments.
+ * Uses the REST API (consistent right after writes), not search-backed listing.
+ */
 export const indexIssues = (run) => {
-  const issues = JSON.parse(run(['issue', 'list', '--label', LABEL, '--state', 'all', '--limit', '1000', '--json', 'number,body,comments']))
+  const lines = (args) => run(['api', '--paginate', ...args]).split('\n').filter(Boolean).map((line) => JSON.parse(line))
+  const bodies = lines([`repos/{owner}/{repo}/issues?labels=${LABEL}&state=all&per_page=100`, '--jq', '.[] | [.number, .body] | @json'])
+  const comments = lines(['repos/{owner}/{repo}/issues/comments?per_page=100', '--jq', '.[] | [.issue_url, .body] | @json'])
   const index = new Map()
-  for (const issue of issues) {
-    const texts = [issue.body ?? '', ...(issue.comments ?? []).map((c) => c.body ?? '')]
-    for (const text of texts) for (const m of text.matchAll(ITEM_RE)) index.set(m[1], issue.number)
+  const add = (number, text) => {
+    for (const m of (text ?? '').matchAll(ITEM_RE)) if (!index.has(m[1])) index.set(m[1], number)
   }
+  for (const [number, body] of bodies.sort((a, b) => a[0] - b[0])) add(number, body)
+  for (const [url, body] of comments) add(Number(url.split('/').pop()), body)
   return index
 }
 
@@ -72,10 +78,5 @@ export const applyIssues = (actions, run) =>
       : run(['issue', 'comment', String(action.issue), '--body-file', '-'], action.body).trim(),
   )
 
-export const ensureLabel = (run) => {
-  try {
-    run(['label', 'create', LABEL, '--color', '0E8A16', '--description', t('issues.labelDescription')])
-  } catch {
-    // already exists
-  }
-}
+export const ensureLabel = (run) =>
+  run(['label', 'create', LABEL, '--force', '--color', '0E8A16', '--description', t('issues.labelDescription')])
