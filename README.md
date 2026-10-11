@@ -12,6 +12,7 @@ No dependencies; Node ≥ 22.
 
 ```sh
 npm i -g @internet4000/feedbai   # or: npx @internet4000/feedbai …
+npm i -g github:internet4000/feedbai   # latest main, before it reaches npm
 ```
 
 ## Start here
