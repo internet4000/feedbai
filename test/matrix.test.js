@@ -14,7 +14,7 @@ test('parses matrix.to links', () => {
   assert.equal(parseRoom('#radio4000:matrix.org'), '#radio4000:matrix.org')
 })
 
-test('resolves alias, paginates back to `since`, skips edits, returns oldest first', async () => {
+test('resolves alias, paginates back to `since`, reads edits as new text, returns oldest first', async () => {
   const fetchImpl = fakeFetch([
     [(u) => u.includes('/directory/room/'), { room_id: '!room:hs.test' }],
     [(u) => u.includes('/messages') && u.includes('from=p2'), {
@@ -25,14 +25,15 @@ test('resolves alias, paginates back to `since`, skips edits, returns oldest fir
       state: [{ type: 'm.room.member', state_key: '@ana:hs.test', content: { displayname: 'Ana' } }],
       chunk: [
         event('$3', 3000, { body: 'third', 'm.relates_to': { 'm.in_reply_to': { event_id: '$2' } } }),
-        event('$edit', 2500, { body: '* fix', 'm.relates_to': { rel_type: 'm.replace', event_id: '$2' } }),
+        event('$edit', 2500, { body: '* fix', 'm.new_content': { body: 'fix' }, 'm.relates_to': { rel_type: 'm.replace', event_id: '$2' } }),
       ],
     }],
   ])
   const items = await matrix.fetch({ ...ctx, since: new Date(1000), limit: 10, fetchImpl })
-  assert.deepEqual(items.map((i) => i.text), ['second', 'third'])
-  assert.equal(items[1].replyTo, '$2')
-  assert.equal(items[1].author.name, 'Ana')
+  assert.deepEqual(items.map((i) => i.text), ['second', 'fix', 'third'])
+  assert.equal(items[1].edits, '$2')
+  assert.equal(items[2].replyTo, '$2')
+  assert.equal(items[2].author.name, 'Ana')
   assert.match(items[0].url, /^https:\/\/matrix\.to\/#\/!room%3Ahs\.test\/%242$/)
   assert.equal(fetchImpl.calls[1].init.headers.authorization, 'Bearer secret')
 })

@@ -57,7 +57,7 @@ export const planIssues = (items, index) => {
     const all = [root, ...replies]
     const fresh = all.filter((entry) => !known(entry))
     if (!fresh.length) continue
-    const linked = all.map((entry) => index.get(entry.id) ?? index.get(entry.replyTo) ?? index.get(entry.thread)).find(Boolean)
+    const linked = all.map((entry) => index.get(entry.id) ?? index.get(entry.replyTo) ?? index.get(entry.edits) ?? index.get(entry.thread)).find(Boolean)
     const trigger = all.find(triggers)
     if (!linked && !trigger) continue
     const body = fresh.map(quote).join('\n\n')

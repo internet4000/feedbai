@@ -12,6 +12,7 @@
  * @property {string} [replyTo]  id of the item this replies to
  * @property {string} [thread]   id of the thread root
  * @property {'self'|'maintainer'} [role]  set by roles.js
+ * @property {string} [edits]   id of the item this one edits (new text)
  * @property {string[]} [mentions]  user ids explicitly mentioned (Matrix m.mentions)
  * @property {boolean} [toSelf]  mentions the account feedbai reads with; set by roles.js
  */
@@ -28,6 +29,7 @@ export const item = (fields) => ({
   ...(fields.replyTo && { replyTo: fields.replyTo }),
   ...(fields.thread && { thread: fields.thread }),
   ...(fields.mentions?.length && { mentions: fields.mentions }),
+  ...(fields.edits && { edits: fields.edits }),
 })
 
 /** Throw if any of `fields` is missing on `source`. */

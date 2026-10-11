@@ -21,26 +21,26 @@ const resolveRoomId = async (homeserver, room, fetchImpl) => {
 
 const toItem = ({ event, names, roomId, project, source }) => {
   const relates = event.content['m.relates_to'] ?? {}
+  const edit = relates.rel_type === 'm.replace'
+  const content = edit ? (event.content['m.new_content'] ?? event.content) : event.content
   return item({
     id: event.event_id,
     platform: 'matrix',
     project: project.id,
     source: source.id,
     author: { id: event.sender, ...(names[event.sender] && { name: names[event.sender] }) },
-    text: event.content.body,
+    text: content.body,
     url: `https://matrix.to/#/${encodeURIComponent(roomId)}/${encodeURIComponent(event.event_id)}`,
     createdAt: new Date(event.origin_server_ts).toISOString(),
     replyTo: relates['m.in_reply_to']?.event_id,
-    mentions: event.content['m.mentions']?.user_ids,
+    mentions: content['m.mentions']?.user_ids,
+    edits: edit ? relates.event_id : undefined,
     thread: relates.rel_type === 'm.thread' ? relates.event_id : undefined,
   })
 }
 
-/** Skip edits and redactions; keep messages with a text body. */
-const isFeedback = (event) =>
-  event.type === 'm.room.message' &&
-  typeof event.content?.body === 'string' &&
-  event.content['m.relates_to']?.rel_type !== 'm.replace'
+/** Messages with a text body, edits included (they carry the new text); redactions have none. */
+const isFeedback = (event) => event.type === 'm.room.message' && typeof event.content?.body === 'string'
 
 export default {
   type: 'matrix',

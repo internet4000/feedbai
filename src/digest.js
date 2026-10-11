@@ -8,7 +8,7 @@ export const threads = (items) => {
   const keyOf = new Map()
   const byKey = new Map()
   for (const entry of items) {
-    const key = keyOf.get(entry.replyTo) ?? entry.thread ?? entry.replyTo ?? entry.id
+    const key = keyOf.get(entry.edits) ?? keyOf.get(entry.replyTo) ?? entry.thread ?? entry.replyTo ?? entry.edits ?? entry.id
     keyOf.set(entry.id, key)
     if (byKey.has(key)) byKey.get(key).push(entry)
     else byKey.set(key, [entry])

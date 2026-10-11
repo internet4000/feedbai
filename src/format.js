@@ -15,7 +15,8 @@ const who = (entry) => {
 
 export const mdItem = (entry, max = Infinity) => {
   const reply = entry.replyTo ? ` ${t('md.reply', { target: entry.replyTo })}` : ''
-  return `- ${entry.createdAt} **${who(entry)}**${reply} — ${truncate(oneLine(entry.text), max)}\n  <${entry.url}>`
+  const edit = entry.edits ? ` ${t('md.edit', { target: entry.edits })}` : ''
+  return `- ${entry.createdAt} **${who(entry)}**${reply}${edit} — ${truncate(oneLine(entry.text), max)}\n  <${entry.url}>`
 }
 
 /** Maintainer messages in full, then one line per thread with reply count and latest reply. */
