@@ -147,6 +147,8 @@ export default {
     requireFields(source, mode.fields, t)
   },
 
+  needsAuth: (source) => MODES[source.mode].auth,
+
   authStatus: (account) => (!account ? 'none' : password(account) ? 'ok' : 'missing'),
 
   async fetch({ project, source, account, since, limit, fetchImpl }) {

@@ -9,14 +9,15 @@ const mdItem = (entry) => {
 }
 
 /** Compact Markdown: cheap on tokens, easy for agents and humans to read. */
-const md = ({ groups, errors }) => {
+const md = ({ groups, errors }, { title, depth = 2 } = {}) => {
+  const heading = '#'.repeat(depth)
   const total = groups.reduce((n, g) => n + g.items.length, 0)
-  const parts = [t('md.header', { count: total })]
+  const parts = [title ?? t('md.header', { count: total })]
   for (const group of groups) {
-    parts.push(t('md.source', { ...group, count: group.items.length }))
+    parts.push(`${heading} ${t('md.source', { ...group, count: group.items.length })}`)
     parts.push(group.items.length ? group.items.map(mdItem).join('\n') : t('md.empty'))
   }
-  if (errors.length) parts.push(t('md.errors'), errors.map((e) => `- ${e.error}`).join('\n'))
+  if (errors.length) parts.push(`${heading} ${t('md.errors')}`, errors.map((e) => `- ${e.error}`).join('\n'))
   return parts.join('\n\n') + '\n'
 }
 

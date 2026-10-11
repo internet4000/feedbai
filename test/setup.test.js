@@ -1,0 +1,58 @@
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { httpsRemote, detectProject } from '../src/project.js'
+import { discover } from '../src/discover.js'
+import { addSource, removeSource, initConfig } from '../src/edit.js'
+
+/** A throwaway git repo with a README linking to channels. */
+const repo = () => {
+  const dir = mkdtempSync(join(tmpdir(), 'feedbai-'))
+  const git = (...args) => execFileSync('git', args, { cwd: dir, stdio: 'ignore' })
+  git('init', '-q')
+  git('remote', 'add', 'origin', 'git@github.com:radio4000/r4-svelte.git')
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: '@radio4000/r4' }))
+  writeFileSync(join(dir, 'README.md'), 'Chat: [matrix](https://matrix.to/#/#radio4000:matrix.org) and https://bsky.app/profile/radio4000.com')
+  git('add', '.')
+  return dir
+}
+
+const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'))
+
+test('normalizes git remotes to https', () => {
+  assert.equal(httpsRemote('git@github.com:a/b.git'), 'https://github.com/a/b')
+  assert.equal(httpsRemote('https://github.com/a/b.git'), 'https://github.com/a/b')
+  assert.equal(httpsRemote(null), undefined)
+})
+
+test('detects the project and discovers channel links', () => {
+  const dir = repo()
+  const project = detectProject(dir)
+  assert.equal(project.id, 'r4')
+  assert.equal(project.repository, 'https://github.com/radio4000/r4-svelte')
+  assert.deepEqual(discover(dir).map((s) => s.command), [
+    "feedbai add matrix '#radio4000:matrix.org'",
+    'feedbai add bluesky author radio4000.com',
+  ])
+  assert.deepEqual(discover(dir, [{ room: '#radio4000:matrix.org' }]).length, 1)
+})
+
+test('add creates the config, names sources, and remove deletes them', () => {
+  const dir = repo()
+  const { file } = addSource({ cwd: dir, words: ['matrix', '#radio4000:matrix.org'], opts: { join: true } })
+  addSource({ cwd: dir, words: ['bluesky', 'search', 'radio4000'], opts: {} })
+  addSource({ cwd: dir, words: ['bluesky', 'search', 'r4'], opts: { limit: '10' } })
+  let [project] = readJson(file).projects
+  assert.equal(project.id, 'r4')
+  assert.deepEqual(project.sources.map((s) => s.id), ['matrix', 'bluesky-search', 'bluesky-search-2'])
+  assert.equal(project.sources[0].join, true)
+  assert.equal(project.sources[2].limit, 10)
+  assert.throws(() => addSource({ cwd: dir, words: ['bluesky', 'author'], opts: {} }), /actor/)
+  assert.throws(() => initConfig({ cwd: dir }), /already exists/)
+  removeSource({ cwd: dir, id: 'bluesky-search-2', opts: {} })
+  ;[project] = readJson(file).projects
+  assert.equal(project.sources.length, 2)
+})

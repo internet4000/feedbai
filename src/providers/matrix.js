@@ -46,6 +46,8 @@ export default {
 
   validate: (source) => requireFields(source, ['id', 'room'], t),
 
+  needsAuth: () => true,
+
   authStatus: (account) => (!account ? 'none' : token(account) ? 'ok' : 'missing'),
 
   async fetch({ project, source, account, since, limit, fetchImpl }) {

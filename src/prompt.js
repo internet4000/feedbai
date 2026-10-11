@@ -1,3 +1,5 @@
+import { t } from './i18n.js'
+
 /** Read one line from the terminal without echoing it (or from piped stdin). */
 export const promptHidden = (question) =>
   new Promise((resolve, reject) => {
@@ -7,7 +9,10 @@ export const promptHidden = (question) =>
     if (!stdin.isTTY) {
       stdin.setEncoding('utf8')
       stdin.on('data', (chunk) => (value += chunk))
-      stdin.on('end', () => resolve(value.split('\n')[0].trim()))
+      stdin.on('end', () => {
+        const line = value.split('\n')[0].trim()
+        line ? resolve(line) : reject(new Error(t('error.noTerminal')))
+      })
       return
     }
     stdin.setRawMode(true)
