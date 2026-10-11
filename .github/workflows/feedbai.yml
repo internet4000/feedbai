@@ -1,0 +1,24 @@
+# Hourly: file new #feedbai feedback that mentions the bot as GitHub issues (label: feedback).
+# Secrets: FEEDBAI_MATRIX_TOKEN, FEEDBAI_MATRIX_USER (e.g. @bot:matrix.org).
+# In other projects, replace `node src/cli.js` with `npx -y @internet4000/feedbai`.
+name: feedbai
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  issues:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+      - run: node src/cli.js issues --since 2h
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FEEDBAI_MATRIX_TOKEN: ${{ secrets.FEEDBAI_MATRIX_TOKEN }}
+          FEEDBAI_MATRIX_USER: ${{ secrets.FEEDBAI_MATRIX_USER }}

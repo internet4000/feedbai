@@ -46,6 +46,17 @@ feedbai watch --as claude    # background: prints one line per new item, backs o
 - **Claude Code**: this repo's [`.claude/settings.json`](.claude/settings.json) runs `feedbai --as claude` at session start (a `SessionStart` hook); copy it into your project. During a session, ask Claude to run `feedbai watch` in the background.
 - **Codex, pi, others**: run `feedbai --as <agent>` at the start of a session (or put that in the project's `AGENTS.md`), and `feedbai watch` in the background if the agent supports background processes.
 
+## Act: feedback → issues → agents
+
+```sh
+feedbai issues --dry-run    # what would be filed
+feedbai issues              # file it (needs `gh`)
+```
+
+Threads that mention the bot account (Matrix) or come from Bluesky sources become GitHub issues labelled `feedback`; later messages in the same thread become comments. Runs are idempotent, so schedule it freely. [`.github/workflows/feedbai.yml`](.github/workflows/feedbai.yml) runs it hourly with the account taken from repository secrets (`FEEDBAI_MATRIX_TOKEN`, `FEEDBAI_MATRIX_USER`; for Bluesky `FEEDBAI_BLUESKY_IDENTIFIER`, `FEEDBAI_BLUESKY_PASSWORD`).
+
+From there, any agent that works on issues takes over — e.g. [Pullfrog](https://pullfrog.com) automations on issue creation, or a maintainer mentioning an agent.
+
 ## Configure a project
 
 ```sh

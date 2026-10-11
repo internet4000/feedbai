@@ -64,14 +64,31 @@ export const loadConfig = ({ explicit, cwd } = {}) => {
   return { config: mergeConfigs(...files.map(readConfig)), files }
 }
 
-/** Pick the account for a source: explicit `account` id, else the first of its type. */
+/** Accounts from the environment (CI): FEEDBAI_MATRIX_TOKEN (+ _USER, _HOMESERVER), FEEDBAI_BLUESKY_IDENTIFIER + _PASSWORD. */
+const envAccounts = (env = process.env) => [
+  env.FEEDBAI_MATRIX_TOKEN && {
+    id: 'env-matrix',
+    type: 'matrix',
+    user: env.FEEDBAI_MATRIX_USER,
+    homeserver: env.FEEDBAI_MATRIX_HOMESERVER,
+    secrets: { token: 'FEEDBAI_MATRIX_TOKEN' },
+  },
+  env.FEEDBAI_BLUESKY_PASSWORD && {
+    id: 'env-bluesky',
+    type: 'bluesky',
+    identifier: env.FEEDBAI_BLUESKY_IDENTIFIER,
+    secrets: { password: 'FEEDBAI_BLUESKY_PASSWORD' },
+  },
+].filter(Boolean)
+
+/** Pick the account for a source: explicit `account` id, else the first of its type (config, then environment). */
 const resolveAccount = (config, source) => {
   if (source.account) {
     const account = config.accounts.find((a) => a.id === source.account)
     if (!account) throw new Error(t('error.unknownAccount', { source: source.id, account: source.account }))
     return account
   }
-  return config.accounts.find((a) => a.type === source.type) ?? null
+  return [...config.accounts, ...envAccounts()].find((a) => a.type === source.type) ?? null
 }
 
 /** Flatten projects into validated, filtered source entries. */
