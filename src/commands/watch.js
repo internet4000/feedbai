@@ -26,7 +26,7 @@ export default async ({ opts }) => {
 
   while (true) {
     const { groups, errors } = await collect(usable, { since: 'last', consumer, limit: opts.limit })
-    const fresh = groups.flatMap((g) => g.items).filter((entry) => !seen.has(entry.id))
+    const fresh = groups.flatMap((g) => g.items).filter((entry) => !seen.has(entry.id) && entry.role !== 'agent')
     for (const entry of fresh) seen.add(entry.id)
     if (fresh.length) {
       const lines = fresh.map((entry) => `[${entry.project}/${entry.source}] ${mdItem(entry).slice(2)}`)

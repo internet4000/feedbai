@@ -14,7 +14,7 @@ export const LABEL = 'feedback'
  * Chat rooms are conversations, not a backlog: a Matrix message starts an issue
  * only when it mentions the bot account. Bluesky sources are already targeted.
  */
-const triggers = (entry) => entry.platform !== 'matrix' || Boolean(entry.toSelf)
+const triggers = (entry) => entry.role !== 'agent' && (entry.platform !== 'matrix' || Boolean(entry.toSelf))
 
 const itemMarker = (id) => `<!-- feedbai:item=${id} -->`
 const ITEM_RE = /<!-- feedbai:item=(.+?) -->/g

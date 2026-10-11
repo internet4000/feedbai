@@ -11,7 +11,7 @@
  * @property {string} createdAt  ISO date
  * @property {string} [replyTo]  id of the item this replies to
  * @property {string} [thread]   id of the thread root
- * @property {'self'|'maintainer'} [role]  set by roles.js
+ * @property {'self'|'agent'|'maintainer'} [role]  set by roles.js
  * @property {string} [edits]   id of the item this one edits (new text)
  * @property {string[]} [mentions]  user ids explicitly mentioned (Matrix m.mentions)
  * @property {boolean} [toSelf]  mentions the account feedbai reads with; set by roles.js
