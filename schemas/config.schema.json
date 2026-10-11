@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sctlib/feedbai/schemas/config.schema.json",
+  "title": "feedbai config",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "accounts": {
+      "description": "Personal credentials. Keep them in the global config; secrets are env var names, never values.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/account" }
+    },
+    "projects": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/project" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-zA-Z0-9._@:-]+$" },
+    "account": {
+      "type": "object",
+      "required": ["id", "type", "secrets"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "type": { "enum": ["matrix", "bluesky"] },
+        "homeserver": { "type": "string", "format": "uri", "description": "matrix" },
+        "user": { "type": "string", "description": "matrix user id" },
+        "service": { "type": "string", "format": "uri", "description": "bluesky PDS" },
+        "identifier": { "type": "string", "description": "bluesky handle" },
+        "secrets": {
+          "type": "object",
+          "description": "Field name -> environment variable name",
+          "properties": {
+            "token": { "type": "string" },
+            "password": { "type": "string" }
+          }
+        }
+      }
+    },
+    "project": {
+      "type": "object",
+      "required": ["id", "sources"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string" },
+        "repository": { "type": "string", "format": "uri" },
+        "sources": { "type": "array", "items": { "$ref": "#/$defs/source" } }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "type": { "enum": ["matrix", "bluesky"] },
+        "account": { "$ref": "#/$defs/id", "description": "Account id; defaults to the first account of the same type" },
+        "limit": { "type": "integer", "minimum": 1, "default": 50 }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "type": { "const": "matrix" },
+            "room": { "type": "string", "description": "#alias:server, !id:server or matrix.to link" },
+            "join": { "type": "boolean", "default": false }
+          },
+          "required": ["room"]
+        },
+        {
+          "properties": {
+            "type": { "const": "bluesky" },
+            "mode": { "enum": ["search", "author", "thread", "mentions"] },
+            "query": { "type": "string", "description": "search mode" },
+            "actor": { "type": "string", "description": "author mode: handle or DID" },
+            "filter": { "enum": ["posts_with_replies", "posts_no_replies", "posts_and_author_threads"] },
+            "post": { "type": "string", "description": "thread mode: bsky.app link or AT URI" },
+            "depth": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["mode"]
+        }
+      ]
+    }
+  }
+}
