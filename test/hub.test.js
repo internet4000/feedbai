@@ -192,3 +192,10 @@ test('issue bodies cannot ping GitHub users or forge item markers', async () => 
   const index = await indexIssues({ issues: async () => [{ number: 1, body }], comments: async () => [] })
   assert.deepEqual([...index.keys()], ['$x'])
 })
+
+test('items drop terminal escapes and bidi overrides', async () => {
+  const { item } = await import('../src/model.js')
+  const entry = item({ id: '1', author: { id: 'a', name: 'x‮evil' }, text: 'ok\u001b[2Jcleared\nnext\tline' })
+  assert.equal(entry.text, 'ok[2Jcleared\nnext\tline')
+  assert.equal(entry.author.name, 'xevil')
+})
