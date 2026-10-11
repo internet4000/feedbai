@@ -9,5 +9,6 @@ import paths from './paths.js'
 import help from './help.js'
 import watch from './watch.js'
 import issues from './issues.js'
+import post from './post.js'
 
-export const commands = { home, fetch, sources, add, remove, login, skill, paths, help, watch, issues }
+export const commands = { home, fetch, sources, add, remove, login, skill, paths, help, watch, issues, post }

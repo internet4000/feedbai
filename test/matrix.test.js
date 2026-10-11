@@ -56,3 +56,12 @@ test('ancestors walks the reply chain, oldest first', async () => {
   const chain = await matrix.ancestors({ ...ctx, entry, fetchImpl })
   assert.deepEqual(chain.map((i) => i.text), ['grandparent', 'parent'])
 })
+
+test('post sends a reply into the thread and returns its link', async () => {
+  const fetchImpl = fakeFetch([[(u, init) => init.method === 'PUT' && u.includes('/send/m.room.message/'), { event_id: '$new' }]])
+  const link = await matrix.post({ account, room: '!room:hs.test', text: 'hi', replyTo: '$1', fetchImpl })
+  const sent = JSON.parse(fetchImpl.calls[0].init.body)
+  assert.equal(sent.body, 'hi')
+  assert.equal(sent['m.relates_to']['m.in_reply_to'].event_id, '$1')
+  assert.equal(link, 'https://matrix.to/#/!room%3Ahs.test/%24new')
+})
