@@ -107,5 +107,6 @@
   "github.merge.CLEAN": "ready to merge",
   "github.merge.BLOCKED": "blocked by branch rules (review or required checks)",
   "github.merge.DIRTY": "has conflicts",
-  "github.merge.BEHIND": "behind the base branch"
+  "github.merge.BEHIND": "behind the base branch",
+  "error.notFileable": "Source {source}: not filed. The room is private and its topic does not name github.com/{repo}; issues are public, so add that link to the room topic if its members agree."
 }

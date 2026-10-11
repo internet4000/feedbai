@@ -91,10 +91,27 @@ const withContext = async (items, entries) => {
   return items.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
 }
 
+/** Sources whose messages may go to `repo`'s issues (see each provider's `mayFile`), and errors for the others. */
+const fileable = async (entries, repo) => {
+  const allowed = []
+  const errors = []
+  for (const entry of entries.filter(filesIssues)) {
+    const refuse = (error) => errors.push({ project: entry.project.id, source: entry.source.id, error })
+    try {
+      if (await (entry.provider.mayFile?.({ ...entry, repo }) ?? true)) allowed.push(entry)
+      else refuse(t('error.notFileable', { source: entry.source.id, repo }))
+    } catch (error) {
+      refuse(t('error.sourceFailed', { source: entry.source.id, reason: error.message }))
+    }
+  }
+  return { allowed, errors }
+}
+
 /** Fetch feedback for `entries` and file it in `client`'s repo. Returns { actions, urls, errors }. */
 export const fileIssues = async ({ entries, client, since = '1d', limit, dryRun = false }) => {
-  const actionable = entries.filter(filesIssues)
-  const { groups, errors } = await collect(actionable, { since, limit })
+  const { allowed: actionable, errors: refused } = await fileable(entries, client.repo)
+  const { groups, errors: failed } = await collect(actionable, { since, limit })
+  const errors = [...refused, ...failed]
   const items = await withContext(groups.flatMap((g) => g.items), actionable)
   const actions = planIssues(items, await indexIssues(client))
   if (dryRun || !actions.length) return { actions, urls: [], errors }

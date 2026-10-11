@@ -55,6 +55,15 @@ const hiddenHistory = async ({ homeserver, roomId, room, account, oldest, auth }
   return [t('notice.matrixHistoryHidden', { room, visibility, missing, account: account.user ?? account.id })]
 }
 
+/** Does a room topic name `repo` (owner/name) as `github.com/owner/name`? Whole names only: "ernet4000/feedbai" is not "internet4000/feedbai". */
+export const topicNamesRepo = (topic = '', repo = '') => {
+  const name = repo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`(^|[^\\w.-])github\\.com/${name}($|[^\\w.-]|\\.(\\s|$))`, 'i').test(topic)
+}
+
+const roomState = (homeserver, roomId, type, auth) =>
+  request(api(homeserver, `/rooms/${encodeURIComponent(roomId)}/state/${type}`), auth).catch(() => ({}))
+
 /** Messages with a text body, edits included (they carry the new text); redactions have none. */
 const isFeedback = (event) => event.type === 'm.room.message' && typeof event.content?.body === 'string'
 
@@ -173,6 +182,21 @@ export default {
     }
     const notices = exhausted ? await hiddenHistory({ homeserver, roomId, room, account, oldest, auth }) : []
     return { items: items.reverse(), notices }
+  },
+
+  /**
+   * May this room's messages be filed as issues in `repo`? Issues are usually public, so only if the
+   * room is public, or its topic names the repo (its members agreed). Without an account feedbai
+   * reads through the hub, which serves public rooms only.
+   */
+  async mayFile({ source, account, repo, fetchImpl }) {
+    const accessToken = token(account)
+    if (!accessToken) return true
+    const homeserver = account.homeserver ?? DEFAULT_HOMESERVER
+    const auth = { token: accessToken, fetchImpl }
+    const roomId = await resolveRoomId(homeserver, parseRoom(source.room), fetchImpl)
+    if ((await roomState(homeserver, roomId, 'm.room.join_rules', auth)).join_rule === 'public') return true
+    return topicNamesRepo((await roomState(homeserver, roomId, 'm.room.topic', auth)).topic, repo)
   },
 
   /** The messages a reply points back to, oldest first (up to `depth`), as context for it. */
