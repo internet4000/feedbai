@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/internet4000/feedbai/main/schemas/config.schema.json",
+  "projects": [
+    {
+      "id": "feedbai",
+      "repository": "https://github.com/internet4000/feedbai",
+      "sources": [
+        {
+          "id": "matrix",
+          "type": "matrix",
+          "room": "#feedbai:matrix.org",
+          "join": true
+        },
+        {
+          "id": "bluesky-search",
+          "type": "bluesky",
+          "mode": "search",
+          "query": "#feedbai"
+        }
+      ]
+    }
+  ]
+}
