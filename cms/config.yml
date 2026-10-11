@@ -22,6 +22,7 @@ collections:
               - { name: id, label: Id, widget: string }
               - { name: name, label: Name, widget: string, required: false }
               - { name: repository, label: Repository, widget: string, required: false }
+              - { name: maintainers, label: Maintainers (Matrix ids, Bluesky handles), widget: list, required: false }
               - name: sources
                 label: Sources
                 widget: list

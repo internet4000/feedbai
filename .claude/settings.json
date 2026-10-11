@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/src/cli.js\" --as claude 2>&1 || true",
+            "timeout": 30,
+            "statusMessage": "feedbai: checking feedback"
+          }
+        ]
+      }
+    ]
+  }
+}

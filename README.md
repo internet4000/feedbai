@@ -23,6 +23,29 @@ Run `feedbai` in a project — or `!feedbai` in your agent's chat (Claude Code),
 
 It is agent-first: every output says what to do next, and any agent that can run a shell command can drive it.
 
+## How it works
+
+```
+users ──► Matrix / Bluesky ──► feedbai ──► agent triage ──► GitHub issues (label: feedback) ──► PRs
+             ▲                                                                                 │
+             └────────────────────── maintainers steer from the same channels ◄────────────────┘
+```
+
+- **Agents check in; they don't stay connected.** Every agent tool can run a command, so `feedbai --as <agent>` works the same in Claude Code, Codex, pi and the rest. Each agent has its own "last run" cursor.
+- **Busy feeds are digested** by thread; quiet ones cost a few lines.
+- **GitHub issues are the shared memory**: triaged feedback becomes `feedback` issues linking the original messages, so no session or agent triages the same thing twice, and coding sessions work from issues as usual.
+- **Trust by account, not by text**: messages from the project's `maintainers` are marked `[maintainer]` (direction); everyone else's are feedback for the agent to evaluate. The platform authenticates the author, so text can't claim a role.
+
+## Listen
+
+```sh
+feedbai --as claude          # on demand: status + new since last run
+feedbai watch --as claude    # background: prints one line per new item, backs off while quiet
+```
+
+- **Claude Code**: this repo's [`.claude/settings.json`](.claude/settings.json) runs `feedbai --as claude` at session start (a `SessionStart` hook); copy it into your project. During a session, ask Claude to run `feedbai watch` in the background.
+- **Codex, pi, others**: run `feedbai --as <agent>` at the start of a session (or put that in the project's `AGENTS.md`), and `feedbai watch` in the background if the agent supports background processes.
+
 ## Configure a project
 
 ```sh
@@ -50,6 +73,8 @@ feedbai remove bluesky-search
   ]
 }
 ```
+
+Add `"maintainers": ["@you:matrix.org", "you.bsky.social"]` to a project to mark messages from those accounts as `[maintainer]`.
 
 The global config uses the same shape, so you can also list projects there (e.g. projects whose repo you don't control). Project and global configs are merged by `id`.
 
