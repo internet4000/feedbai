@@ -24,7 +24,7 @@ test('resolves alias, paginates back to `since`, reads edits as new text, return
       end: 'p2',
       state: [{ type: 'm.room.member', state_key: '@ana:hs.test', content: { displayname: 'Ana' } }],
       chunk: [
-        event('$3', 3000, { body: 'third', 'm.relates_to': { 'm.in_reply_to': { event_id: '$2' } } }),
+        event('$3', 3000, { body: '> <@ana:hs.test> second\n\nthird', 'm.relates_to': { 'm.in_reply_to': { event_id: '$2' } } }),
         event('$edit', 2500, { body: '* fix', 'm.new_content': { body: 'fix' }, 'm.relates_to': { rel_type: 'm.replace', event_id: '$2' } }),
       ],
     }],

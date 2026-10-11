@@ -29,7 +29,7 @@ const toItem = ({ event, names, roomId, project, source }) => {
     project: project.id,
     source: source.id,
     author: { id: event.sender, ...(names[event.sender] && { name: names[event.sender] }) },
-    text: content.body,
+    text: relates['m.in_reply_to'] ? stripReplyFallback(content.body) : content.body,
     url: `https://matrix.to/#/${encodeURIComponent(roomId)}/${encodeURIComponent(event.event_id)}`,
     createdAt: new Date(event.origin_server_ts).toISOString(),
     replyTo: relates['m.in_reply_to']?.event_id,
@@ -38,6 +38,9 @@ const toItem = ({ event, names, roomId, project, source }) => {
     thread: relates.rel_type === 'm.thread' ? relates.event_id : undefined,
   })
 }
+
+/** Replies start with a quoted copy of the parent ("> <@user> text") for old clients; replyTo already links it. */
+const stripReplyFallback = (body) => body.replace(/^(> .*\n)+\n/, '')
 
 /** Messages with a text body, edits included (they carry the new text); redactions have none. */
 const isFeedback = (event) => event.type === 'm.room.message' && typeof event.content?.body === 'string'
