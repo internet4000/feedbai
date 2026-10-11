@@ -4,6 +4,11 @@
     {
       "id": "feedbai",
       "repository": "https://github.com/internet4000/feedbai",
+      "maintainers": [
+        "@ugp:matrix.org",
+        "@4www:hwww.org",
+        "@oskarr:matrix.org"
+      ],
       "sources": [
         {
           "id": "matrix",
