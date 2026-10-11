@@ -55,10 +55,9 @@ export const mergeConfigs = (...configs) => {
   return merged
 }
 
-/** Load the global config and the nearest project config (or only `explicit`). */
+/** Load the global config and the nearest project config (or `explicit` instead of the latter). */
 export const loadConfig = ({ explicit, cwd } = {}) => {
-  if (explicit) return { config: mergeConfigs(readConfig(explicit)), files: [explicit] }
-  const files = [GLOBAL_CONFIG, findProjectConfig(cwd)].filter((f) => f && existsSync(f))
+  const files = [GLOBAL_CONFIG, explicit ?? findProjectConfig(cwd)].filter((f) => f && existsSync(f))
   if (!files.length) {
     throw new Error(t('error.noConfig', { project: PROJECT_CONFIG_NAME, global: GLOBAL_CONFIG }))
   }
