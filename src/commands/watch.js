@@ -25,7 +25,7 @@ export default async ({ opts }) => {
 
   while (true) {
     const { groups, errors } = await collect(usable, { since: 'last', consumer, limit: opts.limit })
-    const fresh = groups.flatMap((g) => g.items.filter((entry) => entry.role !== 'self'))
+    const fresh = groups.flatMap((g) => g.items)
     if (fresh.length) {
       const lines = fresh.map((entry) => `[${entry.project}/${entry.source}] ${mdItem(entry).slice(2)}`)
       process.stdout.write(lines.join('\n') + '\n')
