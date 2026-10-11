@@ -14,9 +14,27 @@ No dependencies; Node ≥ 22.
 npm i -g @internet4000/feedbai   # or: npx @internet4000/feedbai …
 ```
 
+## Start here
+
+Run `feedbai` in a project — or `!feedbai` in your agent's chat (Claude Code), so the agent sees the output too.
+
+- **Not set up yet**: it detects the project (git remote, package name), finds Matrix/Bluesky links already in the repo, and prints the `feedbai add …` commands plus instructions for the agent to set it up with you.
+- **Set up**: it shows each source's auth state and the feedback that is new since the last run.
+
+It is agent-first: every output says what to do next, and any agent that can run a shell command can drive it.
+
 ## Configure a project
 
-`feedbai.config.json` at the root of the project repository (see [`feedbai.config.example.json`](feedbai.config.example.json), schema in [`schemas/config.schema.json`](schemas/config.schema.json)):
+```sh
+feedbai add matrix '#radio4000:matrix.org'      # --join to join the room on first read
+feedbai add bluesky search radio4000            # needs an account
+feedbai add bluesky author radio4000.com
+feedbai add bluesky mentions                    # needs an account
+feedbai add bluesky thread https://bsky.app/profile/…/post/…
+feedbai remove bluesky-search
+```
+
+`add` creates `feedbai.config.json` at the project root (git root). Commit it: it holds no secrets, and every collaborator's agent then knows the project's channels. See [`feedbai.config.example.json`](feedbai.config.example.json) and the schema in [`schemas/config.schema.json`](schemas/config.schema.json):
 
 ```json
 {
@@ -25,9 +43,8 @@ npm i -g @internet4000/feedbai   # or: npx @internet4000/feedbai …
       "id": "radio4000",
       "repository": "https://github.com/internet4000/radio4000",
       "sources": [
-        { "id": "matrix", "type": "matrix", "room": "https://matrix.to/#/#radio4000:matrix.org" },
-        { "id": "bsky-search", "type": "bluesky", "mode": "search", "query": "radio4000" },
-        { "id": "bsky-mentions", "type": "bluesky", "mode": "mentions" }
+        { "id": "matrix", "type": "matrix", "room": "#radio4000:matrix.org" },
+        { "id": "bluesky-search", "type": "bluesky", "mode": "search", "query": "radio4000" }
       ]
     }
   ]
@@ -48,13 +65,13 @@ The global config uses the same shape, so you can also list projects there (e.g.
 
 Optional on every source: `limit` (default 50), `account` (account id; defaults to the first account of that type). Matrix: `join: true` to join the room before reading — otherwise join it once yourself.
 
-Matrix rooms with history visibility `joined` (e.g. `#radio4000:matrix.org`) only show messages sent after your account joined: join early, stay joined, and poll with `--since last`.
+Matrix rooms with history visibility `joined` (e.g. `#radio4000:matrix.org`) only show messages sent after your account joined: join early, stay joined, and poll with `feedbai`.
 
 Encrypted Matrix rooms are not supported (no E2EE); public community rooms usually aren't encrypted.
 
 ## Accounts
 
-Run these yourself; they prompt for the secret without echoing it, verify it, then save the account to the global config and the secret to `secrets.env`:
+Run these in your own terminal (not through an agent); they prompt for the secret without echoing it, verify it, then save the account to the global config and the secret to `secrets.env`:
 
 ```sh
 feedbai login matrix --user @you:matrix.org            # password login
@@ -67,25 +84,23 @@ A dedicated bot/low-privilege account is a good idea. Secrets can also come stra
 ## Use
 
 ```sh
+feedbai                                 # this project: status + new feedback since the last run
+feedbai --since 7d                      # a window (doesn't move the "last run" cursor)
+feedbai fetch --format json             # every configured project, machine-readable
 feedbai sources
-feedbai fetch --since last              # new since the previous `--since last` run (cursor per source)
-feedbai fetch --since 7d --format json
-feedbai paths                           # where config, secrets and state live
+feedbai help
 ```
 
 Exit code `2` = some sources failed (listed at the end), `1` = usage/config error.
 
 ## Give it to your agents
 
-The agent instructions are a standard skill: [`skills/feedbai/SKILL.md`](skills/feedbai/SKILL.md). Link it where your agent looks for skills, e.g.:
+Bare `feedbai` already explains itself, so any agent can use it. For the full triage workflow (feedback → issues/PRs), install the skill:
 
 ```sh
-ln -s "$PWD/skills/feedbai" ~/.claude/skills/feedbai      # Claude Code
-ln -s "$PWD/skills/feedbai" ~/.codex/skills/feedbai       # Codex
-ln -s "$PWD/skills/feedbai" ~/.pi/agent/skills/feedbai    # pi
+feedbai skill install    # links it into ~/.claude/skills, ~/.codex/skills, ~/.pi/agent/skills (where those agents exist)
+feedbai skill            # or print it, e.g. for agents without skill support
 ```
-
-For agents without skill support, add to the project's `AGENTS.md`: *"User feedback: run `feedbai fetch --since last`; follow `<path>/skills/feedbai/SKILL.md`."*
 
 ## CMS
 
