@@ -13,9 +13,12 @@ export const LABEL = 'feedback'
 
 /**
  * Chat rooms are conversations, not a backlog: a Matrix message starts an issue
- * only when it mentions the bot account. Bluesky sources are already targeted.
+ * only when it mentions the bot account. Bluesky mentions and threads are already targeted.
  */
 const triggers = (entry) => entry.role !== 'agent' && (entry.platform !== 'matrix' || Boolean(entry.toSelf))
+
+/** Bluesky searches and author feeds are a sentiment signal to read (`feedbai`, `watch`), never a backlog. */
+export const filesIssues = ({ source }) => !(source.type === 'bluesky' && ['search', 'author'].includes(source.mode))
 
 const itemMarker = (id) => `<!-- feedbai:item=${id} -->`
 const ITEM_RE = /<!-- feedbai:item=(.+?) -->/g
@@ -87,8 +90,9 @@ const withContext = async (items, entries) => {
 
 /** Fetch feedback for `entries` and file it in `client`'s repo. Returns { actions, urls, errors }. */
 export const fileIssues = async ({ entries, client, since = '1d', limit, dryRun = false }) => {
-  const { groups, errors } = await collect(entries, { since, limit })
-  const items = await withContext(groups.flatMap((g) => g.items), entries)
+  const actionable = entries.filter(filesIssues)
+  const { groups, errors } = await collect(actionable, { since, limit })
+  const items = await withContext(groups.flatMap((g) => g.items), actionable)
   const actions = planIssues(items, await indexIssues(client))
   if (dryRun || !actions.length) return { actions, urls: [], errors }
   await client.ensureLabel({ name: LABEL, color: '0E8A16', description: t('issues.labelDescription') })

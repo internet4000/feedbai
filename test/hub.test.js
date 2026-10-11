@@ -121,3 +121,13 @@ test('without an account, Matrix sources read through the hub (FEEDBAI_HUB=off d
     delete process.env.FEEDBAI_HUB
   }
 })
+
+test('Bluesky searches and author feeds are read for sentiment, never filed as issues', async () => {
+  const { filesIssues } = await import('../src/issues.js')
+  const files = (source) => filesIssues({ source })
+  assert.equal(files({ type: 'bluesky', mode: 'search', query: 'q' }), false)
+  assert.equal(files({ type: 'bluesky', mode: 'author', actor: 'a' }), false)
+  assert.equal(files({ type: 'bluesky', mode: 'mentions' }), true)
+  assert.equal(files({ type: 'bluesky', mode: 'thread', post: 'p' }), true)
+  assert.equal(files({ type: 'matrix', room: '#r:x' }), true)
+})
