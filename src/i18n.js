@@ -1,15 +1,19 @@
 import { readFileSync, existsSync } from 'node:fs'
+import en from './locales/en.json' with { type: 'json' }
 
-const dir = new URL('./locales/', import.meta.url)
 const lang = (process.env.FEEDBAI_LANG || process.env.LANG || 'en').slice(0, 2)
 
+/** Other languages load from disk (CLI); English is bundled so runtimes without a filesystem (Workers) still have it. */
 const load = (code) => {
-  const file = new URL(`${code}.json`, dir)
-  return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {}
+  try {
+    const file = new URL(`./locales/${code}.json`, import.meta.url)
+    return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {}
+  } catch {
+    return {}
+  }
 }
 
-const fallback = load('en')
-const messages = { ...fallback, ...load(lang) }
+const messages = { ...en, ...(lang === 'en' ? {} : load(lang)) }
 
 /** Translate `key`, interpolating `{name}` placeholders from `vars`. */
 export const t = (key, vars = {}) =>

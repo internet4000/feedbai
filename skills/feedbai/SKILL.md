@@ -25,7 +25,7 @@ Run `feedbai watch --as <agent>` as a background process (Claude Code: Monitor t
 
 ## Accounts
 
-Matrix rooms and Bluesky `search`/`mentions` need an account. When a source says it needs one, ask the user to run the shown `feedbai login …` command **in their own terminal** — it prompts for the secret and cannot work through you. Never ask for passwords or tokens in chat, never read `secrets.env`.
+Public Matrix rooms need no account when the feedbai hub's bot (`@feedbai:matrix.org`) is in them: the source shows "ok via the feedbai hub". If the hub answers that its bot is not in the room, suggest inviting `@feedbai:matrix.org` (anyone in a public room can), or logging in with an own account. Private rooms and Bluesky `search`/`mentions` need an account. When a source says it needs one, ask the user to run the shown `feedbai login …` command **in their own terminal** — it prompts for the secret and cannot work through you. Never ask for passwords or tokens in chat, never read `secrets.env`.
 
 ## Workflow: feedback → issues → PRs
 

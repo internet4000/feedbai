@@ -38,8 +38,13 @@ test('resolves alias, paginates back to `since`, reads edits as new text, return
   assert.equal(fetchImpl.calls[1].init.headers.authorization, 'Bearer secret')
 })
 
-test('requires a token and explains 403', async () => {
-  await assert.rejects(matrix.fetch({ ...ctx, account: null, limit: 1 }), /requires an authenticated/)
+test('requires a token (when the hub is off) and explains 403', async () => {
+  process.env.FEEDBAI_HUB = 'off'
+  try {
+    await assert.rejects(matrix.fetch({ ...ctx, account: null, limit: 1 }), /requires an authenticated/)
+  } finally {
+    delete process.env.FEEDBAI_HUB
+  }
   const fetchImpl = fakeFetch([
     [(u) => u.includes('/directory/room/'), { room_id: '!room:hs.test' }],
     [(u) => u.includes('/messages'), { errcode: 'M_FORBIDDEN' }, 403],

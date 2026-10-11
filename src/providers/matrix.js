@@ -13,6 +13,21 @@ const api = (homeserver, path) => `${homeserver.replace(/\/$/, '')}/_matrix/clie
 
 const token = (account) => getSecret(account?.secrets?.token)
 
+/** Without an account, read public rooms through the feedbai hub (its bot must be in the room). FEEDBAI_HUB=off disables. */
+export const hubUrl = (env = process.env) =>
+  env.FEEDBAI_HUB === 'off' ? null : (env.FEEDBAI_HUB || 'https://feedbai.internet4000.com').replace(/\/$/, '')
+
+const fetchViaHub = async ({ hub, project, source, since, limit, fetchImpl }) => {
+  const url = `${hub}/v1/matrix?${query({ room: source.room, since: since?.toISOString(), limit })}`
+  try {
+    const { items = [] } = await request(url, { fetchImpl })
+    return items.map((fields) => item({ ...fields, platform: 'matrix', project: project.id, source: source.id }))
+  } catch (error) {
+    if (!error.data?.error) throw error
+    throw new Error(t('error.hubRoom', { room: source.room, reason: error.data.error }))
+  }
+}
+
 const resolveRoomId = async (homeserver, room, fetchImpl) => {
   if (room.startsWith('!')) return room
   const data = await request(api(homeserver, `/directory/room/${encodeURIComponent(room)}`), { fetchImpl })
@@ -52,11 +67,15 @@ export default {
 
   needsAuth: () => true,
 
-  authStatus: (account) => (!account ? 'none' : token(account) ? 'ok' : 'missing'),
+  authStatus: (account) => (account ? (token(account) ? 'ok' : 'missing') : hubUrl() ? 'hub' : 'none'),
 
   async fetch({ project, source, account, since, limit, fetchImpl }) {
     const accessToken = token(account)
-    if (!accessToken) throw new Error(t('error.authRequired', { source: source.id, mode: 'room', type: 'matrix' }))
+    if (!accessToken) {
+      const hub = !account && hubUrl()
+      if (hub) return fetchViaHub({ hub, project, source, since, limit, fetchImpl })
+      throw new Error(t('error.authRequired', { source: source.id, mode: 'room', type: 'matrix' }))
+    }
     const homeserver = account.homeserver ?? DEFAULT_HOMESERVER
     const room = parseRoom(source.room)
     const roomId = await resolveRoomId(homeserver, room, fetchImpl)
@@ -75,7 +94,7 @@ export default {
       try {
         page = await request(url, auth)
       } catch (error) {
-        if (error.status === 403) throw new Error(t('error.matrixForbidden', { room }))
+        if (error.status === 403) throw Object.assign(new Error(t('error.matrixForbidden', { room })), { status: 403 })
         throw error
       }
       for (const member of page.state ?? []) {

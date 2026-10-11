@@ -1,10 +1,14 @@
 import { t } from './i18n.js'
 
+// GitHub rejects requests without one, and Workers' fetch (unlike Node's) sends none.
+const USER_AGENT = 'feedbai (+https://github.com/internet4000/feedbai)'
+
 /** fetch() + JSON with readable errors. `fetchImpl` is injectable for tests. */
 export const request = async (url, { method = 'GET', token, body, fetchImpl = fetch } = {}) => {
   const response = await fetchImpl(url, {
     method,
     headers: {
+      'user-agent': USER_AGENT,
       ...(token && { authorization: `Bearer ${token}` }),
       ...(body && { 'content-type': 'application/json' }),
     },

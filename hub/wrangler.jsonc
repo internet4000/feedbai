@@ -1,0 +1,15 @@
+{
+  "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
+  "name": "feedbai-hub",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-01",
+  // process.env is populated from vars and secrets: src/config.js reads accounts from it
+  "compatibility_flags": ["nodejs_compat"],
+  "triggers": { "crons": ["*/10 * * * *"] },
+  "routes": [{ "pattern": "feedbai.internet4000.com", "custom_domain": true }],
+  "vars": {
+    "FEEDBAI_MATRIX_USER": "@feedbai:matrix.org",
+    "FEEDBAI_APP_URL": "https://github.com/apps/feedbai"
+  },
+  "observability": { "enabled": true }
+}
