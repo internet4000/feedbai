@@ -47,3 +47,8 @@ test('each agent has its own cursor key; default keeps the old key', () => {
   assert.equal(stateKey(project, source, 'claude'), 'claude:p/s')
   assert.equal(consumerName({ as: 'codex' }), 'codex')
 })
+
+test('threads keep reply chains together', () => {
+  const groups = threads([entry('a', 'u'), entry('b', 'u', { replyTo: 'a' }), entry('c', 'u', { replyTo: 'b' })])
+  assert.deepEqual(groups.map((g) => [g.root.id, g.replies.map((r) => r.id)]), [['a', ['b', 'c']]])
+})

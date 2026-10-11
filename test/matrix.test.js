@@ -45,3 +45,13 @@ test('requires a token and explains 403', async () => {
   ])
   await assert.rejects(matrix.fetch({ ...ctx, limit: 1, fetchImpl }), /not joined/)
 })
+
+test('ancestors walks the reply chain, oldest first', async () => {
+  const fetchImpl = fakeFetch([
+    [(u) => u.includes('/event/%24p'), event('$p', 2000, { body: 'parent', 'm.relates_to': { 'm.in_reply_to': { event_id: '$g' } } })],
+    [(u) => u.includes('/event/%24g'), event('$g', 1000, { body: 'grandparent' })],
+  ])
+  const entry = { url: 'https://matrix.to/#/!room%3Ahs.test/%24r', replyTo: '$p' }
+  const chain = await matrix.ancestors({ ...ctx, entry, fetchImpl })
+  assert.deepEqual(chain.map((i) => i.text), ['grandparent', 'parent'])
+})

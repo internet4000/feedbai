@@ -93,6 +93,24 @@ export default {
     return items.reverse()
   },
 
+  /** The messages a reply points back to, oldest first (up to `depth`), as context for it. */
+  async ancestors({ project, source, account, entry, depth = 3, fetchImpl }) {
+    const accessToken = token(account)
+    if (!accessToken) return []
+    const homeserver = account.homeserver ?? DEFAULT_HOMESERVER
+    const roomId = decodeURIComponent(entry.url.replace(/^https:\/\/matrix\.to\/#\//, '').split('/')[0])
+    const chain = []
+    let id = entry.replyTo
+    while (id && chain.length < depth) {
+      const url = api(homeserver, `/rooms/${encodeURIComponent(roomId)}/event/${encodeURIComponent(id)}`)
+      const event = await request(url, { token: accessToken, fetchImpl }).catch(() => null)
+      if (!event || !isFeedback(event)) break
+      chain.unshift(toItem({ event, names: {}, roomId, project, source }))
+      id = event.content['m.relates_to']?.['m.in_reply_to']?.event_id
+    }
+    return chain
+  },
+
   /** Exchange a password for an access token. */
   async login({ homeserver = DEFAULT_HOMESERVER, user, password, fetchImpl }) {
     const data = await request(api(homeserver, '/login'), {
