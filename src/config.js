@@ -55,13 +55,22 @@ export const mergeConfigs = (...configs) => {
   return merged
 }
 
+/**
+ * A project config comes with the repository, so anyone who can commit to it wrote it: it may
+ * choose what to read, never which credentials to use. Accounts come only from the global config
+ * and the environment; otherwise a cloned repo could point an env var (any secret) at its own server.
+ */
+export const projectOnly = ({ accounts, ...config }) => config
+
 /** Load the global config and the nearest project config (or `explicit` instead of the latter). */
 export const loadConfig = ({ explicit, cwd } = {}) => {
-  const files = [GLOBAL_CONFIG, explicit ?? findProjectConfig(cwd)].filter((f) => f && existsSync(f))
+  const project = explicit ?? findProjectConfig(cwd)
+  const files = [GLOBAL_CONFIG, project].filter((f) => f && existsSync(f))
   if (!files.length) {
     throw new Error(t('error.noConfig', { project: PROJECT_CONFIG_NAME, global: GLOBAL_CONFIG }))
   }
-  return { config: mergeConfigs(...files.map(readConfig)), files }
+  const configs = files.map((file) => (file === GLOBAL_CONFIG ? readConfig(file) : projectOnly(readConfig(file))))
+  return { config: mergeConfigs(...configs), files }
 }
 
 /** Accounts from the environment (CI, the hub): each provider's `envAccount`, e.g. FEEDBAI_MATRIX_TOKEN. */

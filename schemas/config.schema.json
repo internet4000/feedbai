@@ -8,7 +8,7 @@
       "type": "string"
     },
     "accounts": {
-      "description": "Personal credentials. Keep them in the global config; secrets are env var names, never values.",
+      "description": "Personal credentials, read only from the global config (ignored in a project's feedbai.config.json). Secrets are env var names, never values.",
       "type": "array",
       "items": {
         "$ref": "#/$defs/account"

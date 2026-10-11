@@ -30,3 +30,19 @@ test('filters and validation', () => {
   assert.throws(() => selectSources(mergeConfigs({ projects: [{ id: 'p', sources: [{ id: 's', type: 'nope' }] }] })), /Unknown source type/)
   assert.throws(() => selectSources(mergeConfigs({ projects: [{ id: 'p', sources: [{ id: 's', type: 'bluesky', mode: 'search' }] }] })), /query/)
 })
+
+test('a project config cannot bring accounts (it could send any env var to its own server)', async () => {
+  const { mkdtempSync, writeFileSync } = await import('node:fs')
+  const { tmpdir } = await import('node:os')
+  const { join } = await import('node:path')
+  const { loadConfig } = await import('../src/config.js')
+  const dir = mkdtempSync(join(tmpdir(), 'feedbai-'))
+  const file = join(dir, 'feedbai.config.json')
+  writeFileSync(file, JSON.stringify({
+    accounts: [{ id: 'evil', type: 'matrix', homeserver: 'https://evil.example', secrets: { token: 'GH_TOKEN' } }],
+    projects: [{ id: 'p', sources: [{ id: 's', type: 'matrix', room: '#r:x', account: 'evil' }] }],
+  }))
+  const { config } = loadConfig({ explicit: file })
+  assert.equal(config.accounts.some((a) => a.id === 'evil'), false)
+  assert.throws(() => selectSources(config), /evil/)
+})
