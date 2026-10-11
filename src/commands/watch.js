@@ -21,11 +21,13 @@ export default async ({ opts }) => {
   const max = Math.max(base, MAX_INTERVAL)
   let interval = base
   let lastErrors = ''
+  const seen = new Set() // polls overlap (cursor = poll start), so the same item can come back once
   process.stderr.write(t('watch.start', { count: usable.length, consumer, interval: base }) + '\n')
 
   while (true) {
     const { groups, errors } = await collect(usable, { since: 'last', consumer, limit: opts.limit })
-    const fresh = groups.flatMap((g) => g.items)
+    const fresh = groups.flatMap((g) => g.items).filter((entry) => !seen.has(entry.id))
+    for (const entry of fresh) seen.add(entry.id)
     if (fresh.length) {
       const lines = fresh.map((entry) => `[${entry.project}/${entry.source}] ${mdItem(entry).slice(2)}`)
       process.stdout.write(lines.join('\n') + '\n')
