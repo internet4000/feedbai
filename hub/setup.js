@@ -19,7 +19,7 @@ if (!args.url) throw new Error('--url <hub url> is required, e.g. --url https://
 process.on('exit', (code) => code && console.error(`setup exited with code ${code}`))
 process.on('uncaughtException', (error) => console.error(`setup crashed: ${error.stack}`))
 
-const HUB_DIR = fileURLToPath(new URL('.', import.meta.url))
+const ROOT = fileURLToPath(new URL('..', import.meta.url)) // wrangler.jsonc lives at the repo root
 const local = `http://localhost:${args.port}`
 const state = randomBytes(16).toString('hex')
 const escape = (s) => String(s).replace(/[&"<>]/g, (c) => `&#${c.charCodeAt(0)};`)
@@ -27,7 +27,7 @@ const escape = (s) => String(s).replace(/[&"<>]/g, (c) => `&#${c.charCodeAt(0)};
 /** Pipe a value into `wrangler secret put` for the hub Worker; never echoed. */
 const putSecret = (name, value) =>
   new Promise((resolve, reject) => {
-    const child = spawn('npx', ['-y', 'wrangler@4', 'secret', 'put', name], { cwd: HUB_DIR, stdio: ['pipe', 'inherit', 'inherit'] })
+    const child = spawn('npx', ['-y', 'wrangler@4', 'secret', 'put', name], { cwd: ROOT, stdio: ['pipe', 'inherit', 'inherit'] })
     child.on('error', reject)
     child.stdin.on('error', reject)
     child.on('exit', (code) => (code === 0 ? resolve() : reject(new Error(`wrangler secret put ${name} exited with ${code}`))))
@@ -85,7 +85,7 @@ const routes = {
     console.log(`GitHub App ${app.slug} (id ${app.id}) created, storing its secrets…`)
     await putSecret('FEEDBAI_APP_ID', String(app.id))
     await putSecret('FEEDBAI_APP_PRIVATE_KEY', app.pem)
-    console.log(`GitHub App created: ${app.html_url} (id ${app.id}). Set FEEDBAI_APP_URL to ${app.html_url} in hub/wrangler.jsonc.`)
+    console.log(`GitHub App created: ${app.html_url} (id ${app.id}). Set FEEDBAI_APP_URL to ${app.html_url} in wrangler.jsonc.`)
     return html(`<p>Created <a href="${escape(app.html_url)}">${escape(app.slug)}</a> and stored its id and key in the Worker.</p><p><a href="/">Back</a></p>`)
   },
   'POST /matrix': async (req) => {

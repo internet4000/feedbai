@@ -1,7 +1,7 @@
 /**
  * feedbai hub on Cloudflare Workers: the cron trigger runs `runHub`; `/` explains how to join, `/v1/matrix` serves public rooms (api.js).
  * Secrets (wrangler secret put): FEEDBAI_APP_ID, FEEDBAI_APP_PRIVATE_KEY, FEEDBAI_MATRIX_TOKEN,
- * optional FEEDBAI_BLUESKY_IDENTIFIER/_PASSWORD. Vars (wrangler.jsonc): FEEDBAI_MATRIX_USER, FEEDBAI_APP_URL.
+ * optional FEEDBAI_BLUESKY_IDENTIFIER/_PASSWORD. Vars (../wrangler.jsonc): FEEDBAI_MATRIX_USER, FEEDBAI_APP_URL.
  */
 import { runHub } from './run.js'
 import { readMatrix } from './api.js'

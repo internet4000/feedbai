@@ -1,7 +1,7 @@
 {
   "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
   "name": "feedbai-hub",
-  "main": "worker.js",
+  "main": "hub/worker.js",
   "compatibility_date": "2026-10-01",
   // process.env is populated from vars and secrets: src/config.js reads accounts from it
   "compatibility_flags": ["nodejs_compat"],

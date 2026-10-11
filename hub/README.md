@@ -16,16 +16,15 @@ Hosted at **https://feedbai.internet4000.com** (Cloudflare Worker, every 10 minu
 
 **Run your own** (free software): create a bot account and a GitHub App (Issues: read & write, Contents: read), then either enable [`.github/workflows/hub.yml`](../.github/workflows/hub.yml) in a fork (secrets `FEEDBAI_APP_ID`, `FEEDBAI_APP_PRIVATE_KEY`, `FEEDBAI_HUB_MATRIX_TOKEN`, `FEEDBAI_HUB_MATRIX_USER`; variable `FEEDBAI_HUB_ENABLED=true`), or run `node hub/run.js` from cron with the same values as `FEEDBAI_APP_ID`, `FEEDBAI_APP_PRIVATE_KEY`, `FEEDBAI_MATRIX_TOKEN`, `FEEDBAI_MATRIX_USER`. No database: GitHub issues and their hidden markers are the state.
 
-**Cloudflare Workers** ([`worker.js`](worker.js), [`wrangler.jsonc`](wrangler.jsonc); change the domain and `vars` for your own):
+**Cloudflare Workers** ([`worker.js`](worker.js), [`wrangler.jsonc`](../wrangler.jsonc) at the repo root; change the domain and `vars` for your own). From the repo root:
 
 ```sh
-cd hub
 npx wrangler@4 deploy
-npx wrangler@4 secret put FEEDBAI_APP_ID
-npx wrangler@4 secret put FEEDBAI_APP_PRIVATE_KEY < app.private-key.pem
-npx wrangler@4 secret put FEEDBAI_MATRIX_TOKEN
+node hub/setup.js --url https://your-hub.example --owner <github org>
 npx wrangler@4 tail   # watch the next scheduled run
 ```
+
+`hub/setup.js` serves a local page that creates the GitHub App (manifest flow) and logs the bot in; the App key and bot token go straight into the Worker's secrets, never to disk. Connecting the repo in Cloudflare (Workers Builds) deploys on push with the default commands.
 
 Run only one hub per bot (Worker or the Actions workflow), not both.
 
