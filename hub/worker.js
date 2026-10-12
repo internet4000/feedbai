@@ -5,12 +5,14 @@
  */
 import { runHub } from './run.js'
 import { readMatrix, readBlueskySearch } from './api.js'
+import logo from '../assets/logo.svg'
 
 const page = (env) => `<!doctype html>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>feedbai hub</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>body{font:16px/1.5 system-ui,sans-serif;max-width:40rem;margin:2rem auto;padding:0 1rem}code{background:#8882;padding:0 .2em}</style>
-<h1>feedbai hub</h1>
+<h1><img src="/favicon.svg" alt="" width="40" height="40" style="vertical-align:middle"> feedbai hub</h1>
 <p>Reads what users say about your project where they already talk, and files what is addressed to it as GitHub issues (label <code>feedback</code>) that your agents can pick up. No bot account, secrets or server of your own.</p>
 <table>
 <tr><th>Channel</th><th>Read with <code>npx feedbai</code>, no account</th><th>Filed as issues</th></tr>
@@ -32,6 +34,7 @@ const page = (env) => `<!doctype html>
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
+    if (url.pathname === '/favicon.svg') return new Response(logo, { headers: { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=86400' } })
     if (url.pathname === '/') return new Response(page(env), { headers: { 'content-type': 'text/html; charset=utf-8' } })
     const read = { '/v1/matrix': readMatrix, '/v1/bluesky/search': readBlueskySearch }[url.pathname]
     if (!read || request.method !== 'GET') return new Response('Not found', { status: 404 })
