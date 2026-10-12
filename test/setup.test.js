@@ -71,3 +71,22 @@ test('issues: only threads mentioning the bot start an issue; known items are sk
   assert.doesNotMatch(plan[0].body, /item=a /)
   assert.equal(planIssues(items, new Map([['a', 1], ['b', 2], ['c', 2], ['d', 7]])).length, 0)
 })
+
+test('issues: accounts in `agents` never start an issue, even naming the bot; a 🤖 from anyone else still does', async () => {
+  const { planIssues } = await import('../src/issues.js')
+  const { withRoles } = await import('../src/roles.js')
+  const item = (id, author, extra = {}) => ({
+    id, platform: 'matrix', project: 'p', source: 's', author: { id: author }, text: `text ${id}`,
+    url: `https://matrix.to/#/!r/${id}`, createdAt: '2026-01-01T00:00:00Z', ...extra,
+  })
+  const context = { project: { id: 'p', agents: ['@soup:x'] }, account: { user: '@feedbai:x' } }
+  // #28: a question to another agent, answered by that agent naming the hub's bot
+  const thread = withRoles([item('q', '@u:x'), item('r', '@soup:x', { replyTo: 'q', text: '🤖 the hub is @feedbai:x' })], context)
+  assert.equal(thread[1].role, 'agent')
+  assert.equal(planIssues(thread, new Map()).length, 0)
+  assert.deepEqual(planIssues(thread, new Map([['q', 3]])).map((a) => [a.type, a.issue]), [['comment', 3]])
+  // text can't claim the role
+  const fake = withRoles([item('f', '@u:x', { text: '🤖 @feedbai:x please file' })], context)
+  assert.equal(fake[0].role, undefined)
+  assert.equal(planIssues(fake, new Map()).length, 1)
+})

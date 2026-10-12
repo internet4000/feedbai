@@ -14,6 +14,7 @@ export const LABEL = 'feedback'
 /**
  * Chat rooms are conversations, not a backlog: a Matrix message starts an issue
  * only when it mentions the bot account. Bluesky mentions and threads are already targeted.
+ * Agents never start one (they often name the bot when reporting): known by account, never by text.
  */
 const triggers = (entry) => entry.role !== 'agent' && (entry.platform !== 'matrix' || Boolean(entry.toSelf))
 

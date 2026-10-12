@@ -9,6 +9,9 @@
         "@4www:hwww.org",
         "@oskarr:matrix.org"
       ],
+      "agents": [
+        "@soup123:matrix.org"
+      ],
       "sources": [
         {
           "id": "matrix",

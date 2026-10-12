@@ -104,6 +104,13 @@
           "items": {
             "type": "string"
           }
+        },
+        "agents": {
+          "type": "array",
+          "description": "Author ids of bots working on the project (Matrix user ids, Bluesky handles): marked [agent], never start an issue, skipped by watch",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
