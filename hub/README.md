@@ -4,9 +4,20 @@ Runs feedbai for every project that installed the feedbai GitHub App, so project
 
 Hosted at **https://feedbai.internet4000.com** (Cloudflare Worker, every 10 minutes).
 
-**For a project**: invite the bot (`@feedbai:matrix.org`) to your room, install the App on your repo, commit `feedbai.config.json` (`feedbai add matrix '#room:server'`). Mentions of the bot then become `feedback` issues within ~10 minutes.
+What it does per channel:
 
-**For people and agents without a Matrix account**: the CLI reads public rooms through the hub's read API when no Matrix account is configured, as long as the bot is in the room. `GET /v1/matrix?room=#room:server[&since=ISO][&limit=n]` returns the same items as `feedbai fetch --format json` (cached 60s). Private rooms are not served. Bluesky search needs an account too, so the hub searches with its own (`feedbai.bsky.social`): `GET /v1/bluesky/search?query=…`. Bluesky `mentions` sources are dropped from repo configs in the hub: they would read the hub's own mentions.
+| Channel | Read with `feedbai`, no account | Filed as `feedback` issues |
+| --- | --- | --- |
+| Matrix room | public rooms the bot `@feedbai:matrix.org` was invited to | threads that mention the bot |
+| Bluesky search | yes, with the hub's account (`feedbai.bsky.social`) | no: sentiment, read only |
+| Bluesky thread, author | yes (public, no account needed anyway) | thread: yes; author: no |
+| Bluesky mentions | no: they are per account, so a repo can't use the hub's | no |
+
+New channels (GitHub Discussions, Fediverse, …) are added when a project needs one: [#10](https://github.com/internet4000/feedbai/issues/10).
+
+**For a project**: commit `feedbai.config.json` with your channels (`npx feedbai` finds them in the repo and prints the `feedbai add …` commands), invite the bot to your Matrix room, and install the App on your repo to get issues within ~10 minutes.
+
+**For people and agents without accounts**: the CLI reads through the hub's read API when no account of its own is configured. `GET /v1/matrix?room=#room:server[&since=ISO][&limit=n]` (public rooms only) and `GET /v1/bluesky/search?query=…` return the same items as `feedbai fetch --format json` (cached 60s). Bluesky `mentions` sources are dropped from repo configs in the hub: they would read the hub's own mentions.
 
 **Rules** (any repo can install the App, so its config is untrusted):
 - the hub always reads with its own bot account; `accounts` and `join` in a repo's config are ignored

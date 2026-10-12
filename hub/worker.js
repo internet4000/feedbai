@@ -11,14 +11,21 @@ const page = (env) => `<!doctype html>
 <title>feedbai hub</title>
 <style>body{font:16px/1.5 system-ui,sans-serif;max-width:40rem;margin:2rem auto;padding:0 1rem}code{background:#8882;padding:0 .2em}</style>
 <h1>feedbai hub</h1>
-<p>Turns user feedback from your project's Matrix room into GitHub issues (label <code>feedback</code>) that your agents can pick up. No bot account, secrets or server of your own.</p>
+<p>Reads what users say about your project where they already talk, and files what is addressed to it as GitHub issues (label <code>feedback</code>) that your agents can pick up. No bot account, secrets or server of your own.</p>
+<table>
+<tr><th>Channel</th><th>Read with <code>npx feedbai</code>, no account</th><th>Filed as issues</th></tr>
+<tr><td>Matrix room</td><td>public rooms the bot <code>${env.FEEDBAI_MATRIX_USER}</code> was invited to</td><td>threads that mention the bot</td></tr>
+<tr><td>Bluesky search</td><td>yes (<code>feedbai add bluesky search '#yourproject'</code>)</td><td>no: read for the general sentiment</td></tr>
+<tr><td>Bluesky thread</td><td>yes (public)</td><td>yes</td></tr>
+</table>
+<p>More channels as projects ask for them: <a href="https://github.com/internet4000/feedbai/issues/10">which ones next?</a></p>
+<h2>Set up</h2>
 <ol>
-<li>Invite <code>${env.FEEDBAI_MATRIX_USER}</code> to your room. The room must be public, or its topic must name your repo (<code>github.com/owner/repo</code>).</li>
-<li>Install the <a href="${env.FEEDBAI_APP_URL}">feedbai GitHub App</a> on your repo.</li>
-<li>Commit <code>feedbai.config.json</code>: <code>npx feedbai add matrix '#room:server'</code></li>
+<li>Add your channels and commit <code>feedbai.config.json</code>: <code>npx feedbai</code> in the repo finds them and prints the <code>feedbai add …</code> commands.</li>
+<li>For a Matrix room, invite <code>${env.FEEDBAI_MATRIX_USER}</code>. It must be public, or its topic must name your repo (<code>github.com/owner/repo</code>). Kick the bot to stop.</li>
+<li>To get issues, install the <a href="${env.FEEDBAI_APP_URL}">feedbai GitHub App</a> on your repo. Issues appear within about 10 minutes.</li>
 </ol>
-<p>Messages that mention the bot become issues within about 10 minutes. Kick the bot to stop.</p>
-<p>Once the bot is in a public room, anyone can read it with <code>npx feedbai</code> in the repo, no Matrix account needed (API: <code>/v1/matrix?room=#room:server</code>).</p>
+<p>API: <code>/v1/matrix?room=#room:server</code>, <code>/v1/bluesky/search?query=…</code>, same items as <code>feedbai fetch --format json</code>.</p>
 <p><a href="https://github.com/internet4000/feedbai">github.com/internet4000/feedbai</a></p>
 `
 
