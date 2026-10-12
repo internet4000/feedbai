@@ -1,4 +1,4 @@
-# feedbai
+# <img src="assets/logo.svg" alt="" width="40" height="40" align="top"> feedbai
 
 One way for AI agents (Claude Code, Codex, pi, …) to read user feedback about a project from where users actually talk — Matrix rooms and Bluesky for now — so they can triage it and turn it into issues, fixes and PRs.
 
