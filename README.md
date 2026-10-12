@@ -60,7 +60,7 @@ From there, any agent that works on issues takes over — e.g. [Pullfrog](https:
 
 ## Add feedbai to your project's room
 
-**With the hosted hub** (no account, secrets or server):
+**With the hosted hub** (no account, secrets or server). It reads public Matrix rooms and Bluesky searches for anyone running `feedbai`, and files Matrix mentions and Bluesky threads as issues; [per channel](hub/README.md).
 
 1. Invite `@feedbai:matrix.org` to the room.
 2. In the project repo: `feedbai add matrix '#yourproject:matrix.org'`, then commit `feedbai.config.json`. Anyone running `feedbai` in the repo now reads the room through the hub, without a Matrix account (public rooms).
