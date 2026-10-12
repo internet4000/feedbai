@@ -79,12 +79,16 @@ export default {
   /** `feedbai add matrix <room> [--join]` */
   add: ([room], opts) => ({ room, ...(opts.join && { join: true }) }),
 
-  /** Room links a repository may already mention. */
+  /**
+   * Room links a repository may already mention. A message link suggests its room; docs'
+   * placeholders (`!room:server`, `!room/$event`) are skipped: a real server name has a dot.
+   */
   discover: [
     {
       regex: 'matrix\\.to/#/[#!][^] )"\'<>`]+',
       suggest: (link) => {
-        const room = parseRoom(`https://${link}`)
+        const room = parseRoom(`https://${link}`).split('/')[0].replace(/[.,;:]+$/, '')
+        if (!/^[#!][^:\s]+:[\w-]+(\.[\w-]+)+(:\d+)?$/.test(room)) return null
         return { value: room, args: [`'${room}'`] }
       },
     },

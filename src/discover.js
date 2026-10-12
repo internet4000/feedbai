@@ -7,7 +7,9 @@ const patterns = () =>
     (provider.discover ?? []).map(({ regex, suggest }) => ({
       regex,
       suggest: (link) => {
-        const { value, args } = suggest(link)
+        const found = suggest(link) // null: not a real channel (e.g. a placeholder in docs)
+        if (!found) return []
+        const { value, args } = found
         return { type: provider.type, value, command: ['feedbai add', provider.type, ...args].join(' ') }
       },
     })),
