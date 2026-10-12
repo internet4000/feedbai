@@ -1,25 +1,8 @@
-import { execFileSync } from 'node:child_process'
 import { fileIssues } from '../issues.js'
 import { githubClient } from '../github.js'
-import { detectProject } from '../project.js'
+import { githubRepo, githubToken } from '../gh.js'
 import { t } from '../i18n.js'
 import { entries, out } from './shared.js'
-
-/** Token from the environment (CI), else from an installed `gh` login. */
-const githubToken = () => {
-  if (process.env.GH_TOKEN || process.env.GITHUB_TOKEN) return process.env.GH_TOKEN || process.env.GITHUB_TOKEN
-  try {
-    return execFileSync('gh', ['auth', 'token'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
-  } catch {
-    return null
-  }
-}
-
-/** owner/repo from GH_REPO, GITHUB_REPOSITORY (Actions) or the git remote. */
-const githubRepo = () =>
-  process.env.GH_REPO ||
-  process.env.GITHUB_REPOSITORY ||
-  detectProject().repository?.match(/github\.com\/([^/]+\/[^/]+)/)?.[1]
 
 /** `feedbai issues`: file feedback as GitHub issues in this repo. */
 export default async ({ opts }) => {

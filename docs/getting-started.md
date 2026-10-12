@@ -53,7 +53,7 @@ feedbai --since 7d         # a time window (doesn't move the "last run" cursor)
 feedbai --as claude        # a separate "last run" cursor per agent
 ```
 
-Busy channels are summarized per thread; quiet ones cost a few lines. Messages from `maintainers` are shown first and marked `[maintainer]`.
+Busy channels are summarized per thread; quiet ones cost a few lines. Messages from `maintainers` are shown first and marked `[maintainer]`. With a GitHub token (`GH_TOKEN` or a `gh` login), bare `feedbai` also lists the repo's open issues and pull requests, with their checks and whether they can merge, so new feedback is read next to the work already in progress.
 
 ## 5. Keep listening (optional)
 

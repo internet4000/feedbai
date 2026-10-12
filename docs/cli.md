@@ -6,7 +6,7 @@
 
 | command | does |
 | --- | --- |
-| `feedbai` | This project: setup guide if it has no channels; otherwise each channel's status and the feedback new since your last run, then what to do next. Moves your cursor. |
+| `feedbai` | This project: setup guide if it has no channels; otherwise each channel's status, the feedback new since your last run, the repo's open issues and pull requests (with checks, review and merge state; needs a GitHub token), then what to do next. Moves your cursor. |
 | `feedbai fetch` | Feedback from every configured project (filter with `--project`, `--source`). Doesn't move cursors unless `--since last`. |
 | `feedbai sources` | Each source and whether it can be read (`ok`, `ok (public)`, `via the hub`, `needs an account`). `--format json` for a list. |
 | `feedbai add <type> …` | Add a source to the project's `feedbai.config.json` (created at the git root if missing). Forms per channel: [channels](channels/README.md). |
@@ -50,8 +50,8 @@
 | `FEEDBAI_LANG`, `LANG` | Message language (falls back to English). |
 | `FEEDBAI_MATRIX_TOKEN`, `_USER`, `_HOMESERVER` | A Matrix account from the environment (CI). |
 | `FEEDBAI_BLUESKY_IDENTIFIER`, `_PASSWORD` | A Bluesky account from the environment. |
-| `GH_TOKEN`, `GITHUB_TOKEN` | GitHub: the account for GitHub Discussions, and the token `feedbai issues` files with (else `gh auth token`). |
-| `GH_REPO`, `GITHUB_REPOSITORY` | `issues`: the repo to file into (else the git remote). |
+| `GH_TOKEN`, `GITHUB_TOKEN` | GitHub: the account for GitHub Discussions, the token `feedbai issues` files with, and the one bare `feedbai` reads issues and PRs with (else `gh auth token`). |
+| `GH_REPO`, `GITHUB_REPOSITORY` | the GitHub repo for `issues` and the status in bare `feedbai` (else the git remote). |
 
 Accounts from the environment are used when the config has no account of that type.
 
