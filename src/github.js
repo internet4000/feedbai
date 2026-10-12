@@ -26,3 +26,48 @@ export const githubClient = ({ token, repo, fetchImpl }) => {
       }),
   }
 }
+
+const STATUS = `query($owner: String!, $name: String!) {
+  repository(owner: $owner, name: $name) {
+    issues(states: OPEN, first: 10, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      totalCount
+      nodes { number title url labels(first: 5) { nodes { name } } }
+    }
+    pullRequests(states: OPEN, first: 10, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      totalCount
+      nodes {
+        number title url isDraft reviewDecision mergeStateStatus
+        commits(last: 1) { nodes { commit { statusCheckRollup { state } } } }
+      }
+    }
+  }
+}`
+
+/**
+ * Open issues and pull requests of `repo` (owner/name), with each PR's checks, review and
+ * merge state: what is already in progress, next to the new feedback.
+ */
+export const repoStatus = async ({ token, repo, fetchImpl }) => {
+  const [owner, name] = repo.split('/')
+  const { data, errors } = await request(`${API}/graphql`, { method: 'POST', token, fetchImpl, body: { query: STATUS, variables: { owner, name } } })
+  if (errors?.length) throw new Error(errors.map((e) => e.message).join('; '))
+  const { issues, pullRequests } = data.repository
+  return {
+    issues: {
+      total: issues.totalCount,
+      items: issues.nodes.map((i) => ({ number: i.number, title: i.title, url: i.url, labels: i.labels.nodes.map((l) => l.name) })),
+    },
+    pulls: {
+      total: pullRequests.totalCount,
+      items: pullRequests.nodes.map((p) => ({
+        number: p.number,
+        title: p.title,
+        url: p.url,
+        draft: p.isDraft,
+        checks: p.commits.nodes[0]?.commit.statusCheckRollup?.state ?? null, // SUCCESS | FAILURE | ERROR | PENDING | EXPECTED
+        review: p.reviewDecision, // APPROVED | CHANGES_REQUESTED | REVIEW_REQUIRED | null
+        merge: p.mergeStateStatus, // CLEAN | BLOCKED | DIRTY (conflicts) | BEHIND | UNSTABLE | DRAFT | UNKNOWN
+      })),
+    },
+  }
+}

@@ -38,3 +38,19 @@ test('needs a token, reports GraphQL errors, never files issues', async () => {
   assert.equal(github.files(source), false)
   assert.deepEqual(github.add(['discussions', 'https://github.com/a/b']), { repo: 'a/b' })
 })
+
+test('repoStatus: open issues and PRs with checks, review and merge state', async () => {
+  const { repoStatus } = await import('../src/github.js')
+  const pr = { number: 7, title: 'Fix', url: 'u7', isDraft: false, reviewDecision: 'REVIEW_REQUIRED', mergeStateStatus: 'BLOCKED', commits: { nodes: [{ commit: { statusCheckRollup: { state: 'SUCCESS' } } }] } }
+  const fetchImpl = fakeFetch([[(u) => u.endsWith('/graphql'), {
+    data: { repository: {
+      issues: { totalCount: 12, nodes: [{ number: 3, title: 'Bug', url: 'u3', labels: { nodes: [{ name: 'feedback' }] } }] },
+      pullRequests: { totalCount: 1, nodes: [pr, { ...pr, number: 8, commits: { nodes: [{ commit: { statusCheckRollup: null } }] } }] },
+    } },
+  }]])
+  const status = await repoStatus({ token: 't', repo: 'a/b', fetchImpl })
+  assert.deepEqual(status.issues, { total: 12, items: [{ number: 3, title: 'Bug', url: 'u3', labels: ['feedback'] }] })
+  assert.deepEqual(status.pulls.items[0], { number: 7, title: 'Fix', url: 'u7', draft: false, checks: 'SUCCESS', review: 'REVIEW_REQUIRED', merge: 'BLOCKED' })
+  assert.equal(status.pulls.items[1].checks, null)
+  assert.deepEqual(JSON.parse(fetchImpl.calls[0].init.body).variables, { owner: 'a', name: 'b' })
+})
