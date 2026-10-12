@@ -103,7 +103,7 @@ feedbai remove bluesky-search
 }
 ```
 
-Add `"maintainers": ["@you:matrix.org", "you.bsky.social"]` to a project to mark messages from those accounts as `[maintainer]`.
+Add `"maintainers": ["@you:matrix.org", "you.bsky.social"]` to a project to mark messages from those accounts as `[maintainer]`, and `"agents": ["@yourbot:matrix.org"]` for bot accounts that report on the project: their messages are marked `[agent]` and never open an issue, even when they name the hub's bot.
 
 The global config uses the same shape, so you can also list projects there (e.g. projects whose repo you don't control). Project and global configs are merged by `id`.
 
