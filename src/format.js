@@ -44,6 +44,7 @@ const md = ({ groups, errors }, { title, depth = 2, digest } = {}) => {
   const heading = '#'.repeat(depth)
   const total = groups.reduce((n, g) => n + g.items.length, 0)
   const parts = [title ?? t('md.header', { count: total })]
+  if (total) parts.push(t('md.untrusted'))
   for (const group of groups) {
     parts.push(`${heading} ${t('md.source', { ...group, count: group.items.length })}`)
     for (const notice of group.notices ?? []) parts.push(`> ⚠ ${notice}`)

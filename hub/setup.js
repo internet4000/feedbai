@@ -59,23 +59,26 @@ const home = () => html(`
 <p>Creates the <b>${escape(args.name)}</b> App${args.owner ? ` under <b>${escape(args.owner)}</b>` : ''} (Issues: write, Contents: read, no webhook).</p>
 <button>Create GitHub App</button></form>
 <h2>2. Matrix bot</h2>
-<form action="/matrix" method="post">
+<form action="/matrix" method="post"><input type="hidden" name="state" value="${state}">
 <p>Logs the bot in once and stores only a new access token (device "feedbai").</p>
 <input name="user" placeholder="@feedbai:matrix.org" required size="30"><br>
 <input name="password" type="password" placeholder="password" required size="30"><br>
 <input name="homeserver" value="https://matrix.org" size="30"><br>
 <button>Log in bot</button></form>
 <h2>3. Bluesky account (optional)</h2>
-<form action="/bluesky" method="post">
+<form action="/bluesky" method="post"><input type="hidden" name="state" value="${state}">
 <p>Lets people search Bluesky through the hub without an account. Use an app password (bsky.app → Settings → Privacy and security → App passwords). Set the handle as FEEDBAI_BLUESKY_IDENTIFIER in wrangler.jsonc.</p>
 <input name="identifier" placeholder="feedbai.bsky.social" required size="30"><br>
 <input name="password" type="password" placeholder="app password" required size="30"><br>
 <button>Store app password</button></form>`)
 
+/** Form fields, only from this page: any website could otherwise post its own bot credentials here (CSRF). */
 const readForm = async (req) => {
   let body = ''
   for await (const chunk of req) body += chunk
-  return Object.fromEntries(new URLSearchParams(body))
+  const form = Object.fromEntries(new URLSearchParams(body))
+  if (form.state !== state) throw new Error('state mismatch: start again from the setup page')
+  return form
 }
 
 const routes = {
@@ -113,9 +116,12 @@ const routes = {
 createServer(async (req, res) => {
   const url = new URL(req.url, local)
   const route = routes[`${req.method} ${url.pathname}`]
+  // Another Host means another site reached us through DNS rebinding
+  if (req.headers.host !== `localhost:${args.port}` && req.headers.host !== `127.0.0.1:${args.port}`) return res.writeHead(421).end('Misdirected request')
   try {
     if (!route) return res.writeHead(404).end('Not found')
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(await route(req, url))
+    const body = await route(req, url) // before writeHead, so a failing route can still answer 500
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(body)
   } catch (error) {
     console.error(error.message)
     res.writeHead(500, { 'content-type': 'text/html; charset=utf-8' }).end(html(`<p>${escape(error.message)}</p><p><a href="/">Back</a></p>`))

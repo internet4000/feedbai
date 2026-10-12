@@ -35,7 +35,7 @@ test('md switches to a digest for busy sources, keeping maintainer messages in f
   const text = formats.md({ groups: [{ project: 'p', source: 's', platform: 'matrix', items }], errors: [] })
   assert.match(text, /From maintainers/)
   assert.match(text, /30 replies/)
-  assert.ok(text.split('\n').length < 15)
+  assert.ok(text.split('\n').length < 17) // header, untrusted notice, source, digest
   const quiet = formats.md({ groups: [{ project: 'p', source: 's', platform: 'matrix', items: items.slice(0, 3) }], errors: [] })
   assert.doesNotMatch(quiet, /Threads/)
 })

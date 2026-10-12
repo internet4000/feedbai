@@ -17,13 +17,20 @@
  * @property {boolean} [toSelf]  mentions the account feedbai reads with; set by roles.js
  */
 
+/**
+ * Terminal control codes (ANSI escapes can rewrite what a person sees in the terminal) and
+ * bidirectional overrides (they make text read differently than it is), kept out of all output.
+ */
+const UNSAFE = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g
+export const clean = (text) => (typeof text === 'string' ? text.replace(UNSAFE, '') : text)
+
 export const item = (fields) => ({
   id: fields.id,
   platform: fields.platform,
   project: fields.project,
   source: fields.source,
-  author: fields.author,
-  text: fields.text ?? '',
+  author: { ...fields.author, ...(fields.author?.name && { name: clean(fields.author.name) }) },
+  text: clean(fields.text ?? ''),
   url: fields.url,
   createdAt: fields.createdAt,
   ...(fields.replyTo && { replyTo: fields.replyTo }),

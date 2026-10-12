@@ -47,5 +47,6 @@ Slack, Teams, Discord, Mastodon…: a channel is one module. See [adding a chann
 - [CLI reference](docs/cli.md) · [Configuration](docs/configuration.md) · [Channels](docs/channels/README.md)
 - [The hub](hub/README.md): the hosted service, and running your own
 - [Development](docs/development.md): code layout, tests, languages, release
+- [Security](SECURITY.md) and [privacy](PRIVACY.md): the trust model, personal data, removal requests
 
 Free software. Node ≥ 22, no dependencies.

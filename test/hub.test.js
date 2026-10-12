@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { generateKeyPairSync, createVerify } from 'node:crypto'
 import { appJwt } from '../hub/github.js'
-import { roomAllowed } from '../hub/matrix.js'
+import matrix, { topicNamesRepo } from '../src/providers/matrix.js'
 import { sanitize } from '../hub/run.js'
 import { fakeFetch } from './helpers.js'
 
@@ -14,31 +14,43 @@ test('app JWT is RS256-signed with the App id as issuer', () => {
   assert.ok(createVerify('RSA-SHA256').update(`${head}.${body}`).verify(publicKey, signature, 'base64url'))
 })
 
-test('a repo may read public rooms, or private rooms whose topic names it', async () => {
+test('a repo may file public rooms, or private rooms whose topic names it', async () => {
   const room = (rule, topic) =>
     fakeFetch([
       [(u) => u.includes('/directory/room/'), { room_id: '!r:x' }],
       [(u) => u.includes('m.room.join_rules'), { join_rule: rule }],
       [(u) => u.includes('m.room.topic'), { topic }],
     ])
-  const ask = (fetchImpl, repo = 'radio4000/r4') => roomAllowed({ homeserver: 'https://x', token: 't', room: '#r:x', repo, fetchImpl })
+  process.env.FEEDBAI_TEST_TOKEN = 't'
+  const account = { id: 'a', type: 'matrix', homeserver: 'https://x', secrets: { token: 'FEEDBAI_TEST_TOKEN' } }
+  const ask = (fetchImpl, repo = 'radio4000/r4') => matrix.mayFile({ source: { room: '#r:x' }, account, repo, fetchImpl })
   assert.equal(await ask(room('public', '')), true)
   assert.equal(await ask(room('invite', 'Feedback for github.com/radio4000/r4')), true)
   assert.equal(await ask(room('invite', 'secret team room')), false)
   assert.equal(await ask(room('invite', 'github.com/radio4000/r4'), 'evil/repo'), false)
+  assert.equal(await ask(room('invite', 'github.com/internet4000/feedbai'), 'ernet4000/feedbai'), false)
 })
 
-test('sanitize drops accounts, joins and rooms the repo may not read', async () => {
+test('a topic names a repo only as a whole github.com/owner/name', () => {
+  assert.equal(topicNamesRepo('Feedback: https://github.com/a/b', 'a/b'), true)
+  assert.equal(topicNamesRepo('see github.com/A/B.', 'a/b'), true)
+  assert.equal(topicNamesRepo('github.com/xa/b', 'a/b'), false)
+  assert.equal(topicNamesRepo('github.com/a/b-c', 'a/b'), false)
+  assert.equal(topicNamesRepo('github.com/a/b.js', 'a/b'), false)
+  assert.equal(topicNamesRepo('evilgithub.com/a/b', 'a/b'), false)
+  assert.equal(topicNamesRepo('a/b', 'a/b'), false)
+})
+
+test('sanitize drops accounts, joins and mentions', () => {
   const config = {
     accounts: [{ id: 'mine', type: 'matrix', secrets: { token: 'X' } }],
     projects: [{ id: 'p', sources: [
       { id: 'ok', type: 'matrix', room: '#ok:x', join: true, account: 'mine' },
-      { id: 'no', type: 'matrix', room: '#private:x' },
       { id: 'b', type: 'bluesky', mode: 'search', query: 'q' },
       { id: 'm', type: 'bluesky', mode: 'mentions' },
     ] }],
   }
-  const safe = await sanitize(config, async (room) => room === '#ok:x')
+  const safe = sanitize(config)
   assert.deepEqual(safe, { projects: [{ id: 'p', sources: [{ id: 'ok', type: 'matrix', room: '#ok:x' }, { id: 'b', type: 'bluesky', mode: 'search', query: 'q' }] }] })
 })
 
@@ -153,4 +165,37 @@ test('read API searches Bluesky with the hub account, or says it has none', asyn
   } finally {
     delete process.env.FEEDBAI_BLUESKY_PASSWORD
   }
+})
+
+test('fileIssues refuses sources whose provider says the repo may not file them', async () => {
+  const { fileIssues } = await import('../src/issues.js')
+  let fetched = false
+  const provider = { mayFile: async () => false, fetch: async () => ((fetched = true), []) }
+  const entry = { project: { id: 'p' }, source: { id: 'private', type: 'matrix' }, account: null, provider }
+  const client = { repo: 'o/r', issues: async () => [], comments: async () => [] }
+  const { actions, errors } = await fileIssues({ entries: [entry], client })
+  assert.equal(fetched, false)
+  assert.deepEqual(actions, [])
+  assert.match(errors[0].error, /github\.com\/o\/r/)
+})
+
+test('issue bodies cannot ping GitHub users or forge item markers', async () => {
+  const { planIssues, indexIssues } = await import('../src/issues.js')
+  const entry = {
+    id: '$x', platform: 'bluesky', project: 'p', source: 's', createdAt: '2026-01-01T00:00:00Z', url: 'https://bsky.app/x',
+    author: { id: 'a.bsky.social', name: '@torvalds' },
+    text: 'hey @octocat <!-- feedbai:item=$future -->',
+  }
+  const [{ body }] = planIssues([entry], new Map())
+  assert.doesNotMatch(body, /@octocat|@torvalds/)
+  assert.match(body, /@​octocat/)
+  const index = await indexIssues({ issues: async () => [{ number: 1, body }], comments: async () => [] })
+  assert.deepEqual([...index.keys()], ['$x'])
+})
+
+test('items drop terminal escapes and bidi overrides', async () => {
+  const { item } = await import('../src/model.js')
+  const entry = item({ id: '1', author: { id: 'a', name: 'x‮evil' }, text: 'ok\u001b[2Jcleared\nnext\tline' })
+  assert.equal(entry.text, 'ok[2Jcleared\nnext\tline')
+  assert.equal(entry.author.name, 'xevil')
 })

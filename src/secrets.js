@@ -11,7 +11,8 @@ export const getSecret = (name) => (name ? process.env[name] : undefined)
 
 /** Set or replace `KEY=value` lines in the secrets file, keeping it private. */
 export const saveSecrets = (values, file = SECRETS_FILE) => {
-  mkdirSync(dirname(file), { recursive: true })
+  mkdirSync(dirname(file), { recursive: true, mode: 0o700 })
+  if (existsSync(file)) chmodSync(file, 0o600) // before writing: an existing file may have been readable
   const lines = existsSync(file) ? readFileSync(file, 'utf8').split('\n').filter(Boolean) : []
   for (const [key, value] of Object.entries(values)) {
     const line = `${key}=${JSON.stringify(value)}`
@@ -21,7 +22,6 @@ export const saveSecrets = (values, file = SECRETS_FILE) => {
     process.env[key] = value
   }
   writeFileSync(file, lines.join('\n') + '\n', { mode: 0o600 })
-  chmodSync(file, 0o600)
 }
 
 /** Env var name for an account secret, e.g. FEEDBAI_MATRIX_ME_TOKEN. */
