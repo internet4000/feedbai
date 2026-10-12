@@ -47,3 +47,10 @@ collections:
                       - { name: post, label: Thread post link, widget: string, required: false }
                       - { name: limit, label: Limit, widget: number, value_type: int, default: 50, required: false }
                       - { name: account, label: Account id, widget: string, required: false }
+                  - name: github
+                    label: GitHub Discussions
+                    fields:
+                      - { name: id, label: Id, widget: string }
+                      - { name: repo, label: Repository (owner/name), widget: string }
+                      - { name: limit, label: Limit, widget: number, value_type: int, default: 50, required: false }
+                      - { name: account, label: Account id, widget: string, required: false }

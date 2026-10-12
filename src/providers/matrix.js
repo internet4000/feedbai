@@ -58,10 +58,62 @@ const hiddenHistory = async ({ homeserver, roomId, room, account, oldest, auth }
 /** Messages with a text body, edits included (they carry the new text); redactions have none. */
 const isFeedback = (event) => event.type === 'm.room.message' && typeof event.content?.body === 'string'
 
+const MATRIX_TO = 'https://matrix.to/#/'
+
 export default {
   type: 'matrix',
 
   validate: (source) => requireFields(source, ['id', 'room'], t),
+
+  describe: (source) => source.room,
+
+  /** `feedbai add matrix <room> [--join]` */
+  add: ([room], opts) => ({ room, ...(opts.join && { join: true }) }),
+
+  /** Room links a repository may already mention. */
+  discover: [
+    {
+      regex: 'matrix\\.to/#/[#!][^] )"\'<>`]+',
+      suggest: (link) => {
+        const room = parseRoom(`https://${link}`)
+        return { value: room, args: [`'${room}'`] }
+      },
+    },
+  ],
+
+  /** Account from the environment (CI, the hub): FEEDBAI_MATRIX_TOKEN (+ _USER, _HOMESERVER). */
+  envAccount: (env) =>
+    env.FEEDBAI_MATRIX_TOKEN && {
+      id: 'env-matrix',
+      type: 'matrix',
+      user: env.FEEDBAI_MATRIX_USER,
+      homeserver: env.FEEDBAI_MATRIX_HOMESERVER,
+      secrets: { token: 'FEEDBAI_MATRIX_TOKEN' },
+    },
+
+  /** `feedbai login matrix --user @you:server [--homeserver url] [--token]`: returns the account and its secrets to save. */
+  async authenticate({ homeserver = DEFAULT_HOMESERVER, user, token: useToken, account }, { promptHidden }) {
+    let accessToken
+    if (useToken) {
+      accessToken = await promptHidden(t('prompt.token', { user: user ?? homeserver }))
+      user = await this.whoami({ homeserver, token: accessToken })
+    } else {
+      if (!user) throw new Error(t('error.missingField', { source: 'login', field: '--user' }))
+      const password = await promptHidden(t('prompt.password', { user }))
+      ;({ token: accessToken, user } = await this.login({ homeserver, user, password }))
+    }
+    return { account: { id: account ?? `matrix-${user}`, type: 'matrix', homeserver, user }, secrets: { token: accessToken } }
+  },
+
+  /** Rooms are conversations, not a backlog: a message starts an issue only when it mentions the bot. */
+  filing: 'mentions',
+
+  /** A message link `feedbai post` can reply to: matrix.to/#/!room/$event. */
+  parseLink: (link) => {
+    if (!link.startsWith(MATRIX_TO)) return null
+    const [room, replyTo] = decodeURIComponent(link.slice(MATRIX_TO.length).split('?')[0]).split('/')
+    return { room, replyTo }
+  },
 
   needsAuth: () => true,
 
@@ -141,8 +193,8 @@ export default {
     return chain
   },
 
-  /** Send `text` to `room`; with `replyTo` (event id) as a reply in that thread. Returns the new event's link. */
-  async post({ account, room, text, replyTo, fetchImpl }) {
+  /** Send `text` to `room` (or the source's room); with `replyTo` (event id) as a reply in that thread. Returns the new event's link. */
+  async post({ account, source, room = source?.room, text, replyTo, fetchImpl }) {
     const accessToken = token(account)
     if (!accessToken) throw new Error(t('error.authRequired', { source: account?.id ?? 'matrix', mode: 'post', type: 'matrix' }))
     const homeserver = account.homeserver ?? DEFAULT_HOMESERVER

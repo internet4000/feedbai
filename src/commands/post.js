@@ -15,25 +15,24 @@ const message = async (words) => {
 }
 
 /**
- * `feedbai post <target> <text>`: target is an item link (matrix.to/#/!room/$event → reply
- * in that thread) or a source id (new message in that source's room). Matrix only for now.
+ * `feedbai post <target> <text>`: target is an item link (e.g. matrix.to/#/!room/$event → reply
+ * in that thread; providers recognise their own with `parseLink`) or a source id (new message there).
  */
 export default async ({ opts, args }) => {
   const [target, ...words] = args
   const text = await message(words)
   if (!target || !text) throw new Error(t('error.missingField', { source: 'post', field: '<target> <text>' }))
   const { config } = loadConfig({ explicit: opts.config })
-  let room
-  let replyTo
-  let account
-  if (target.startsWith('https://matrix.to/#/')) {
-    ;[room, replyTo] = decodeURIComponent(target.replace('https://matrix.to/#/', '').split('?')[0]).split('/')
-    account = config.accounts.find((a) => a.type === 'matrix' && (!opts.account || a.id === opts.account))
-  } else {
-    const [entry] = selectSources(config, { project: opts.project, source: target })
-    if (entry?.source.type !== 'matrix') throw new Error(t('error.badTarget', { target }))
-    room = entry.source.room
-    account = entry.account
+  const provider = Object.values(providers).find((p) => p.parseLink?.(target))
+  if (provider) {
+    const where = provider.parseLink(target)
+    const account = config.accounts.find((a) => a.type === provider.type && (!opts.account || a.id === opts.account))
+    return out(await provider.post({ account, ...where, text: LABEL + text }))
   }
-  out(await providers.matrix.post({ account, room, replyTo, text: LABEL + text }))
+  const [entry] = selectSources(config, { project: opts.project, source: target })
+  if (!entry?.provider.post) {
+    const channels = Object.values(providers).filter((p) => p.parseLink).map((p) => t(`channel.${p.type}.name`)).join(', ')
+    throw new Error(t('error.badTarget', { target, channels }))
+  }
+  out(await entry.provider.post({ account: entry.account, source: entry.source, text: LABEL + text }))
 }

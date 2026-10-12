@@ -7,7 +7,7 @@ export default ({ opts, args }) => {
   const { file, project, source } = addSource({ words: args, opts })
   const [entry] = selectSources(loadConfig().config, { project: project.id, source: source.id })
   const lines = [t('add.done', { source: source.id, file })]
-  if (['login', 'missing'].includes(authState(entry))) lines.push(t('add.needsLogin', { command: t(`login.hint.${source.type}`) }))
+  if (['login', 'missing'].includes(authState(entry))) lines.push(t('add.needsLogin', { command: t(`channel.${source.type}.hint`) }))
   lines.push(t('add.next'))
   out(lines.join('\n'))
 }

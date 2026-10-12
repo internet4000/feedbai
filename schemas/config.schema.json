@@ -40,7 +40,8 @@
         "type": {
           "enum": [
             "matrix",
-            "bluesky"
+            "bluesky",
+            "github"
           ]
         },
         "homeserver": {
@@ -127,7 +128,8 @@
         "type": {
           "enum": [
             "matrix",
-            "bluesky"
+            "bluesky",
+            "github"
           ]
         },
         "account": {
@@ -198,6 +200,20 @@
           },
           "required": [
             "mode"
+          ]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "github"
+            },
+            "repo": {
+              "type": "string",
+              "description": "owner/name or github.com link: the repo whose Discussions are read"
+            }
+          },
+          "required": [
+            "repo"
           ]
         }
       ]
