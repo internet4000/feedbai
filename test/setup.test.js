@@ -40,6 +40,18 @@ test('detects the project and discovers channel links', () => {
   assert.deepEqual(discover(dir, [{ room: '#radio4000:matrix.org' }]).length, 1)
 })
 
+test('discovery skips placeholder rooms in docs, and a message link suggests its room', () => {
+  const dir = repo()
+  writeFileSync(join(dir, 'GUIDE.md'), [
+    'reply: feedbai post https://matrix.to/#/!room:server/$event "text"',
+    'or https://matrix.to/#/!room/$event.',
+    'thread: https://matrix.to/#/!AbC123:matrix.org/$ev1?via=matrix.org',
+  ].join('\n'))
+  execFileSync('git', ['add', '.'], { cwd: dir })
+  const rooms = discover(dir).filter((s) => s.type === 'matrix').map((s) => s.value)
+  assert.deepEqual(rooms.sort(), ['!AbC123:matrix.org', '#radio4000:matrix.org'])
+})
+
 test('add creates the config, names sources, and remove deletes them', () => {
   const dir = repo()
   const { file } = addSource({ cwd: dir, words: ['matrix', '#radio4000:matrix.org'], opts: { join: true } })
