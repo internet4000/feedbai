@@ -20,9 +20,10 @@ flowchart LR
 ## Quick start
 
 ```sh
-npx @internet4000/feedbai              # in your project: finds your channels and says how to add them
-npx @internet4000/feedbai add matrix '#yourproject:matrix.org'
-npx @internet4000/feedbai              # new feedback since the last run
+npm i -g github:internet4000/feedbai   # latest main (npm has an old 0.0.1 until the next release)
+feedbai                                # in your project: finds your channels and says how to add them
+feedbai add matrix '#yourproject:matrix.org'
+feedbai                                # new feedback since the last run
 ```
 
 Commit `feedbai.config.json`. In Claude Code, type `!feedbai` so the agent sees the output, or ask it to "check feedback".
