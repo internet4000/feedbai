@@ -1,6 +1,6 @@
 ---
 name: feedbai
-description: Read user feedback for the current project from its channels (Matrix rooms, Bluesky searches/mentions/threads) with the `feedbai` CLI, set those channels up with the user, listen during a session, triage feedback into GitHub issues, and act on it (fixes, PRs). Use when asked to check, read, set up, listen to, triage or act on user feedback, community chat, mentions, or "what users are saying", or when the user runs `feedbai`.
+description: Read user feedback for the current project from its channels (Matrix rooms, Bluesky searches/mentions/threads, GitHub Discussions) with the `feedbai` CLI, set those channels up with the user, listen during a session, triage feedback into GitHub issues, and act on it (fixes, PRs). Use when asked to check, read, set up, listen to, triage or act on user feedback, community chat, mentions, or "what users are saying", or when the user runs `feedbai`.
 ---
 
 # feedbai — user feedback for agents
@@ -49,7 +49,7 @@ feedbai --as claude                      # status + new feedback since your last
 feedbai --since 7d                       # a window (does not move the cursor)
 feedbai watch --as claude                # background listener
 feedbai fetch --format json              # all configured projects; json/ndjson for processing
-feedbai add matrix '#room:server'        # add bluesky search <q> | author <handle> | thread <link> | mentions
+feedbai add matrix '#room:server'        # add bluesky search <q> | author <handle> | thread <link> | mentions · add github discussions <owner/name> · all: feedbai help
 feedbai remove <source-id>
 feedbai post <item url> <text>         # reply in that thread, marked 🤖 (Matrix)
 feedbai help

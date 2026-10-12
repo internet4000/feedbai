@@ -44,22 +44,14 @@ const uniqueId = (sources, base) => {
   return id
 }
 
-/** Build a source from CLI words: `matrix <room>` or `bluesky <mode> [value]`. */
-const BUILDERS = {
-  matrix: ([room], opts) => ({ type: 'matrix', room, ...(opts.join && { join: true }) }),
-  bluesky: ([mode, value]) => {
-    const field = { search: 'query', author: 'actor', thread: 'post' }[mode]
-    return { type: 'bluesky', mode, ...(field && { [field]: value }) }
-  },
-}
-
+/** `feedbai add <type> …words`: the provider's `add` builds the source from the words. */
 export const addSource = ({ cwd, words, opts }) => {
   const [type, ...rest] = words
-  const build = BUILDERS[type]
-  if (!build) throw new Error(t('error.unknownType', { type: type ?? '', source: '(add)' }))
+  const provider = providers[type]
+  if (!provider?.add) throw new Error(t('error.unknownType', { type: type ?? '', source: '(add)' }))
   const { file, config } = openConfig({ cwd, create: true })
   const project = pickProject(config, opts.project)
-  const draft = build(rest, opts)
+  const draft = { type, ...provider.add(rest, opts) }
   const source = {
     id: opts.id ?? uniqueId(project.sources, [type, draft.mode].filter(Boolean).join('-')),
     ...draft,

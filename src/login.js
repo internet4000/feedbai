@@ -18,25 +18,10 @@ const save = (account, secrets) => {
   return t('login.saved', { account: account.id, config: GLOBAL_CONFIG, secrets: SECRETS_FILE })
 }
 
-const matrix = async ({ homeserver = 'https://matrix.org', user, token: useToken, account }) => {
-  const provider = providers.matrix
-  let token
-  if (useToken) {
-    token = await promptHidden(t('prompt.token', { user: user ?? homeserver }))
-    user = await provider.whoami({ homeserver, token })
-  } else {
-    if (!user) throw new Error(t('error.missingField', { source: 'login', field: '--user' }))
-    const password = await promptHidden(t('prompt.password', { user }))
-    ;({ token, user } = await provider.login({ homeserver, user, password }))
-  }
-  return save({ id: account ?? `matrix-${user}`, type: 'matrix', homeserver, user }, { token })
+/** `feedbai login <type> …`: the provider's `authenticate` verifies the secret; feedbai saves it. */
+export const login = async (type, opts) => {
+  const provider = providers[type]
+  if (!provider?.authenticate) throw new Error(t('error.unknownCommand', { command: `login ${type ?? ''}` }))
+  const { account, secrets } = await provider.authenticate(opts, { promptHidden })
+  return save(account, secrets)
 }
-
-const bluesky = async ({ service = 'https://bsky.social', identifier, account }) => {
-  if (!identifier) throw new Error(t('error.missingField', { source: 'login', field: '--identifier' }))
-  const password = await promptHidden(t('prompt.appPassword', { identifier }))
-  const { handle } = await providers.bluesky.login({ service, identifier, password })
-  return save({ id: account ?? `bluesky-${handle}`, type: 'bluesky', service, identifier: handle }, { password })
-}
-
-export const logins = { matrix, bluesky }

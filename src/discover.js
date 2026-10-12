@@ -1,23 +1,17 @@
 import { execFileSync } from 'node:child_process'
-import { parseRoom } from './providers/matrix.js'
+import { providers } from './providers/index.js'
 
-/** Patterns for channel links a repository may already mention. */
-const PATTERNS = [
-  {
-    regex: 'matrix\\.to/#/[#!][^] )"\'<>`]+',
-    suggest: (link) => {
-      const room = parseRoom(`https://${link}`)
-      return [{ type: 'matrix', value: room, command: `feedbai add matrix '${room}'` }]
-    },
-  },
-  {
-    regex: 'bsky\\.app/profile/[a-zA-Z0-9.:-]+',
-    suggest: (link) => {
-      const actor = link.split('/').pop()
-      return [{ type: 'bluesky', mode: 'author', value: actor, command: `feedbai add bluesky author ${actor}` }]
-    },
-  },
-]
+/** Each provider's `discover` patterns: links to its channels a repository may already mention. */
+const patterns = () =>
+  Object.values(providers).flatMap((provider) =>
+    (provider.discover ?? []).map(({ regex, suggest }) => ({
+      regex,
+      suggest: (link) => {
+        const { value, args } = suggest(link)
+        return { type: provider.type, value, command: ['feedbai add', provider.type, ...args].join(' ') }
+      },
+    })),
+  )
 
 /** Tests, specs and examples link to made-up or other projects' channels. */
 const EXCLUDE = [':!*test*', ':!*spec*', ':!*example*', ':!*fixture*']
@@ -34,9 +28,9 @@ const grep = (regex, root) => {
 
 /** Suggest sources from links found in tracked files, minus ones already configured. */
 export const discover = (root, existing = []) => {
-  const known = new Set(existing.map((s) => s.room ?? s.actor ?? s.query ?? s.post))
+  const known = new Set(existing.flatMap((s) => Object.values(s))) // a room, query, actor… already followed
   const seen = new Set()
-  return PATTERNS.flatMap(({ regex, suggest }) => [...new Set(grep(regex, root))].flatMap(suggest)).filter((s) => {
+  return patterns().flatMap(({ regex, suggest }) => [...new Set(grep(regex, root))].flatMap(suggest)).filter((s) => {
     if (known.has(s.value) || seen.has(s.command)) return false
     seen.add(s.command)
     return true

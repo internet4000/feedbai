@@ -7,7 +7,7 @@ Zero-dependency Node (>=22) CLI. Run `npm test` before committing.
 - `src/project.js`, `src/discover.js`, `src/edit.js` — detect the project, find channel links in the repo, edit `feedbai.config.json`.
 - Output is agent-first: every message should say what to do next, with copy-pasteable commands.
 - `src/config.js` — global + nearest project config, merged by id; accounts resolved per source.
-- `src/providers/<type>.js` — one module per platform: `validate`, `authStatus`, `fetch`, `login`. Register in `providers/index.js`, add to `schemas/config.schema.json`, `cms/config.yml` and tests.
+- `src/providers/<type>.js` — one module per channel (Matrix, Bluesky, GitHub Discussions…); core code never names a platform. Adding one: [docs/channels/adding-a-channel.md](docs/channels/adding-a-channel.md); `test/providers.test.js` checks the contract.
 - All user-facing strings live in `src/locales/<lang>.json` and go through `t()`.
 - Secrets are never stored in configs: accounts hold env var *names*; values live in `~/.config/feedbai/secrets.env` (0600).
 

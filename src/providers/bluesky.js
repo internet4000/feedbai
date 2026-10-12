@@ -142,8 +142,47 @@ const fetchers = {
     }),
 }
 
+/** The source field each mode's `feedbai add bluesky <mode> <value>` sets. */
+const ADD_FIELD = { search: 'query', author: 'actor', thread: 'post' }
+
 export default {
   type: 'bluesky',
+
+  describe: (source) => [source.mode, source.query ?? source.actor ?? source.post].filter(Boolean).join(' '),
+
+  /** `feedbai add bluesky <mode> [value]` */
+  add: ([mode, value]) => ({ mode, ...(ADD_FIELD[mode] && { [ADD_FIELD[mode]]: value }) }),
+
+  /** Profile links a repository may already mention: follow that account's posts. */
+  discover: [
+    {
+      regex: 'bsky\\.app/profile/[a-zA-Z0-9.:-]+',
+      suggest: (link) => {
+        const actor = link.split('/').pop()
+        return { value: actor, args: ['author', actor] }
+      },
+    },
+  ],
+
+  /** Account from the environment (CI, the hub): FEEDBAI_BLUESKY_IDENTIFIER + _PASSWORD. */
+  envAccount: (env) =>
+    env.FEEDBAI_BLUESKY_PASSWORD && {
+      id: 'env-bluesky',
+      type: 'bluesky',
+      identifier: env.FEEDBAI_BLUESKY_IDENTIFIER,
+      secrets: { password: 'FEEDBAI_BLUESKY_PASSWORD' },
+    },
+
+  /** `feedbai login bluesky --identifier you.bsky.social [--service url]` (app password). */
+  async authenticate({ service = DEFAULT_SERVICE, identifier, account }, { promptHidden }) {
+    if (!identifier) throw new Error(t('error.missingField', { source: 'login', field: '--identifier' }))
+    const secret = await promptHidden(t('prompt.appPassword', { identifier }))
+    const { handle } = await this.login({ service, identifier, password: secret })
+    return { account: { id: account ?? `bluesky-${handle}`, type: 'bluesky', service, identifier: handle }, secrets: { password: secret } }
+  },
+
+  /** Searches and author feeds are a sentiment signal to read, never a backlog. */
+  files: (source) => !['search', 'author'].includes(source.mode),
 
   validate(source) {
     requireFields(source, ['id', 'mode'], t)

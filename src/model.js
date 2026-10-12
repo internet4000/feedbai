@@ -2,7 +2,7 @@
  * Normalized feedback item, identical for every platform.
  * @typedef {object} FeedbackItem
  * @property {string} id         Platform id (Matrix event id, AT URI, ...)
- * @property {string} platform   matrix | bluesky
+ * @property {string} platform   provider type: matrix | bluesky | github | …
  * @property {string} project    Project id
  * @property {string} source     Source id
  * @property {{id: string, name?: string}} author

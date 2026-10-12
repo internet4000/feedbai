@@ -5,6 +5,7 @@ import { collect } from '../feedback.js'
 import { formats } from '../format.js'
 import { readState, stateKey, consumerName } from '../state.js'
 import { t } from '../i18n.js'
+import { channelText } from '../providers/index.js'
 import { authState, authText, describe, out } from './shared.js'
 
 const suggestions = (list) => list.map((s) => `- ${s.type} ${s.mode ?? ''} ${s.value} → \`${s.command}\``.replace('  ', ' ')).join('\n')
@@ -25,7 +26,7 @@ const onboarding = (project, file) => {
     t('home.title', { project: project.id }),
     t(file ? 'home.noSources' : 'home.notSetUp', { root: project.root, file }),
     found.length && `${t('home.found')}\n\n${suggestions(found)}`,
-    t('home.setup', { id: project.id, root: project.root }),
+    t('home.setup', { id: project.id, root: project.root, channels: channelText('setup', { id: project.id }), logins: channelText('login') }),
     otherProjects(),
   ].filter(Boolean).join('\n\n')
 }

@@ -2,6 +2,7 @@ import { threads, truncate } from './digest.js'
 import { collect } from './feedback.js'
 import { withRoles } from './roles.js'
 import { t } from './i18n.js'
+import { providers } from './providers/index.js'
 
 /**
  * Turn feedback into GitHub issues: one issue per thread, later items as comments.
@@ -12,14 +13,15 @@ import { t } from './i18n.js'
 export const LABEL = 'feedback'
 
 /**
- * Chat rooms are conversations, not a backlog: a Matrix message starts an issue
- * only when it mentions the bot account. Bluesky mentions and threads are already targeted.
+ * What may start an issue: on channels whose provider says `filing: 'mentions'` (chat rooms:
+ * conversations, not a backlog) only messages that mention the bot; elsewhere any message.
  * Agents never start one (they often name the bot when reporting): known by account, never by text.
  */
-const triggers = (entry) => entry.role !== 'agent' && (entry.platform !== 'matrix' || Boolean(entry.toSelf))
+const triggers = (entry) =>
+  entry.role !== 'agent' && (providers[entry.platform]?.filing !== 'mentions' || Boolean(entry.toSelf))
 
-/** Bluesky searches and author feeds are a sentiment signal to read (`feedbai`, `watch`), never a backlog. */
-export const filesIssues = ({ source }) => !(source.type === 'bluesky' && ['search', 'author'].includes(source.mode))
+/** Sources that are filed at all: a provider's `files(source)` can keep some read-only (e.g. Bluesky searches: sentiment). */
+export const filesIssues = ({ source }) => providers[source.type]?.files?.(source) ?? true
 
 const itemMarker = (id) => `<!-- feedbai:item=${id} -->`
 const ITEM_RE = /<!-- feedbai:item=(.+?) -->/g
