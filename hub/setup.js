@@ -68,7 +68,7 @@ const home = () => html(`
 <h2>3. Bluesky account (optional)</h2>
 <form action="/bluesky" method="post"><input type="hidden" name="state" value="${state}">
 <p>Lets people search Bluesky through the hub without an account. Use an app password (bsky.app → Settings → Privacy and security → App passwords). Set the handle as FEEDBAI_BLUESKY_IDENTIFIER in wrangler.jsonc.</p>
-<input name="identifier" placeholder="feedbai.bsky.social" required size="30"><br>
+<input name="identifier" placeholder="feedbai.internet4000.com" required size="30"><br>
 <input name="password" type="password" placeholder="app password" required size="30"><br>
 <button>Store app password</button></form>`)
 

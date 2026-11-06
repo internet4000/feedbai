@@ -22,6 +22,6 @@ feedbai add bluesky mentions                               # mentions, replies a
 feedbai login bluesky --identifier you.bsky.social      # an app password: https://bsky.app/settings/app-passwords
 ```
 
-Use an app password, never your main one. Without an account, `search` reads through the [hub](../../hub/README.md), which searches with its own (`feedbai.bsky.social`). In CI: `FEEDBAI_BLUESKY_IDENTIFIER`, `FEEDBAI_BLUESKY_PASSWORD`.
+Use an app password, never your main one. Without an account, `search` reads through the [hub](../../hub/README.md), which searches with its own (`feedbai.internet4000.com`). In CI: `FEEDBAI_BLUESKY_IDENTIFIER`, `FEEDBAI_BLUESKY_PASSWORD`.
 
 The hub ignores `mentions` sources in repo configs: it would read its own mentions, not yours.

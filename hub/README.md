@@ -11,7 +11,7 @@ What it does per channel:
 | Channel | Read with `feedbai`, no account | Filed as `feedback` issues |
 | --- | --- | --- |
 | Matrix room | public rooms the bot `@feedbai:matrix.org` was invited to | threads that mention the bot |
-| Bluesky search | yes, with the hub's account (`feedbai.bsky.social`) | no: sentiment, read only |
+| Bluesky search | yes, with the hub's account (`feedbai.internet4000.com`) | no: sentiment, read only |
 | Bluesky thread, author | yes (public, no account needed anyway) | thread: yes; author: no |
 | Bluesky mentions | no: they are per account, so a repo can't use the hub's | no |
 
