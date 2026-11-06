@@ -71,6 +71,7 @@
   "notice.matrixHistoryHidden": "{room} hides history from new members (history visibility \"{visibility}\"): {account} cannot see {missing}, so older feedback is missing. Messages sent under this setting stay hidden. For later ones, a room admin can set history visibility to \"shared\" (Element: Room settings → Security & Privacy → Who can read history? → Members only (since the point in time of selecting this option)); for now, someone who was in the room earlier can read it with their own account (`feedbai login matrix`).",
   "notice.before": "messages from before {date}",
   "notice.anything": "any message in this period (none sent since it joined, or all hidden)",
+  "error.hubDown": "Source {source}: the feedbai hub ({hub}) is unreachable ({reason}). Read with your own account instead: `{login}` (user runs it in a terminal), or point FEEDBAI_HUB at another hub. Report it: https://github.com/internet4000/feedbai/issues",
   "error.hub": "Source {source}: the feedbai hub cannot read it: {reason}",
   "channel.matrix.name": "Matrix",
   "channel.matrix.add": "  feedbai add matrix <room>               #alias:server, !id:server or matrix.to link [--join]",

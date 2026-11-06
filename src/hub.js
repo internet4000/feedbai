@@ -16,7 +16,8 @@ export const readViaHub = async ({ path, params, platform, project, source, fetc
     const { items = [], notices = [] } = await request(url, { fetchImpl })
     return { items: items.map((fields) => item({ ...fields, platform, project: project.id, source: source.id })), notices }
   } catch (error) {
-    if (!error.data?.error) throw error
-    throw new Error(t('error.hub', { source: source.id, reason: error.data.error }))
+    if (error.data?.error) throw new Error(t('error.hub', { source: source.id, reason: error.data.error }))
+    // Down, unreachable or not a hub: say so, and how to read without it. Never a silent failure.
+    throw new Error(t('error.hubDown', { source: source.id, hub: hubUrl(), reason: error.cause?.code ?? error.status ?? error.message, login: t(`channel.${source.type}.hint`) }))
   }
 }
