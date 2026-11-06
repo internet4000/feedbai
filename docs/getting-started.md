@@ -43,7 +43,7 @@ feedbai login bluesky --identifier you.bsky.social     # an app password: https:
 feedbai login github                                   # a token; or set GH_TOKEN
 ```
 
-Run these **in your own terminal**, not through an agent: they prompt for the secret without echoing it, check it, and save the account to `~/.config/feedbai/config.json` and the secret to `~/.config/feedbai/secrets.env` (mode 600). A dedicated low-privilege bot account is a good idea. See [configuration → accounts](configuration.md#accounts).
+Run these **in your own terminal**, not through an agent: they prompt for the secret without echoing it, check it, and save the account to `~/.config/feedbai/config.json` and the secret to `~/.config/feedbai/secrets.env` (mode 600). A dedicated low-privilege bot account is a good idea. See [configuration → accounts](configuration.md#global-config-and-accounts).
 
 ## 4. Read feedback
 

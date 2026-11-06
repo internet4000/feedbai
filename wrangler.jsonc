@@ -8,8 +8,8 @@
   "compatibility_date": "2026-10-01",
   // process.env is populated from vars and secrets: src/config.js reads accounts from it
   "compatibility_flags": ["nodejs_compat"],
-  // the logo (assets/logo.svg) is imported as text and served as the favicon
-  "rules": [{ "type": "Text", "globs": ["**/*.svg"], "fallthrough": true }],
+  // imported as text: the logo (assets/logo.svg, the favicon) and the docs the site serves (hub/docs.js)
+  "rules": [{ "type": "Text", "globs": ["**/*.svg", "**/*.md"], "fallthrough": true }],
   "triggers": { "crons": ["*/10 * * * *"] },
   "routes": [{ "pattern": "feedbai.internet4000.com", "custom_domain": true }],
   "vars": {
