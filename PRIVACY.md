@@ -8,6 +8,7 @@ From the channels a project configures:
 
 - **Matrix**: your user id (e.g. `@you:matrix.org`), display name, message text, time, and links to the message.
 - **Bluesky**: your handle, display name, post text, time, and links to the post.
+- **Feedback records** (saved to your own account with the Feedback button): your DID and handle, the text, the project, the page's address (origin and path only), and the time.
 
 Nothing else: no email addresses, IP addresses of message authors, contacts, or tracking. feedbai has no database. Its state is a list of "last read" times on the computer that runs it.
 
@@ -15,6 +16,7 @@ Nothing else: no email addresses, IP addresses of message authors, contacts, or 
 
 - **Read only**: running `feedbai` shows messages to the person (or agent) running it, on their computer. Nothing is stored beyond the "last read" time.
 - **Filed as a GitHub issue** (`feedbai issues`, the hub): only Matrix threads where someone **mentions the project's bot**, plus Bluesky mentions and Bluesky threads a project follows explicitly. The issue quotes those messages with their links. Private Matrix rooms are filed only if their topic names the repository, which means the room's members agreed. Bluesky searches and author feeds are **never** filed.
+- **The Feedback button** sends nothing to us. Its choices open Bluesky, GitHub or Matrix, prefilled, where you send it yourself. "Save to my Bluesky account" signs you in on `auth.feedbai.internet4000.com`: the sign-in session stays in your browser (on that site only), the handle you type is looked up through Bluesky's public API, and the record is written straight to your own account's server. It allows only creating feedbai feedback records: nothing else in your account. Records are public; delete one from your account and feedbai stops seeing it, and issues already filed keep their copy until removed on request (below).
 - **The hosted hub** reads public Matrix rooms its bot was invited to and Bluesky search results, and serves them through its read API with a 60-second cache. It stores no messages. Cloudflare keeps operational logs (repository names, counts, errors) for a short time.
 
 Services involved: the Matrix homeserver(s) and Bluesky, where the messages already are; GitHub, where issues are kept; Cloudflare, which runs the hub. GitHub and Cloudflare may process data outside the EU under their own data protection terms.
@@ -26,6 +28,7 @@ Legitimate interest (GDPR Art. 6(1)(f)): maintainers need to act on feedback tha
 ## Your choices
 
 - **Don't mention the bot** (Matrix): your messages are then read by people running feedbai, but never filed.
+- **Feedback records**: delete them from your account (any atproto record viewer, e.g. pdsls.dev, can), and sign out on the save page to end the session.
 - **Room admins**: kick the bot (`@feedbai:matrix.org`) to stop the hub. Leave the repository out of a private room's topic to keep the room out of issues.
 - **Projects**: uninstall the feedbai GitHub App, or remove `feedbai.config.json`.
 

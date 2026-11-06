@@ -1,0 +1,80 @@
+---
+/**
+ * /connect/: save feedback to your own Bluesky/atproto account. Served only on auth.feedbai.internet4000.com
+ * (its own origin, strict CSP: hub/worker.js), opened by the Feedback button. A plain page, not Starlight:
+ * no inline scripts, nothing else on the origin.
+ */
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Save your feedback · feedbai</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <main>
+      <header><img src="/favicon.svg" alt="" width="28" height="28" /><b>feedbai</b></header>
+      <h1>Save your feedback to your account</h1>
+      <p class="lead">It's saved in your own Bluesky account, as a public record, for the project to read. You can delete it anytime.</p>
+
+      <form id="form">
+        <label for="text">Your feedback</label>
+        <textarea id="text" maxlength="3000" rows="5" required></textarea>
+        <p class="meta">For <b id="project"></b></p>
+        <p class="meta" id="subject-row">About <span id="subject"></span> <button type="button" class="link" id="drop-subject">don't include</button></p>
+
+        <div id="signed-out">
+          <label for="handle">Your Bluesky handle</label>
+          <input id="handle" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="you.bsky.social" />
+          <button id="signin" class="primary" type="submit">Sign in and save</button>
+          <p class="fine">Bluesky asks you to allow one thing: <b>creating feedbai feedback records</b> in your account. Nothing else: no posts, no messages, no reading.</p>
+        </div>
+        <div id="signed-in" hidden>
+          <button id="save" class="primary" type="submit">Save as <span id="who"></span></button>
+          <p class="fine"><button type="button" class="link" id="signout">Sign out</button></p>
+        </div>
+        <p id="status" role="status" aria-live="polite"></p>
+      </form>
+
+      <section id="saved" hidden>
+        <p class="ok">✓ Saved to your account. The project will see it.</p>
+        <p><a id="record" href="#" target="_blank" rel="noopener noreferrer">See your record</a> (public). You can delete it from your account anytime.</p>
+        <button id="close" type="button" class="primary">Close</button>
+      </section>
+
+      <footer><a href="https://feedbai.internet4000.com/docs/button/">About feedbai</a> · <a href="https://feedbai.internet4000.com/docs/privacy/">Privacy</a></footer>
+    </main>
+    <script src="../scripts/connect.ts"></script>
+  </body>
+</html>
+
+<style is:global>
+  :root { --accent: #1f9d5c; --accent-ink: #fff; --bg: #f6f8f6; --card: #fff; --ink: #10201a; --muted: #5b6b63; --line: #dfe7e2; --soft: #eef2ef; color-scheme: light dark; }
+  @media (prefers-color-scheme: dark) { :root { --accent: #3ddc84; --accent-ink: #0b2a1a; --bg: #0b1511; --card: #13201a; --ink: #e8f1ec; --muted: #9bb0a5; --line: #22342b; --soft: #1b2b23; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+  main { max-width: 30rem; margin: 0 auto; padding: 20px 16px 40px; }
+  header { display: flex; align-items: center; gap: 8px; font-size: 18px; margin-bottom: 24px; }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0 0 8px; }
+  .lead { color: var(--muted); margin: 0 0 20px; }
+  form, #saved { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+  label { display: block; font-weight: 600; font-size: 15px; margin: 0 0 6px; }
+  textarea, input { width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--soft); color: var(--ink); font: inherit; }
+  textarea { resize: vertical; min-height: 120px; }
+  input { min-height: 48px; margin-bottom: 12px; }
+  .meta { font-size: 14px; color: var(--muted); margin: 8px 0 0; overflow-wrap: anywhere; }
+  #signed-out, #signed-in { margin-top: 18px; }
+  .primary { width: 100%; min-height: 48px; border: 0; border-radius: 12px; background: var(--accent); color: var(--accent-ink); font: 600 16px/1 inherit; font-family: inherit; cursor: pointer; }
+  .primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .link { border: 0; background: none; padding: 4px; color: var(--muted); text-decoration: underline; font: inherit; font-size: 14px; cursor: pointer; }
+  .fine { font-size: 13.5px; color: var(--muted); margin: 10px 0 0; }
+  #status { margin: 12px 0 0; font-size: 15px; min-height: 1.2em; }
+  #status.error { color: #c0392b; }
+  .ok { font-weight: 600; font-size: 18px; margin: 0 0 8px; }
+  a { color: var(--accent); }
+  footer { margin-top: 24px; font-size: 14px; color: var(--muted); }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+</style>

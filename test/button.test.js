@@ -17,15 +17,18 @@ test('a project is a GitHub repo, in any common spelling', () => {
 
 test('feedback goes to prefilled public places: Bluesky, a GitHub issue, the Matrix room', () => {
   const out = routes({ text: ' Play button broken ', page: 'https://x.example/p', project: 'https://github.com/o/r', matrix: '#r:matrix.org', bluesky: '#r' })
-  assert.deepEqual(out.map((r) => r.id), ['bluesky', 'github', 'matrix'])
+  assert.deepEqual(out.map((r) => r.id), ['bluesky', 'github', 'account', 'matrix'])
   const post = new URL(out[0].href).searchParams.get('text')
   assert.equal(post, 'Play button broken #r\nhttps://x.example/p')
   const issue = new URL(out[1].href)
   assert.equal(issue.pathname, '/o/r/issues/new')
   assert.equal(issue.searchParams.get('title'), 'Play button broken')
   assert.match(issue.searchParams.get('body'), /^Play button broken\n\nPage: https:\/\/x.example\/p\n/)
-  assert.equal(out[2].href, 'https://matrix.to/#/%23r%3Amatrix.org')
-  assert.equal(out[2].copy, '@feedbai:matrix.org Play button broken\nhttps://x.example/p', 'mentions the bot, so it becomes an issue')
+  const connect = new URL(out[2].href)
+  assert.equal(connect.origin + connect.pathname, 'https://auth.feedbai.internet4000.com/connect/')
+  assert.deepEqual(Object.fromEntries(connect.searchParams), { project: 'https://github.com/o/r', text: 'Play button broken', subject: 'https://x.example/p' })
+  assert.equal(out[3].href, 'https://matrix.to/#/%23r%3Amatrix.org')
+  assert.equal(out[3].copy, '@feedbai:matrix.org Play button broken\nhttps://x.example/p', 'mentions the bot, so it becomes an issue')
 })
 
 test('long feedback fits a Bluesky post, keeping the tag and page', () => {

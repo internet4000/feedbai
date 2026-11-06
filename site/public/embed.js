@@ -1,7 +1,8 @@
 /**
  * The feedbai button: a feedback button for any website. No login, no cookies, nothing stored by us.
  * The person writes their feedback, then picks a public place to send it, opened prefilled for them to
- * review and send: a Bluesky post, a GitHub issue, or the project's Matrix room. feedbai already listens there.
+ * review and send: a Bluesky post, a GitHub issue, the project's Matrix room, or a feedback record saved in their
+ * own Bluesky account (signing in on auth.feedbai.internet4000.com). feedbai already listens to all four.
  *
  *   <script type="module" src="https://feedbai.internet4000.com/embed.js"
  *     data-project="https://github.com/owner/repo" data-matrix="#room:server" data-bluesky="#yourproject"></script>
@@ -14,6 +15,7 @@
 export const VERSION = '0.1.0'
 const DEFAULT_BOT = '@feedbai:matrix.org'
 const BLUESKY_LIMIT = 300 // graphemes in a Bluesky post
+const AUTH = 'https://auth.feedbai.internet4000.com' // sign-in page, on its own origin
 
 /** The page being talked about: origin + path only. Query strings and fragments can hold tokens or personal data. */
 export const pageAddress = (href) => {
@@ -53,6 +55,10 @@ export const routes = ({ text, page = '', project, matrix, bluesky, bot = DEFAUL
     const title = cut(body.replace(/\s+/g, ' '), 72) || 'Feedback'
     const issue = `${cut(body, 4000)}${page ? `\n\nPage: ${page}` : ''}\n\n<sub>Sent with the [feedbai button](https://feedbai.internet4000.com/docs/button/)</sub>`
     out.push({ id: 'github', label: 'Open a GitHub issue', href: `https://github.com/${repo}/issues/new?${new URLSearchParams({ title, body: issue, labels: 'feedback' })}` })
+  }
+  if (repo) {
+    const connect = new URLSearchParams({ project: `https://github.com/${repo}`, text: cut(body, 3000), ...(page && { subject: page }) })
+    out.push({ id: 'account', label: 'Save to my Bluesky account', href: `${AUTH}/connect/?${connect}` })
   }
   if (matrix) {
     out.push({

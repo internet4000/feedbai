@@ -1,0 +1,14 @@
+{
+  "client_id": "https://auth.feedbai.internet4000.com/oauth/client-metadata.json",
+  "client_name": "feedbai",
+  "client_uri": "https://feedbai.internet4000.com",
+  "logo_uri": "https://feedbai.internet4000.com/favicon.svg",
+  "policy_uri": "https://feedbai.internet4000.com/docs/privacy/",
+  "redirect_uris": ["https://auth.feedbai.internet4000.com/connect/"],
+  "scope": "atproto repo:com.internet4000.feedbai.feedback?action=create",
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"],
+  "token_endpoint_auth_method": "none",
+  "application_type": "web",
+  "dpop_bound_access_tokens": true
+}

@@ -4,9 +4,10 @@ A feedback button for any website. People write what works and what doesn't, the
 
 - **a Bluesky post**, with your hashtag or handle and the page address;
 - **a GitHub issue** in your repo, labelled `feedback`;
-- **your Matrix room**, as a message that mentions the bot, so the [hub](../hub/README.md) (or your CI) files it as an issue.
+- **your Matrix room**, as a message that mentions the bot, so the [hub](../hub/README.md) (or your CI) files it as an issue;
+- **their own Bluesky account**, as a feedback record: they sign in (allowing only that), and you read it with the [AT Protocol records](channels/atproto.md) channel: `feedbai add atproto you/yourproject`.
 
-It needs no login and sets no cookies, and nothing goes through or stays on our servers: each choice opens that place prefilled, for the person to review and send. This site uses it: the **Feedback** button at the bottom right.
+It needs no login and sets no cookies, and nothing goes through or stays on our servers: each choice opens that place prefilled, for the person to review and send. Saving to their account is the only choice with a sign-in, on its own page (`auth.feedbai.internet4000.com`), and the record goes straight to their account. This site uses it: the **Feedback** button at the bottom right.
 
 ## Add it to your site
 
@@ -54,4 +55,4 @@ Only the page's address is attached (origin and path: query strings and `#fragme
 
 ## Next
 
-Connecting a Bluesky account to save feedback as a record in your own account, the hub replying when it's fixed, and a page per project: see the [vision](vision.md).
+The hub replying when it's fixed, and a page per project: see the [vision](vision.md).
