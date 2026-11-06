@@ -3,3 +3,7 @@ node_modules/
 !.env.example
 .wrangler/
 .dev.vars
+site/dist/
+site/.astro/
+# generated from docs/ by site/scripts/sync-docs.mjs
+site/src/content/docs/

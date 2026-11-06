@@ -8,8 +8,10 @@
   "compatibility_date": "2026-10-01",
   // process.env is populated from vars and secrets: src/config.js reads accounts from it
   "compatibility_flags": ["nodejs_compat"],
-  // the logo (assets/logo.svg) is imported as text and served as the favicon
-  "rules": [{ "type": "Text", "globs": ["**/*.svg"], "fallthrough": true }],
+  // The website (site/: Astro + Starlight, docs synced from docs/), built before every deploy and `wrangler dev`.
+  // Its files are served first; the Worker gets the rest (/v1/…, /.well-known/atproto-did, 404s).
+  "build": { "command": "npm ci --prefix site && npm run build --prefix site" },
+  "assets": { "directory": "./site/dist", "binding": "ASSETS" },
   "triggers": { "crons": ["*/10 * * * *"] },
   "routes": [{ "pattern": "feedbai.internet4000.com", "custom_domain": true }],
   "vars": {

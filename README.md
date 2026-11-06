@@ -41,6 +41,8 @@ Slack, Teams, Discord, Mastodon…: a channel is one module. See [adding a chann
 
 ## Documentation
 
+Also on the web: **https://feedbai.internet4000.com/docs**
+
 - [Getting started](docs/getting-started.md): install, set up a project, accounts, listening
 - [Concepts](docs/concepts.md): how it fits together, with diagrams
 - [Agents](docs/agents.md): Claude Code, Codex, pi; the triage workflow

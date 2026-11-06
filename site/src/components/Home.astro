@@ -1,0 +1,151 @@
+---
+/**
+ * The home page and its tabs (/, /agent, /diy, /self-host, /give): what feedbai does, then one way to use it.
+ * Starlight's page frame (header, search, theme) with a wide splash layout; tabs are links, no JS needed.
+ */
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro'
+import { WAYS, BOT } from '../ways.mjs'
+
+const { path } = Astro.props
+const way = WAYS.find((w) => w.path === path)
+const first = path === '/'
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
+const flow = `<ol class="flow">
+  <li><span class="icon">💬</span><div>Someone writes in your chat room<span class="chat">${esc(BOT)} the play button doesn't work on Safari</span></div></li>
+  <li><span class="icon">📋</span><div>A GitHub issue appears<small>Labelled <b>feedback</b>, with a link back to the message.</small></div></li>
+  <li><span class="icon">🛠️</span><div>You or your agent fix it<small>And reply in the chat when it's done.</small></div></li>
+</ol>`
+const faq = [
+  ['Does it cost anything?', 'No. feedbai is free and open source (GPL-3.0). This hub is run by internet4000; you can run your own, or do without one.'],
+  ['Which messages become issues?', 'Only messages that mention the bot, and later replies in the same thread. Everything else stays in the chat. Messages from bots listed in your config never open issues.'],
+  ["Does it keep my users' messages?", 'No. The hub stores nothing. The issues it opens quote the messages, in your repository. Details in the <a href="/docs/privacy/">privacy notes</a>.'],
+  ['How do I stop it?', 'Remove the bot from your room, or uninstall the GitHub App. Either one stops it immediately.'],
+  ['What about Bluesky and other places?', 'Bluesky works too: threads become issues, and searches give you the general mood. GitHub Discussions can be read. More channels get added when a project asks: <a href="https://github.com/internet4000/feedbai/issues/10">tell us which</a>.'],
+  ["I'm a developer: is there an API?", 'Yes, read-only and public: <code>/v1/matrix?room=#room:server</code> and <code>/v1/bluesky/search?query=…</code>. They return the same items as <code>feedbai fetch --format json</code>. <a href="/docs/hub/">Details</a>.'],
+]
+---
+
+<StarlightPage
+  frontmatter={{
+    title: first ? 'User feedback, straight into your issues' : way.title,
+    description: first ? 'People mention @feedbai in your chat; a GitHub issue appears. Free, open source, nothing to install.' : way.lead,
+    template: 'splash',
+    hero: {
+      title: "Your users' feedback, straight into your issues.",
+      tagline: 'People already talk about your project in chat. When they mention the bot, feedbai turns their message into a GitHub issue, so you (or your AI agents) can fix it.',
+      image: { html: flow },
+      actions: [
+        { text: 'Get started', link: '#ways', icon: 'right-arrow' },
+        { text: 'Read the docs', link: '/docs/', variant: 'minimal' },
+      ],
+    },
+  }}
+>
+  <div class="not-content home">
+    <p class="label" id="ways">How do you want to use it?</p>
+    <nav class="tabs" aria-label="Ways to use feedbai">
+      {WAYS.map((w) => (
+        <a href={`${w.path}#ways`} aria-current={w === way ? 'page' : undefined}>
+          {w.tab}{w.hint && <small>{w.hint}</small>}
+        </a>
+      ))}
+    </nav>
+
+    <section class="way">
+      <div class="way-head">
+        <h2>{way.title}</h2>
+        <p>{way.lead}</p>
+        <a class="more" href={way.more[0]}>{way.more[1]} →</a>
+      </div>
+      <ol class="steps">
+        {way.steps.map((s) => (
+          <li>
+            <p set:html={s.text} />
+            {s.chat && <p><span class="chat">{s.chat}</span></p>}
+            {s.copy && <div class="copy"><code>{s.copy}</code><button type="button" data-copy={s.copy}>Copy</button></div>}
+            {s.note && <p class="note" set:html={s.note} />}
+            {s.button && <a class:list={['btn', { ghost: s.button.ghost }]} href={s.button.href}>{s.button.label}</a>}
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <p class="label">Questions</p>
+    <div class="faqs">
+      {faq.map(([q, a]) => <details class="faq"><summary>{q}</summary><div set:html={a} /></details>)}
+    </div>
+  </div>
+</StarlightPage>
+
+<script>
+  document.addEventListener('click', async (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-copy]')
+    if (!b) return
+    try {
+      await navigator.clipboard.writeText(b.dataset.copy ?? '')
+      b.textContent = 'Copied'
+      setTimeout(() => (b.textContent = 'Copy'), 1500)
+    } catch {}
+  })
+  const tab = document.querySelector<HTMLElement>('.tabs [aria-current]')
+  if (tab?.parentElement) tab.parentElement.scrollLeft = tab.offsetLeft - 16
+</script>
+
+<style is:global>
+  /* The home page uses the whole width */
+  [data-has-hero] { --sl-content-width: 76rem; }
+  [data-has-hero] .hero { padding-block: 1rem 0; }
+  [data-has-hero] .hero h1 { font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.08; letter-spacing: -0.02em; }
+  [data-has-hero] .hero > .hero-html { order: 2; width: 100%; max-width: 32rem; }
+  .flow { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.65rem; width: 100%; text-align: start; }
+  .flow li { min-width: 0; background: var(--sl-color-bg-nav); border: 1px solid var(--sl-color-hairline); border-radius: 0.9rem; padding: 0.9rem 1rem; display: flex; gap: 0.75rem; align-items: flex-start; font-size: var(--sl-text-base); color: var(--sl-color-white); }
+  .flow .icon { font-size: 1.35rem; line-height: 1.3; }
+  .flow small { display: block; color: var(--sl-color-gray-3); font-size: var(--sl-text-sm); margin-top: 0.15rem; }
+  .chat { display: inline-block; margin-top: 0.3rem; background: var(--sl-color-accent-low); color: var(--sl-color-white); border-radius: 0.8rem 0.8rem 0.8rem 0.25rem; padding: 0.15rem 0.65rem; font-size: var(--sl-text-sm); }
+  @media (min-width: 50rem) {
+    [data-has-hero] .hero { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 3.5rem; }
+    [data-has-hero] .hero .hero-html { order: 2; }
+  }
+</style>
+
+<style>
+  .home { color: var(--sl-color-white); }
+  .label { font-size: var(--sl-text-sm); text-transform: uppercase; letter-spacing: 0.08em; color: var(--sl-color-gray-3); margin: 2.5rem 0 0.75rem; font-weight: 700; scroll-margin-top: 5rem; }
+  .tabs { display: flex; gap: 0.5rem; overflow-x: auto; margin: 0 calc(-1 * var(--sl-content-pad-x)) 1rem; padding: 2px var(--sl-content-pad-x) 6px; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs a { flex: none; display: flex; align-items: center; gap: 0.4rem; min-height: 2.75rem; padding: 0 0.9rem; border-radius: 999px; border: 1px solid var(--sl-color-hairline); background: var(--sl-color-bg-nav); color: var(--sl-color-white); text-decoration: none; font-size: var(--sl-text-sm); font-weight: 600; white-space: nowrap; }
+  .tabs a small { font-weight: 500; color: var(--sl-color-gray-3); }
+  .tabs a[aria-current] { background: var(--sl-color-white); color: var(--sl-color-black); border-color: var(--sl-color-white); }
+  .tabs a[aria-current] small { color: inherit; opacity: 0.75; }
+  .way-head h2 { font-size: var(--sl-text-2xl); margin: 0 0 0.25rem; }
+  .way-head p { color: var(--sl-color-gray-3); margin: 0 0 0.75rem; }
+  .more { display: inline-block; font-weight: 600; text-decoration: none; color: var(--sl-color-text-accent); margin-bottom: 1rem; }
+  .steps { list-style: none; margin: 0; padding: 0; counter-reset: s; display: grid; gap: 0.75rem; }
+  .steps li { min-width: 0; counter-increment: s; background: var(--sl-color-bg-nav); border: 1px solid var(--sl-color-hairline); border-radius: 0.9rem; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+  .steps li::before { content: counter(s); display: inline-grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--sl-color-accent); color: var(--sl-color-black); font-weight: 700; font-size: var(--sl-text-sm); }
+  .steps p { margin: 0; }
+  .steps :global(code), .faq :global(code) { background: var(--sl-color-gray-6); padding: 0.05rem 0.3rem; border-radius: 0.3rem; font-size: 0.9em; }
+  .steps :global(a:not(.btn)), .faq :global(a) { color: var(--sl-color-text-accent); }
+  .note { font-size: var(--sl-text-sm); color: var(--sl-color-gray-3); }
+  .btn { margin-top: auto; display: flex; align-items: center; justify-content: center; min-height: 3rem; border-radius: 0.75rem; background: var(--sl-color-accent); color: var(--sl-color-black); font-weight: 600; text-decoration: none; }
+  .btn.ghost { background: transparent; color: var(--sl-color-white); border: 1px solid var(--sl-color-gray-5); }
+  .copy { min-width: 0; display: flex; align-items: center; gap: 0.5rem; background: var(--sl-color-gray-6); border-radius: 0.75rem; padding: 0.35rem 0.35rem 0.35rem 0.85rem; min-height: 3rem; }
+  .copy code { flex: 1; overflow-x: auto; white-space: nowrap; font-family: var(--__sl-font-mono); font-size: var(--sl-text-sm); background: none; padding: 0; }
+  .copy button { flex: none; min-height: 2.25rem; padding: 0 0.75rem; border-radius: 0.5rem; border: 1px solid var(--sl-color-hairline); background: var(--sl-color-bg-nav); color: var(--sl-color-white); font: inherit; font-size: var(--sl-text-sm); font-weight: 600; cursor: pointer; }
+  .faqs { display: grid; gap: 0.5rem; align-items: start; }
+  .faq { background: var(--sl-color-bg-nav); border: 1px solid var(--sl-color-hairline); border-radius: 0.9rem; }
+  .faq summary { cursor: pointer; padding: 0.85rem 1rem; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 0.75rem; min-height: 3rem; align-items: center; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: '+'; color: var(--sl-color-gray-3); font-weight: 400; font-size: 1.4rem; line-height: 1; }
+  .faq[open] summary::after { content: '−'; }
+  .faq > div { padding: 0 1rem 0.9rem; color: var(--sl-color-gray-2); }
+  @media (min-width: 40rem) { .faqs { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 50rem) {
+    .tabs { flex-wrap: wrap; overflow: visible; margin: 0 0 1.5rem; padding: 0; }
+    .way-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1.5rem; margin-bottom: 1.25rem; }
+    .way-head h2 { flex-basis: 100%; }
+    .way-head p { margin: 0; flex: 1 1 20rem; }
+    .more { margin: 0; }
+    .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+</style>

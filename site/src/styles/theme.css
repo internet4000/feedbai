@@ -1,0 +1,13 @@
+/* feedbai green on Starlight's tokens; light and dark follow the reader's choice */
+:root {
+  --sl-color-accent-low: #0f3321;
+  --sl-color-accent: #1f9d5c;
+  --sl-color-accent-high: #b7f0cf;
+}
+:root[data-theme='light'] {
+  --sl-color-accent-low: #d4f2e0;
+  --sl-color-accent: #1a8a50;
+  --sl-color-accent-high: #0e3d24;
+}
+pre.mermaid { background: var(--sl-color-bg-nav); border: 1px solid var(--sl-color-hairline); border-radius: 0.75rem; padding: 1rem; overflow-x: auto; text-align: center; }
+@media (max-width: 39.99rem) { pre.mermaid svg { min-width: 600px; } }
