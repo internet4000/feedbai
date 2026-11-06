@@ -87,3 +87,4 @@ test('unknown pages are a 404 page; API paths are left to the API', () => {
   assert.equal(site({ path: '/v1/other', docs }), null)
   assert.equal(site({ path: '/docs/cli.md', docs }).status, 200)
 })
+

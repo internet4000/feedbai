@@ -1,11 +1,15 @@
 /**
  * The hub's website: `/` and its tabs show each way to use feedbai, `/docs/…` serves the repo's docs
  * (rendered from the same Markdown as on GitHub, so they never drift). Mobile first, one column,
- * no external assets except Mermaid on pages with diagrams; light and dark follow the system.
+ * no third-party requests: Mermaid (for diagrams) is served from this domain (MERMAID_PATH); light and dark follow the system.
  */
-import { esc, render } from './markdown.js'
+import { esc, inline, render } from './markdown.js'
 
 const REPO = 'https://github.com/internet4000/feedbai'
+/** Mermaid draws the docs' diagrams in the browser. The Worker serves it from this path (passed through from
+ * jsdelivr, pinned, cached), so visitors never contact a third party. */
+export const MERMAID_PATH = '/vendor/mermaid/'
+export const MERMAID_CDN = 'https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/'
 
 /** Every doc the site serves: repo path → route, in menu order. Links between docs follow these. */
 export const DOCS = [
@@ -112,25 +116,31 @@ const ways = (env) => {
 }
 
 const CSS = `
-:root{--bg:#f6f8f6;--card:#fff;--ink:#10201a;--muted:#5b6b63;--line:#dfe7e2;--accent:#1f9d5c;--accent-ink:#fff;--soft:#e6f6ed;--code:#eef2ef}
-@media (prefers-color-scheme:dark){:root{--bg:#0b1511;--card:#13201a;--ink:#e8f1ec;--muted:#9bb0a5;--line:#22342b;--accent:#3ddc84;--accent-ink:#0b2a1a;--soft:#173226;--code:#1b2b23}}
+:root{--wide:76rem;--bg:#f6f8f6;--card:#fff;--ink:#10201a;--muted:#5b6b63;--line:#dfe7e2;--accent:#1f9d5c;--accent-ink:#fff;--soft:#e6f6ed;--code:#eef2ef}
+@media (prefers-color-scheme:dark){:root{--wide:76rem;--bg:#0b1511;--card:#13201a;--ink:#e8f1ec;--muted:#9bb0a5;--line:#22342b;--accent:#3ddc84;--accent-ink:#0b2a1a;--soft:#173226;--code:#1b2b23}}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;scroll-padding-top:72px}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 a{color:inherit}
 .top{position:sticky;top:0;z-index:2;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-.top>div{max-width:60rem;margin:0 auto;padding:0 16px;height:56px;display:flex;align-items:center;gap:4px}
+.top>div{max-width:var(--wide);margin:0 auto;padding:0 16px;height:56px;display:flex;align-items:center;gap:4px}
 .brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:19px;text-decoration:none;margin-right:auto}
 .brand img{width:28px;height:28px}
 .top nav a{text-decoration:none;padding:10px 12px;border-radius:10px;font-size:15px;font-weight:600;color:var(--muted)}
 .top nav a[aria-current]{color:var(--ink);background:var(--card)}
-main{max-width:34rem;margin:0 auto;padding:24px 16px 48px}
+main{max-width:var(--wide);margin:0 auto;padding:24px 16px 48px}
+main.narrow{max-width:34rem}
 .status{font-size:13px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
 .dot.off{background:#d9822b}
 h1{font-size:30px;line-height:1.15;letter-spacing:-.02em;margin:0 0 12px}
 .lead{font-size:18px;color:var(--muted);margin:0 0 24px}
-.label{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:36px 0 12px;font-weight:700}
+.label{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:40px 0 12px;font-weight:700}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 28px}
+.actions .btn{width:auto;flex:1 1 10rem}
+.faqs{display:grid;gap:8px;align-items:start}
+.faqs details.faq{margin:0}
+.toc{display:none}
 .flow{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .flow li{min-width:0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
 .flow .icon{font-size:22px;line-height:1.3}
@@ -142,10 +152,12 @@ h1{font-size:30px;line-height:1.15;letter-spacing:-.02em;margin:0 0 12px}
 .tabs a small{font-weight:500;color:var(--muted)}
 .tabs a[aria-current]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .tabs a[aria-current] small{color:inherit;opacity:.75}
-.way h2{font-size:22px;margin:0 0 4px;letter-spacing:-.01em}
-.way>p{color:var(--muted);margin:0 0 16px}
+.way-head h2{font-size:22px;margin:0 0 4px;letter-spacing:-.01em}
+.way-head p{color:var(--muted);margin:0 0 16px}
+.way-head .more{margin:0 0 16px}
 .steps{list-style:none;margin:0;padding:0;counter-reset:s;display:grid;gap:12px}
-.steps li{min-width:0;counter-increment:s;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.steps li{min-width:0;counter-increment:s;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column}
+.steps li>.btn:last-child{margin-top:auto}
 .steps li::before{content:counter(s);display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:15px;margin-bottom:8px}
 .steps p{margin:0 0 12px}
 .steps p:last-child{margin-bottom:0}
@@ -164,9 +176,8 @@ summary::-webkit-details-marker{display:none}
 .faq[open] summary::after{content:"−"}
 .faq>div{padding:0 16px 14px;color:var(--muted);font-size:16px}
 .faq code{background:var(--code);padding:1px 5px;border-radius:5px;font-size:.9em}
-footer{max-width:60rem;margin:0 auto;padding:24px 16px 40px;font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 16px;border-top:1px solid var(--line)}
+footer{max-width:var(--wide);margin:0 auto;padding:24px 16px 40px;font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 16px;border-top:1px solid var(--line)}
 /* docs */
-.docs{max-width:60rem}
 .menu{border:1px solid var(--line);background:var(--card);border-radius:14px;margin-bottom:20px}
 .menu summary{cursor:pointer;list-style:none;padding:12px 16px;min-height:48px;display:flex;align-items:center;justify-content:space-between;font-weight:600}
 .menu summary::after{content:"☰";color:var(--muted)}
@@ -174,7 +185,7 @@ footer{max-width:60rem;margin:0 auto;padding:24px 16px 40px;font-size:14px;color
 .menu b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:12px 8px 4px}
 .menu a{display:block;padding:8px;border-radius:8px;text-decoration:none;font-size:15px}
 .menu a[aria-current]{background:var(--soft);font-weight:600}
-article{min-width:0;font-size:16.5px}
+article{min-width:0;font-size:16.5px;max-width:48rem}
 article h1{font-size:32px}
 article h2{font-size:23px;margin:36px 0 10px;letter-spacing:-.01em}
 article h3{font-size:19px;margin:28px 0 8px}
@@ -186,10 +197,11 @@ article ul,article ol{padding-left:22px}
 article code{background:var(--code);padding:1px 5px;border-radius:5px;font:.88em ui-monospace,SFMono-Regular,Menlo,monospace}
 article pre{position:relative;background:var(--code);border-radius:12px;padding:14px 16px;overflow-x:auto;font-size:14px;line-height:1.5}
 article pre code{background:none;padding:0;font-size:inherit}
-article pre button{position:absolute;top:8px;right:8px;min-height:30px;opacity:.85}
+article pre button{position:absolute;top:8px;right:8px;min-height:30px;opacity:.9}
+@media (hover:hover){article pre button{opacity:0;transition:opacity .15s}article pre:hover button,article pre button:focus{opacity:1}}
+/* diagrams scroll sideways on phones rather than shrink */
 article pre.mermaid{background:var(--card);border:1px solid var(--line);text-align:center;line-height:1.2}
-article pre.mermaid svg{min-width:min(640px,100%)}
-@media (max-width:639px){article pre.mermaid svg{min-width:640px}}
+@media (max-width:639px){article pre.mermaid svg{min-width:600px}}
 article blockquote{margin:16px 0;padding:2px 16px;border-left:4px solid var(--accent);color:var(--muted)}
 .table{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:12px;background:var(--card)}
 table{border-collapse:collapse;width:100%;font-size:15px}
@@ -197,11 +209,28 @@ th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vert
 tr:last-child td{border-bottom:0}
 th{background:var(--soft);white-space:nowrap}
 .edit{margin-top:40px;font-size:14px}
-@media (min-width:640px){main{padding-top:48px}h1{font-size:40px}article h1{font-size:36px}}
+@media (min-width:640px){main{padding:48px 24px 64px}.top>div,footer{padding-left:24px;padding-right:24px}h1{font-size:40px}article h1{font-size:36px}.faqs{grid-template-columns:1fr 1fr}}
 @media (min-width:900px){
-  .docs{display:grid;grid-template-columns:15rem minmax(0,1fr);gap:40px;align-items:start}
+  .hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:56px;align-items:center;padding:24px 0 16px}
+  .hero h1{font-size:52px}
+  .hero .lead{font-size:20px}
+  .tabs{flex-wrap:wrap;overflow:visible;margin:0 0 24px;padding:0}
+  .way-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 24px;margin-bottom:20px}
+  .way-head p{margin:0;flex:1 1 20rem}
+  .way-head h2{flex-basis:100%}
+  .way-head .more{margin:0}
+  .steps{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .docs{display:grid;grid-template-columns:15rem minmax(0,1fr);gap:48px;align-items:start}
   .menu{position:sticky;top:72px;max-height:calc(100vh - 88px);overflow-y:auto;background:none;border:0;margin:0}
   .menu summary{display:none}
+}
+@media (min-width:1240px){
+  .docs{grid-template-columns:15rem minmax(0,1fr) 13rem}
+  .toc{display:block;position:sticky;top:72px;max-height:calc(100vh - 88px);overflow-y:auto;font-size:14px;border-left:1px solid var(--line);padding-left:16px}
+  .toc b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:16px 0 8px}
+  .toc a{display:block;padding:4px 0;color:var(--muted);text-decoration:none}
+  .toc a:hover{color:var(--ink)}
+  .toc .sub{padding-left:12px}
 }
 `
 
@@ -219,7 +248,7 @@ const fit = () => menu && (menu.open = wide.matches); fit(); wide.addEventListen
 `
 
 const MERMAID = `<script type="module">
-import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs'
+import mermaid from '${MERMAID_PATH}mermaid.esm.min.mjs'
 mermaid.initialize({ startOnLoad: true, theme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'neutral' })
 </script>`
 
@@ -256,31 +285,37 @@ const home = (env, way, all) => {
     description: first ? 'People mention @feedbai in your chat; a GitHub issue appears. Free, open source, nothing to install.' : way.lead,
     section: 'start',
     body: `<main>
+<section class="hero"><div>
 <p class="status"><span class="dot${ready ? '' : ' off'}"></span>${ready ? 'Hub running' : 'Hub not configured'}</p>
 <h1>Your users' feedback, straight into your issues.</h1>
 <p class="lead">People already talk about your project in chat. When they mention the bot, feedbai turns their message into a GitHub issue, so you (or your AI agents) can fix it.</p>
+<div class="actions"><a class="btn" href="/#ways">Get started</a><a class="btn ghost" href="/docs">Read the docs</a></div>
+</div>
 <ol class="flow">
   <li><span class="icon">💬</span><div>Someone writes in your chat room<br>${chat(`${bot} the play button doesn't work on Safari`)}</div></li>
   <li><span class="icon">📋</span><div>A GitHub issue appears<small>Labelled <b>feedback</b>, with a link back to the message.</small></div></li>
   <li><span class="icon">🛠️</span><div>You or your agent fix it<small>And reply in the chat when it's done.</small></div></li>
 </ol>
+</section>
 <p class="label" id="ways">How do you want to use it?</p>
 <nav class="tabs" aria-label="Ways to use feedbai">${all
       .map((w) => `<a href="${w.path === '/' ? '/#ways' : `${w.path}#ways`}"${w === way ? ' aria-current="page"' : ''}>${esc(w.tab)}${w.hint ? ` <small>${esc(w.hint)}</small>` : ''}</a>`)
       .join('')}</nav>
 <section class="way">
-<h2>${esc(way.title)}</h2>
+<div class="way-head"><h2>${esc(way.title)}</h2>
 <p>${esc(way.lead)}</p>
+<a class="more" href="${way.more[0]}">${esc(way.more[1])} →</a></div>
 <ol class="steps">${way.steps.map((s) => `<li>${s}</li>`).join('')}</ol>
-<a class="more" href="${way.more[0]}">${esc(way.more[1])} →</a>
 </section>
 <p class="label">Questions</p>
+<div class="faqs">
 <details class="faq"><summary>Does it cost anything?</summary><div>No. feedbai is free and open source (GPL-3.0). This hub is run by internet4000; you can run your own, or do without one.</div></details>
 <details class="faq"><summary>Which messages become issues?</summary><div>Only messages that mention the bot, and later replies in the same thread. Everything else stays in the chat. Messages from bots listed in your config never open issues.</div></details>
 <details class="faq"><summary>Does it keep my users' messages?</summary><div>No. The hub stores nothing. The issues it opens quote the messages, in your repository. Details in the <a href="/docs/privacy">privacy notes</a>.</div></details>
 <details class="faq"><summary>How do I stop it?</summary><div>Remove the bot from your room, or uninstall the GitHub App. Either one stops it immediately.</div></details>
 <details class="faq"><summary>What about Bluesky and other places?</summary><div>Bluesky works too: threads become issues, and searches give you the general mood. GitHub Discussions can be read. More channels get added when a project asks: <a href="${REPO}/issues/10">tell us which</a>.</div></details>
 <details class="faq"><summary>I'm a developer: is there an API?</summary><div>Yes, read-only and public: <code>/v1/matrix?room=#room:server</code> and <code>/v1/bluesky/search?query=…</code>. They return the same items as <code>feedbai fetch --format json</code>. <a href="/docs/hub">Details</a>.</div></details>
+</div>
 </main>`,
   })
 }
@@ -293,13 +328,15 @@ const menu = (current) => {
 }
 
 const docPage = (doc, docs) => {
-  const { html, mermaid } = render(docs[doc.file], { link: (href) => resolveLink(doc.file, href) })
+  const { html, headings, mermaid } = render(docs[doc.file], { link: (href) => resolveLink(doc.file, href) })
+  const sections = headings.filter((h) => h.level <= 3)
+  const toc = sections.length > 1 ? `<nav class="toc" aria-label="On this page"><b>On this page</b>${sections.map((h) => `<a href="#${esc(h.id)}"${h.level === 3 ? ' class="sub"' : ''}>${inline(h.text.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1'))}</a>`).join('')}</nav>` : ''
   return layout({
     title: `${doc.title} · feedbai docs`,
     description: `feedbai documentation: ${doc.title}`,
     section: 'docs',
     mermaid,
-    body: `<main class="docs">${menu(doc)}<article>${html}<p class="edit"><a href="${REPO}/edit/main/${doc.file}">Edit this page on GitHub</a></p></article></main>`,
+    body: `<main class="docs">${menu(doc)}<article>${html}<p class="edit"><a href="${REPO}/edit/main/${doc.file}">Edit this page on GitHub</a></p></article>${toc}</main>`,
   })
 }
 
@@ -311,9 +348,9 @@ export const site = ({ path, env = {}, docs }) => {
   if (way) return { status: 200, html: home(env, way, all) }
   const doc = DOCS.find((d) => d.route === path.replace(/\/$/, '') || d.route === path.replace(/\.md$/, ''))
   if (doc && docs[doc.file] !== undefined) return { status: 200, html: docPage(doc, docs) }
-  if (path.startsWith('/v1/') || path.startsWith('/.well-known/')) return null
+  if (path.startsWith('/v1/') || path.startsWith('/.well-known/') || path.startsWith(MERMAID_PATH)) return null
   return {
     status: 404,
-    html: layout({ title: 'Not found · feedbai', description: 'Page not found', section: '', body: `<main><h1>Not found</h1><p class="lead">No page at <code>${esc(path)}</code>.</p><a class="btn" href="/">Go to the start</a><a class="more" href="/docs">Browse the docs →</a></main>` }),
+    html: layout({ title: 'Not found · feedbai', description: 'Page not found', section: '', body: `<main class="narrow"><h1>Not found</h1><p class="lead">No page at <code>${esc(path)}</code>.</p><a class="btn" href="/">Go to the start</a><a class="more" href="/docs">Browse the docs →</a></main>` }),
   }
 }

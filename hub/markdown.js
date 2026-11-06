@@ -1,8 +1,9 @@
 /**
  * A small Markdown renderer for the docs in this repo (no dependencies): headings with GitHub-style ids,
- * paragraphs, lists (nested, with code inside), fenced code (``` mermaid becomes a diagram), tables,
+ * paragraphs, lists (nested, with code inside), fenced code, tables,
  * blockquotes, rules; inline code, links, bold, italic, bare URLs. Raw HTML is always escaped.
  * `link(href)` rewrites every link target (the site maps repo paths to its own routes).
+ * ```mermaid blocks become <pre class="mermaid">, drawn in the browser by Mermaid.
  */
 export const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 
@@ -32,7 +33,7 @@ const FENCE = /^ *(```+|~~~+)\s*([\w-]*)/
 const startsBlock = (line) => /^#{1,6} /.test(line) || LIST.test(line) || FENCE.test(line) || /^>/.test(line) || /^\|/.test(line)
 const cells = (row) => row.replace(/\\\|/g, '\u0001').trim().replace(/^\||\|$/g, '').split('|').map((c) => c.replace(/\u0001/g, '\\|').trim())
 
-/** Returns { html, title, headings, mermaid }. */
+/** Returns { html, title, headings, mermaid } (mermaid: the page has diagrams). */
 export const render = (markdown, { link } = {}) => {
   const ids = new Map()
   const doc = { title: '', headings: [], mermaid: false }

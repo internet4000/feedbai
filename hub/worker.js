@@ -7,8 +7,20 @@
 import { runHub } from './run.js'
 import { readMatrix, readBlueskySearch } from './api.js'
 import logo from '../assets/logo.svg'
-import { site } from './site.js'
+import { site, MERMAID_PATH, MERMAID_CDN } from './site.js'
 import { docs } from './docs.js'
+
+/** A pinned file from a CDN, served from this domain (visitors never contact the CDN), cached for a day. */
+const vendor = async (request, upstream, ctx) => {
+  if (!/^[\w./-]+\.m?js$/.test(upstream.slice(upstream.lastIndexOf('/dist/') + 6)) || upstream.includes('..')) return new Response('Not found', { status: 404 })
+  const cached = await caches.default.match(request)
+  if (cached) return cached
+  const res = await fetch(upstream)
+  if (!res.ok) return new Response('Not found', { status: 404 })
+  const response = new Response(res.body, { headers: { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'public, max-age=86400' } })
+  ctx.waitUntil(caches.default.put(request, response.clone()))
+  return response
+}
 
 export default {
   async fetch(request, env, ctx) {
@@ -16,6 +28,7 @@ export default {
     if (url.pathname === '/favicon.svg') return new Response(logo, { headers: { 'content-type': 'image/svg+xml', 'cache-control': 'public, max-age=86400' } })
     // The hub's domain is its Bluesky bot's handle (AT Protocol handle verification over HTTPS)
     if (url.pathname === '/.well-known/atproto-did' && env.FEEDBAI_BLUESKY_DID) return new Response(env.FEEDBAI_BLUESKY_DID, { headers: { 'content-type': 'text/plain' } })
+    if (url.pathname.startsWith(MERMAID_PATH)) return vendor(request, MERMAID_CDN + url.pathname.slice(MERMAID_PATH.length), ctx)
     const read = { '/v1/matrix': readMatrix, '/v1/bluesky/search': readBlueskySearch }[url.pathname]
     if (!read) {
       const page = request.method === 'GET' || request.method === 'HEAD' ? site({ path: url.pathname, env, docs }) : null
