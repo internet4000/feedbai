@@ -1,68 +1,83 @@
 ---
 /**
- * The home page: what feedbai does, how to start in three steps, and where the other ways are documented.
- * One path, no tabs: someone new should get it in ten seconds and be set up in two minutes.
+ * The home page. The pitch in one line ("hear your community, let your agents act on it"), the loop that
+ * delivers it, four reasons, then how to start. One path, no tabs.
  */
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro'
 
 const REPO = 'https://github.com/internet4000/feedbai'
 const BOT = '@feedbai:matrix.org'
 const SNIPPET = '<script type="module" src="https://feedbai.internet4000.com/embed.js" data-project="https://github.com/you/repo"></script>'
-const flow = `<ol class="flow">
-  <li><span class="icon">💬</span><div>Someone sends feedback<small>With the Feedback button on your site, in your chat, or on Bluesky.</small></div></li>
-  <li><span class="icon">📋</span><div>It becomes a GitHub issue<small>Labelled <b>feedback</b>, with a link back to them.</small></div></li>
-  <li><span class="icon">🛠️</span><div>You or your AI agent fix it<small>And they hear back where they wrote.</small></div></li>
+
+// The loop, shown beside the headline
+const loop = `<ol class="loop" aria-label="How it works">
+  <li><span class="n">1</span><div><b>Your community speaks</b><small>In your chat, on Bluesky, with the Feedback button on your site.</small></div></li>
+  <li><span class="n">2</span><div><b>feedbai gathers it</b><small>One stream, from everywhere, as GitHub issues and in your terminal.</small></div></li>
+  <li><span class="n">3</span><div><b>Your agents act on it</b><small>Claude Code, Codex…: triage, fix, open the pull request.</small></div></li>
+  <li><span class="n">4</span><div><b>Everyone hears back</b><small>A reply where they spoke: it's fixed.</small></div></li>
 </ol>`
+
+const reasons = [
+  ['💬', 'Everywhere they talk', 'People keep using their chat, Bluesky, or your site. Nobody signs up for a feedback tool.'],
+  ['🤖', 'Made for AI agents', 'Every output says what to do next. Agents read it, file it, fix it, and reply, with you in charge.'],
+  ['↩️', 'Everyone hears back', 'Feedback is answered where it was given. That is what makes people give more.'],
+  ['🌱', 'Nothing to host, nothing kept', 'Open source and decentralized: feedback stays with the people who wrote it. Run it without us if you like.'],
+]
 const faq = [
   ['Does it cost anything?', 'No. feedbai is free and open source (GPL-3.0).'],
-  ['Where does the feedback go? Do you keep it?', 'We keep nothing. People send feedback from their own accounts to public places (a GitHub issue, Bluesky, your chat room), and feedbai files it in your repository. <a href="/docs/privacy/">Privacy notes</a>.'],
-  ['Can I use it without your servers?', 'Yes: your own bot accounts and your own CI, nothing through us. <a href="/docs/on-your-own/">How</a>.'],
+  ['Where does the feedback go? Do you keep it?', 'We keep nothing. People write from their own accounts, in public places they chose, and feedbai files it in your repository. <a href="/docs/privacy/">Privacy notes</a>.'],
+  ['Do I need an AI agent?', 'No. Feedback becomes GitHub issues you can handle yourself. Agents make the loop faster: they triage, fix and reply.'],
 ]
 const others = [
-  ['/docs/agents/', 'With your AI agent', 'Claude Code, Codex: triage, fix, reply'],
-  ['/docs/on-your-own/', 'Without our servers', 'your bots, your CI'],
+  ['/docs/agents/', 'Agents', 'Claude Code, Codex: the triage workflow'],
+  ['/docs/on-your-own/', 'Without our servers', 'your bot accounts, your CI'],
   ['/docs/hub/', 'Run your own hub', 'one bot for your team or community'],
-  ['/feedback/', 'Giving feedback on a project?', 'how it works for you'],
+  ['/feedback/', 'Giving feedback?', 'how it works for you'],
 ]
 ---
 
 <StarlightPage
   frontmatter={{
-    title: 'User feedback, straight into your issues',
-    description: 'A feedback button for your site, and your chat: feedback becomes GitHub issues you and your AI agent fix. Free, open source, nothing stored.',
+    title: 'Hear your community. Let your agents act on it.',
+    description: 'feedbai gathers feedback wherever people talk about your project, turns it into work for you and your AI agents, and answers back. Open, decentralized, nothing stored.',
     template: 'splash',
     hero: {
-      title: "Your users' feedback, straight into your GitHub issues.",
-      tagline: 'Add a Feedback button to your site, or let people mention the bot in your chat. feedbai turns what they say into issues you and your AI agent can fix.',
-      image: { html: flow },
+      title: 'Hear your community.<br>Let your agents act on it.',
+      tagline: 'feedbai gathers feedback wherever people talk about your project (chat, Bluesky, a button on your site), turns it into work for you and your AI agents, and answers back.',
+      image: { html: loop },
       actions: [
-        { text: 'Start in 2 minutes', link: '#start', icon: 'right-arrow' },
-        { text: 'Docs', link: '/docs/', variant: 'minimal' },
+        { text: 'Get started', link: '#start', icon: 'right-arrow' },
+        { text: 'Read the docs', link: '/docs/', variant: 'minimal' },
       ],
     },
   }}
 >
   <div class="not-content home">
-    <h2 id="start">Start in 2 minutes</h2>
+    <ul class="reasons">
+      {reasons.map(([icon, title, text]) => <li><span class="icon" aria-hidden="true">{icon}</span><b>{title}</b><p>{text}</p></li>)}
+    </ul>
+
+    <h2 id="start">Get started</h2>
+    <p class="sub">Three steps, about two minutes. Each one works on its own.</p>
     <ol class="steps">
       <li>
-        <p><b>Add the Feedback button</b> to your site, with your repo:</p>
+        <p><b>Let people give feedback on your site.</b> Add the Feedback button, with your repo:</p>
         <div class="copy"><code>{SNIPPET}</code><button type="button" data-copy={SNIPPET}>Copy</button></div>
         <p class="note">Try it: bottom right of this page. <a href="/docs/button/">Options</a></p>
       </li>
       <li>
-        <p><b>Connect your chat</b> (optional). Invite the bot to your Matrix room, and install the App so its messages become issues:</p>
+        <p><b>Listen to your chat.</b> Invite the bot to your Matrix room, and install the GitHub App so messages that mention it become issues:</p>
         <div class="copy"><code>{BOT}</code><button type="button" data-copy={BOT}>Copy</button></div>
         <a class="btn" href="https://github.com/apps/feedbai">Install the GitHub App</a>
       </li>
       <li>
-        <p><b>Read it with your AI agent.</b> In your project, run:</p>
+        <p><b>Hand it to your agent.</b> In your project, run:</p>
         <div class="copy"><code>npx github:internet4000/feedbai</code><button type="button" data-copy="npx github:internet4000/feedbai">Copy</button></div>
-        <p class="note">New feedback, your open issues, and what to do next. In Claude Code: <code>!feedbai</code>.</p>
+        <p class="note">It finds your channels, shows new feedback and says what to do next. In Claude Code: <code>!feedbai</code>.</p>
       </li>
     </ol>
 
-    <h2>Other ways</h2>
+    <h2>More ways</h2>
     <ul class="others">
       {others.map(([href, title, hint]) => <li><a href={href}><b>{title}</b><span>{hint}</span></a></li>)}
     </ul>
@@ -71,7 +86,7 @@ const others = [
     <div class="faqs">
       {faq.map(([q, a]) => <details class="faq"><summary>{q}</summary><div set:html={a} /></details>)}
     </div>
-    <p class="more"><a href={REPO}>Source code</a> · <a href="/docs/">All docs</a></p>
+    <p class="more"><a href={REPO}>Source code</a> · <a href="/docs/">All docs</a> · <a href="/docs/vision/">Where it's going</a></p>
   </div>
 </StarlightPage>
 
@@ -89,19 +104,30 @@ const others = [
 
 <style is:global>
   [data-has-hero] { --sl-content-width: 68rem; }
-  [data-has-hero] .hero { padding-block: 1rem 0; }
-  [data-has-hero] .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.08; letter-spacing: -0.02em; }
+  [data-has-hero] .hero { padding-block: 1.5rem 0.5rem; }
+  [data-has-hero] .hero h1 { font-size: clamp(2.1rem, 4.2vw, 3rem); line-height: 1.05; letter-spacing: -0.025em; }
+  [data-has-hero] .hero .tagline { font-size: clamp(1.05rem, 2vw, 1.25rem); }
   [data-has-hero] .hero > .hero-html { order: 2; width: 100%; max-width: 30rem; }
-  .flow { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; width: 100%; text-align: start; }
-  .flow li { min-width: 0; background: var(--sl-color-bg-nav); border: 1px solid var(--sl-color-hairline); border-radius: 0.9rem; padding: 0.85rem 1rem; display: flex; gap: 0.75rem; align-items: flex-start; font-size: var(--sl-text-base); color: var(--sl-color-white); }
-  .flow .icon { font-size: 1.35rem; line-height: 1.3; }
-  .flow small { display: block; color: var(--sl-color-gray-3); font-size: var(--sl-text-sm); margin-top: 0.15rem; }
-  @media (min-width: 50rem) { [data-has-hero] .hero { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 3.5rem; } }
+  .loop { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; width: 100%; text-align: start; position: relative; }
+  .loop li { position: relative; display: flex; gap: 0.85rem; align-items: flex-start; padding: 0 0 1.1rem; color: var(--sl-color-white); font-size: var(--sl-text-base); }
+  .loop li:not(:last-child)::after { content: ''; position: absolute; left: 0.95rem; top: 2.1rem; bottom: 0.25rem; width: 2px; background: var(--sl-color-hairline); }
+  .loop li:last-child { padding-bottom: 0; }
+  .loop .n { flex: none; display: inline-grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: var(--sl-color-accent); color: var(--sl-color-black); font-weight: 700; font-size: var(--sl-text-sm); }
+  .loop li:last-child .n { background: var(--sl-color-accent-high); color: var(--sl-color-black); }
+  .loop b { display: block; line-height: 1.35; }
+  .loop small { display: block; color: var(--sl-color-gray-3); font-size: var(--sl-text-sm); margin-top: 0.15rem; }
+  @media (min-width: 50rem) { [data-has-hero] .hero { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 3rem; } }
 </style>
 
 <style>
   .home { color: var(--sl-color-white); }
-  h2 { font-size: var(--sl-text-2xl); margin: 3rem 0 1rem; scroll-margin-top: 5rem; }
+  h2 { font-size: var(--sl-text-2xl); margin: 3.5rem 0 0.25rem; scroll-margin-top: 5rem; }
+  .sub { color: var(--sl-color-gray-3); margin: 0 0 1rem; }
+  .reasons { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.75rem; }
+  .reasons li { background: var(--sl-color-bg-nav); border: 1px solid var(--sl-color-hairline); border-radius: 0.9rem; padding: 1rem; }
+  .reasons .icon { font-size: 1.4rem; display: block; margin-bottom: 0.35rem; }
+  .reasons b { display: block; margin-bottom: 0.2rem; }
+  .reasons p { margin: 0; color: var(--sl-color-gray-3); font-size: var(--sl-text-sm); }
   .steps { list-style: none; margin: 0; padding: 0; counter-reset: s; display: grid; gap: 0.75rem; }
   .steps li { min-width: 0; counter-increment: s; background: var(--sl-color-bg-nav); border: 1px solid var(--sl-color-hairline); border-radius: 0.9rem; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
   .steps li::before { content: counter(s); display: inline-grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--sl-color-accent); color: var(--sl-color-black); font-weight: 700; font-size: var(--sl-text-sm); }
@@ -113,18 +139,23 @@ const others = [
   .copy { min-width: 0; display: flex; align-items: center; gap: 0.5rem; background: var(--sl-color-gray-6); border-radius: 0.75rem; padding: 0.35rem 0.35rem 0.35rem 0.85rem; min-height: 3rem; }
   .copy code { flex: 1; overflow-x: auto; white-space: nowrap; font-family: var(--__sl-font-mono); font-size: var(--sl-text-sm); background: none; padding: 0; }
   .copy button { flex: none; min-height: 2.25rem; padding: 0 0.75rem; border-radius: 0.5rem; border: 1px solid var(--sl-color-hairline); background: var(--sl-color-bg-nav); color: var(--sl-color-white); font: inherit; font-size: var(--sl-text-sm); font-weight: 600; cursor: pointer; }
-  .others { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+  .others { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.5rem; }
   .others a { display: flex; flex-direction: column; gap: 0.1rem; padding: 0.8rem 1rem; border: 1px solid var(--sl-color-hairline); border-radius: 0.9rem; background: var(--sl-color-bg-nav); text-decoration: none; min-height: 3rem; }
   .others b { color: var(--sl-color-white); }
   .others span { color: var(--sl-color-gray-3); font-size: var(--sl-text-sm); }
-  .faqs { display: grid; gap: 0.5rem; align-items: start; }
+  .faqs { margin-top: 1rem; display: grid; gap: 0.5rem; align-items: start; }
   .faq { background: var(--sl-color-bg-nav); border: 1px solid var(--sl-color-hairline); border-radius: 0.9rem; }
   .faq summary { cursor: pointer; padding: 0.85rem 1rem; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 0.75rem; min-height: 3rem; align-items: center; }
   .faq summary::-webkit-details-marker { display: none; }
   .faq summary::after { content: '+'; color: var(--sl-color-gray-3); font-weight: 400; font-size: 1.4rem; line-height: 1; }
   .faq[open] summary::after { content: '−'; }
   .faq > div { padding: 0 1rem 0.9rem; color: var(--sl-color-gray-2); }
-  .more { margin-top: 2rem; color: var(--sl-color-gray-3); }
-  @media (min-width: 40rem) { .others { grid-template-columns: 1fr 1fr; } }
-  @media (min-width: 50rem) { .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } .faqs { grid-template-columns: repeat(3, 1fr); } }
+  .more { margin-top: 2rem; padding-bottom: 4rem; color: var(--sl-color-gray-3); }
+  @media (min-width: 40rem) { .reasons, .others { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 50rem) {
+    .reasons { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .others { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .faqs { grid-template-columns: repeat(3, 1fr); }
+  }
 </style>
