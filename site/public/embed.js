@@ -71,7 +71,9 @@ const CSS = `
 *{box-sizing:border-box}
 .trigger{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;border:0;background:var(--accent);color:var(--accent-ink);font:600 15px/1 inherit;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgb(0 0 0/.18)}
 .trigger:focus-visible,button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-:host([floating]) .trigger{position:fixed;right:16px;bottom:16px;z-index:2147483646}
+:host([floating]) .trigger{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:2147483646}
+.trigger .ico{font-size:17px;line-height:1}
+@media (max-width:480px){:host([floating]) .trigger{width:52px;height:52px;padding:0;justify-content:center}:host([floating]) .trigger .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}}
 .panel{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:16px;width:min(380px,calc(100vw - 32px));box-shadow:0 12px 40px rgb(0 0 0/.22)}
 .panel[hidden]{display:none}
 :host(:not([inline])) .panel{position:fixed;right:16px;bottom:72px;z-index:2147483647;max-height:calc(100vh - 96px);overflow:auto}
@@ -161,7 +163,14 @@ ${inline ? '' : `<button class="trigger" type="button" aria-expanded="false" ari
       else trigger.focus()
     }
     if (trigger) {
-      trigger.textContent = this.getAttribute('label') || 'Feedback'
+      const ico = document.createElement('span')
+      ico.className = 'ico'
+      ico.setAttribute('aria-hidden', 'true')
+      ico.textContent = '💬'
+      const lbl = document.createElement('span')
+      lbl.className = 'lbl'
+      lbl.textContent = this.getAttribute('label') || 'Feedback'
+      trigger.replaceChildren(ico, lbl)
       trigger.onclick = () => open(panel.hidden)
       $('.close').onclick = () => open(false)
       root.addEventListener('keydown', (e) => e.key === 'Escape' && !panel.hidden && open(false))

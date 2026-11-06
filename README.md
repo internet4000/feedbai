@@ -1,16 +1,18 @@
 # <img src="assets/logo.svg" alt="" width="40" height="40" align="top"> feedbai
 
-Your users' feedback, straight into your GitHub issues, where you and your AI agents (Claude Code, Codex, …) fix it, and reply.
+**Hear your community. Let your agents act on it.**
+
+feedbai gathers feedback wherever people talk about your project (chat, Bluesky, a button on your site), turns it into work for you and your AI agents (Claude Code, Codex, …), and answers back. Open, decentralized, nothing stored by us.
 
 ```mermaid
 flowchart LR
-  people["People using your project"] -->|"write feedback"| places["Your chat room, Bluesky,<br/>or the Feedback button"]
-  places -->|"feedbai files it"| issues["GitHub issues"]
-  issues -->|"you or your agent fix it"| fix["Fix"]
-  fix -->|"reply in the same place"| people
+  people["Your community"] -->|"speaks: chat, Bluesky,<br/>the Feedback button"| feedbai["feedbai"]
+  feedbai -->|"issues and a live feed"| agents["You and your AI agents"]
+  agents -->|"fix it"| fix["Fix"]
+  fix -->|"everyone hears back"| people
 ```
 
-People give feedback where they already are: a Matrix room (mentioning the bot), Bluesky, or the [Feedback button](docs/button.md) on your site. feedbai turns it into GitHub issues and gives your agent the full picture, so the loop closes: fixed, and answered.
+People give feedback where they already are: a Matrix room (mentioning the bot), Bluesky, the [Feedback button](docs/button.md) on your site, or records in their own account. feedbai gathers it as GitHub issues and as a live feed your agent reads, so the loop closes: fixed, and answered.
 
 Website and docs: **https://feedbai.internet4000.com**
 
