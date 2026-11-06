@@ -15,6 +15,8 @@
   "vars": {
     "FEEDBAI_MATRIX_USER": "@feedbai:matrix.org",
     "FEEDBAI_BLUESKY_IDENTIFIER": "feedbai.internet4000.com",
+    // served at /.well-known/atproto-did: makes the hub's domain the bot's Bluesky handle
+    "FEEDBAI_BLUESKY_DID": "did:plc:kwx5rsbzzksolfdxfjnu3lx4",
     "FEEDBAI_APP_URL": "https://github.com/apps/feedbai"
   },
   // Preview builds (wrangler preview, per branch): no cron, no secrets, so the page
@@ -23,6 +25,8 @@
     "vars": {
       "FEEDBAI_MATRIX_USER": "@feedbai:matrix.org",
       "FEEDBAI_BLUESKY_IDENTIFIER": "feedbai.internet4000.com",
+    // served at /.well-known/atproto-did: makes the hub's domain the bot's Bluesky handle
+    "FEEDBAI_BLUESKY_DID": "did:plc:kwx5rsbzzksolfdxfjnu3lx4",
       "FEEDBAI_APP_URL": "https://github.com/apps/feedbai"
     }
   },
