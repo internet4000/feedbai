@@ -6,7 +6,7 @@
 
 1. **Anyone, anywhere, can give feedback on anything**: a website, a page, a repository, an app, an organisation. The project doesn't have to opt in first.
 2. **The people behind that thing can read all of it** and build on it: triage it, answer, fix it, and show what happened to it.
-3. **No infrastructure**: feedbai runs nothing that has to stay up. It's free software, and every piece can be self-hosted or skipped.
+3. **No infrastructure required**: nothing depends on a server we run. Conveniences (the hub, a relay) may run on ours to make life simpler, but they keep no data that matters, anyone can run another, and when one is down feedbai says so and falls back to the self-serve path. It's free software.
 4. **Projects can run on auto-pilot**: an AI builds the project on its existing stack, follows the project's guidelines, works from live feedback, keeps track of what's done and pending, and reports on sentiment and on the project's place in its ecosystem. Humans set how much it may do.
 
 ## Principles
@@ -14,7 +14,7 @@
 - **Data lives with its author.** Feedback is a record in the author's own account, on an open network. They can edit or delete it, and nobody (including feedbai) holds a copy that matters.
 - **Trust comes from the account, never from the text.** This rule already holds today ([concepts](concepts.md#roles-who-is-speaking)). Maintainers and agents are accounts the project lists; everyone else is data to evaluate, never instructions to follow.
 - **Ownership is proved, not registered.** A project shows who runs it with a file on its domain or in its repo. There's no feedbai sign-up.
-- **Every index and relay is swappable.** When we need a service someone else runs (an index, a relay), it's a URL in config with a self-hostable alternative.
+- **Every service is a convenience, and swappable.** Our hub, a public index, a relay: each is a URL in config, self-hostable, and its outage is visible and has a fallback. Never a silent single point of failure.
 - **Agent-first, readable by people.** Every command says what to do next. Everything an agent does leaves a public, human-readable trace.
 - **Small.** The CLI stays zero-dependency (`fetch` + Node built-ins).
 
@@ -151,7 +151,7 @@ Because feedback is public and indexed by subject, anyone can compute views acro
 | Feedback → issues, idempotent; `post` replies in the original thread | ✅ GitHub only |
 | Agent skill, bare `feedbai` status with issues and PRs | ✅ |
 | Scheduled workflow | ✅ but only files with a Matrix bot token |
-| Hosted hub | ❌ offline since the Worker was removed; to be retired (below) |
+| Hosted hub | ❌ offline (the Worker was removed, unnoticed); being redeployed, outages now reported (#44) |
 | npm package | ❌ 0.0.1 only; release publish fails (trusted publishing not set up) |
 | Subjects, claims (`.well-known`) | — |
 | AT feedback / status records, index reader, `say` | — |
@@ -161,13 +161,14 @@ Because feedback is public and indexed by subject, anyone can compute views acro
 
 ### The hub
 
-The hub was always-on infrastructure we run: a Worker with a GitHub App and bot accounts. That's the opposite of goal 3, and it's currently down. We **retire it as a requirement**:
+The hub ([`hub/`](../hub/README.md)) is what makes feedbai work with **nothing to set up**. Install the GitHub App and commit the config: the hub reads public Matrix rooms and Bluesky searches with its own accounts, files mentions as issues every 10 minutes, and serves those channels to people without accounts. Matrix and Bluesky search both require an account otherwise.
 
-- Filing issues moves to each project's own CI. `GITHUB_TOKEN` is enough; no App needed.
-- Reading without an account moves to public indexes (Constellation), which need none. Bluesky's search now requires an account (`403` without one), so search sources use the project's own account in CI.
-- Matrix still needs an account to read most rooms; the project's bot token goes in its CI secrets.
+It stays, as a convenience under the principle above:
 
-The hub code stays in the repo for people who want to run one, until the relay replaces it.
+- **Stateless**: GitHub issues and their markers are its state.
+- **Replaceable**: anyone can run one (`FEEDBAI_HUB=<url>`), or file from their own CI with a bot account.
+- **Visible when down**: the CLI reports an unreachable hub with the login command to read without it, and an hourly check opens an issue (#44). The hosted hub went down unnoticed in October 2026; that check is the lesson.
+- **Grows into the relay**: the anonymous-feedback relay (step 7) is the same kind of service, so it lives in the hub.
 
 ## Hard problems, and the answers we chose
 
@@ -185,17 +186,17 @@ The hub code stays in the repo for people who want to run one, until the relay r
 
 Each step ships on its own and is useful without the next.
 
-0. **Unblock**: publish to npm (trusted publisher on npmjs.com); make the workflow file issues with `GITHUB_TOKEN` alone; docs stop presenting the hub as required.
+0. **Unblock**: redeploy the hub, with an outage check and CLI fallback (#44); publish to npm (trusted publisher on npmjs.com).
 1. **Subjects and claims**: `subjects` in the config, `.well-known/feedbai.json`, `feedbai claim`. Discovery finds the project's site and handles.
 2. **Read the open network**: an `atproto` channel that reads `feedback` records and posts linking a subject through an index (Constellation by default).
 3. **Write and close the loop**: the lexicons, `feedbai say`, `feedbai status` (and automatic `fixed` when a "Fixes #N" PR merges), statuses shown next to items.
 4. **Widget and extension**: one static script (AT OAuth needs only a static client-metadata file on the site), pins with status, text fragments; the extension runs it on any site.
 5. **Pilot**: the `pilot` config and modes, `feedbai pilot` brief, journal, a workflow template for GitHub and Forgejo Actions.
 6. **Pulse and ecosystem**: `feedbai pulse`, a static report page, cross-project views.
-7. **Relay** for anonymous feedback, other outputs (Forgejo, GitLab), more channels on request (#10).
+7. **Relay** for anonymous feedback (in the hub), other outputs (Forgejo, GitLab), more channels on request (#10).
 
 ## Dependencies
 
 - **CLI**: zero dependencies. AT reads and writes are plain XRPC over `fetch`; writes use an app password from `secrets.env`.
 - **Widget and extension**: a separate package in this repo. Browser OAuth for AT (DPoP, PKCE) is complex enough to justify one pinned, bundled dependency (`@atproto/oauth-client-browser`) rather than our own implementation. Output is a single static file.
-- **Services we rely on**: none run by us. An AT index (Constellation by default, configurable), the authors' own servers, and the project's own CI.
+- **Services**: none required. Conveniences: our hub (and later relay), an AT index (Constellation by default). All configurable and self-hostable; the authors' own servers and the project's own CI do the rest.

@@ -1,7 +1,7 @@
 # feedbai documentation
 
 **Where it's going**
-- [Vision](vision.md): open feedback on anything over the AT Protocol, no infrastructure, projects on auto-pilot; where we are and the steps
+- [Vision](vision.md): open feedback on anything over the AT Protocol, no infrastructure required, projects on auto-pilot; where we are and the steps
 
 **Use it**
 - [Getting started](getting-started.md): install, set up a project, accounts, reading and listening
