@@ -54,3 +54,9 @@ collections:
                       - { name: repo, label: Repository (owner/name), widget: string }
                       - { name: limit, label: Limit, widget: number, value_type: int, default: 50, required: false }
                       - { name: account, label: Account id, widget: string, required: false }
+                  - name: atproto
+                    label: AT Protocol feedback records
+                    fields:
+                      - { name: id, label: Id, widget: string }
+                      - { name: project, label: Project (https://github.com/owner/name), widget: string }
+                      - { name: limit, label: Limit, widget: number, value_type: int, default: 50, required: false }

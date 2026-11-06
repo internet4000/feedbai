@@ -14,7 +14,7 @@
 **Reference**
 - [CLI](cli.md): every command, option, environment variable and exit code
 - [Configuration](configuration.md): `feedbai.config.json`, the global config, accounts and secrets
-- [Channels](channels/README.md): [Matrix](channels/matrix.md), [Bluesky](channels/bluesky.md), [GitHub Discussions](channels/github.md)
+- [Channels](channels/README.md): [Matrix](channels/matrix.md), [Bluesky](channels/bluesky.md), [GitHub Discussions](channels/github.md), [AT Protocol records](channels/atproto.md)
 - [The hub](../hub/README.md): the hosted service, its rules, and running your own
 
 **Contribute**
