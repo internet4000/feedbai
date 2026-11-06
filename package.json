@@ -1,7 +1,7 @@
 {
   "name": "@internet4000/feedbai",
   "version": "0.1.0",
-  "description": "Unified retrieval of user feedback (Matrix, Bluesky, ...) for AI agents working on projects",
+  "description": "Hear your community, let your agents act on it: feedback from chat, Bluesky and your site, as work for you and your AI agents, answered back. Open, decentralized.",
   "keywords": [
     "ai",
     "agents",
