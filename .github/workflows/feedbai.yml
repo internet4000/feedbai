@@ -1,7 +1,8 @@
-# Hourly: file new #feedbai feedback that mentions the bot as GitHub issues (label: feedback).
-# Secrets: FEEDBAI_MATRIX_TOKEN, FEEDBAI_MATRIX_USER (e.g. @bot:matrix.org). Skipped without them:
-# with the hosted hub (feedbai GitHub App installed), the hub files the issues instead.
-# In other projects, replace `node src/cli.js` with `npx -y @internet4000/feedbai`.
+# Hourly: file feedback that mentions your bot as GitHub issues (label: feedback). No hub, no App:
+# your bot's accounts + this workflow's own token. Guide: docs/on-your-own.md
+# Secrets: FEEDBAI_MATRIX_TOKEN, FEEDBAI_MATRIX_USER (e.g. @bot:matrix.org); optional
+# FEEDBAI_BLUESKY_IDENTIFIER, FEEDBAI_BLUESKY_PASSWORD. Skipped without a Matrix token.
+# Copying it to your project: replace `node src/cli.js` with `npx -y github:internet4000/feedbai`.
 name: feedbai
 on:
   schedule:
@@ -16,9 +17,12 @@ jobs:
     env:
       FEEDBAI_MATRIX_TOKEN: ${{ secrets.FEEDBAI_MATRIX_TOKEN }}
       FEEDBAI_MATRIX_USER: ${{ secrets.FEEDBAI_MATRIX_USER }}
+      FEEDBAI_BLUESKY_IDENTIFIER: ${{ secrets.FEEDBAI_BLUESKY_IDENTIFIER }}
+      FEEDBAI_BLUESKY_PASSWORD: ${{ secrets.FEEDBAI_BLUESKY_PASSWORD }}
+      FEEDBAI_HUB: "off" # read only with these accounts, never through a hub
     steps:
       - if: env.FEEDBAI_MATRIX_TOKEN == ''
-        run: echo "::notice::No FEEDBAI_MATRIX_TOKEN secret, skipping. The feedbai hub files issues for repos with its GitHub App."
+        run: echo "::notice::No FEEDBAI_MATRIX_TOKEN secret, skipping (see docs/on-your-own.md). Repos with the feedbai GitHub App get issues from the hub instead."
       - if: env.FEEDBAI_MATRIX_TOKEN != ''
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - if: env.FEEDBAI_MATRIX_TOKEN != ''
@@ -30,27 +34,3 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
-  # The hosted hub (feedbai.internet4000.com) is a convenience others rely on: when it stops
-  # answering, open one issue (and close it when it's back), so an outage is never silent.
-  hub-health:
-    runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-      HUB: https://feedbai.internet4000.com
-      TITLE: "feedbai hub is down"
-    steps:
-      - run: |
-          open=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number -q '.[0].number')
-          # Liveness and the Matrix bot's token: read the project's own public room through the hub
-          if curl -fsS -m 30 -o /dev/null "$HUB/v1/matrix?room=%23feedbai%3Amatrix.org&limit=1"; then
-            [ -n "$open" ] && gh issue close "$open" --comment "Back up: $HUB answers again ($(date -u +%FT%TZ))."
-            exit 0
-          fi
-          reason=$(curl -sS -m 30 "$HUB/v1/matrix?room=%23feedbai%3Amatrix.org&limit=1" 2>&1 | head -c 300)
-          if [ -z "$open" ]; then
-            printf '%s\n' "The hub at $HUB does not answer (hourly check in the \`feedbai\` workflow, $(date -u +%FT%TZ))." "" '```' "$reason" '```' "" \
-              "Until it's back, people without accounts can't read Matrix rooms or Bluesky searches through it, and repos with the feedbai GitHub App get no issues filed. Redeploy: hub/README.md." > body.md
-            gh issue create --title "$TITLE" --body-file body.md
-          fi
-          exit 1

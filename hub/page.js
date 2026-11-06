@@ -97,6 +97,7 @@ footer{margin-top:40px;font-size:14px;color:var(--muted);display:flex;flex-wrap:
 <details><summary>Does it keep my users' messages?</summary><div>No. The hub stores nothing. The issues it opens quote the messages, in your repository. Details in the <a href="${repo}/blob/main/PRIVACY.md">privacy notes</a>.</div></details>
 <details><summary>How do I stop it?</summary><div>Remove the bot from your room, or uninstall the GitHub App. Either one stops it immediately.</div></details>
 <details><summary>What about Bluesky and other places?</summary><div>Bluesky works too: threads become issues, and searches give you the general mood. More channels get added when a project asks: <a href="${repo}/issues/10">tell us which</a>.</div></details>
+<details><summary>Can I use feedbai without this hub?</summary><div>Yes. Everything the hub does, you can do with your own bot accounts and your own CI, with nothing going through our servers. <a href="${repo}/blob/main/docs/on-your-own.md">Step-by-step guide</a>.</div></details>
 <details><summary>I'm a developer: is there an API?</summary><div>Yes, read-only and public: <code>/v1/matrix?room=#room:server</code> and <code>/v1/bluesky/search?query=…</code>. They return the same items as <code>feedbai fetch --format json</code>. The CLI uses them when you have no account of your own.</div></details>
 
 <footer>

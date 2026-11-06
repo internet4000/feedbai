@@ -4,7 +4,7 @@ Runs feedbai for every project that installed the feedbai GitHub App, so project
 
 Hosted at **https://feedbai.internet4000.com** (Cloudflare Worker, every 10 minutes).
 
-The hub is a convenience, not a requirement: it keeps no data that matters, anyone can run one, and when it's down the CLI says so and shows how to read with your own account (`feedbai login …`), or file from your CI ([feedback → issues](../docs/issues.md)). An hourly check in [`.github/workflows/feedbai.yml`](../.github/workflows/feedbai.yml) opens an issue "feedbai hub is down" when it stops answering, and closes it when it's back.
+The hub is a convenience, not a requirement: it keeps no data that matters, anyone can run one (or do without: [on your own](../docs/on-your-own.md)), and when it's down the CLI says so and shows how to read with your own account (`feedbai login …`), or file from your CI ([feedback → issues](../docs/issues.md)). An hourly check in [`.github/workflows/hub-health.yml`](../.github/workflows/hub-health.yml) opens an issue "feedbai hub is down" when it stops answering, and closes it when it's back.
 
 What it does per channel:
 
