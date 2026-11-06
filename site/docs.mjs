@@ -12,6 +12,7 @@ export const DOCS = [
   { group: 'Start', file: 'docs/concepts.md', route: '/docs/concepts' },
   { group: 'Start', file: 'docs/agents.md', route: '/docs/agents' },
   { group: 'Start', file: 'docs/issues.md', route: '/docs/issues' },
+  { group: 'Start', file: 'docs/button.md', route: '/docs/button' },
   { group: 'Start', file: 'docs/on-your-own.md', route: '/docs/on-your-own', label: 'On your own' },
   { group: 'Reference', file: 'docs/cli.md', route: '/docs/cli' },
   { group: 'Reference', file: 'docs/configuration.md', route: '/docs/configuration' },

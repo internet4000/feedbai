@@ -17,6 +17,19 @@ export const WAYS = [
     more: ['/docs/getting-started/', 'Getting started guide'],
   },
   {
+    path: '/button',
+    tab: 'Feedback button',
+    hint: 'new',
+    title: 'A feedback button on your site',
+    lead: 'Visitors tell you what works and what doesn\'t, without leaving your site or creating an account. Try it: the Feedback button, bottom right.',
+    steps: [
+      { text: '<b>Add one line</b> to your site, with your repo (and your chat room, if you have one):', copy: '<script type="module" src="https://feedbai.internet4000.com/embed.js" data-project="https://github.com/you/repo"></script>' },
+      { text: '<b>People write their feedback</b> and pick where to send it: a Bluesky post, a GitHub issue, or your chat room. It opens there prefilled, from their own account.' },
+      { text: '<b>It reaches your issues</b> like any other feedback: the hub (or your CI) files the chat messages, agents read the rest.' },
+    ],
+    more: ['/docs/button/', 'Feedback button guide'],
+  },
+  {
     path: '/agent',
     tab: 'With your AI agent',
     title: 'With your AI agent',
@@ -58,9 +71,9 @@ export const WAYS = [
     title: 'Give feedback on a project',
     lead: "You use a project that has feedbai. Tell its makers what works and what doesn't, where you already are.",
     steps: [
-      { text: '<b>Join the project\'s chat room.</b> It\'s usually linked from its website or README. Any Matrix app works, for example <a href="https://app.element.io">Element</a>.' },
-      { text: '<b>Write your message and mention the bot.</b>', chat: `${BOT} the play button doesn't work on Safari` },
-      { text: "<b>That's it.</b> It becomes an issue the maintainers see, linked to your message. They reply in the thread when it's fixed." },
+      { text: '<b>Look for its Feedback button</b>, often at the bottom right of its site: write, then pick where to send it.' },
+      { text: '<b>No button? Join its chat room.</b> It\'s usually linked from its website or README. Any Matrix app works, for example <a href="https://app.element.io">Element</a>.' },
+      { text: '<b>Write your message there and mention the bot.</b> It becomes an issue; they reply in the thread when it\'s fixed.', chat: `${BOT} the play button doesn't work on Safari` },
     ],
     more: ['/docs/vision/', 'Where this is going: feedback on any site'],
   },

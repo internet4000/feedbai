@@ -20,13 +20,15 @@ export default defineConfig({
       favicon: '/favicon.svg',
       social: [{ icon: 'github', label: 'GitHub', href: REPO }],
       customCss: ['./src/styles/theme.css'],
+      // We use our own feedback button (public/embed.js): feedback on any page reaches this repo
+      head: [{ tag: 'script', attrs: { type: 'module', src: '/embed.js', 'data-project': REPO, 'data-matrix': '#feedbai:matrix.org', 'data-bluesky': '#feedbai' } }],
       lastUpdated: false,
       sidebar: groups.map((label) => ({
         label,
         items: DOCS.filter((d) => d.group === label).map((d) => ({ slug: d.route.slice(1), ...(d.label ? { label: d.label } : {}) })),
       })),
       // Every link and #anchor between pages must exist, or the build fails
-      plugins: [starlightLinksValidator({ errorOnLocalLinks: false, exclude: ['/', '/agent', '/diy', '/self-host', '/give', '/#ways', '/agent#ways'] })],
+      plugins: [starlightLinksValidator({ errorOnLocalLinks: false, exclude: ['/', '/button', '/agent', '/diy', '/self-host', '/give', '/feedback', '/#ways', '/agent#ways'] })],
     }),
   ],
 })
