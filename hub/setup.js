@@ -60,9 +60,11 @@ const home = () => html(`
 <button>Create GitHub App</button></form>
 <h2>2. Matrix bot</h2>
 <form action="/matrix" method="post"><input type="hidden" name="state" value="${state}">
-<p>Logs the bot in once and stores only a new access token (device "feedbai").</p>
-<input name="user" placeholder="@feedbai:matrix.org" required size="30"><br>
-<input name="password" type="password" placeholder="password" required size="30"><br>
+<p>Paste an access token for the bot, or log it in once with its password (only a new token, device "feedbai", is stored).</p>
+<p>To get a token without sharing the password: log in as the bot in a private window of a Matrix client (e.g. app.element.io), copy Settings → Help &amp; About → Access token, then <b>close the window without logging out</b> (logging out revokes the token).</p>
+<input name="token" type="password" placeholder="access token" size="30"> or<br>
+<input name="user" placeholder="@feedbai:matrix.org" size="30"><br>
+<input name="password" type="password" placeholder="password" size="30"><br>
 <input name="homeserver" value="https://matrix.org" size="30"><br>
 <button>Log in bot</button></form>
 <h2>3. Bluesky account (optional)</h2>
@@ -79,6 +81,13 @@ const readForm = async (req) => {
   const form = Object.fromEntries(new URLSearchParams(body))
   if (form.state !== state) throw new Error('state mismatch: start again from the setup page')
   return form
+}
+
+/** Checks a pasted Matrix access token and returns whose it is. */
+const matrixWhoami = async (homeserver, token) => {
+  const res = await fetch(`${homeserver.replace(/\/$/, '')}/_matrix/client/v3/account/whoami`, { headers: { authorization: `Bearer ${token}` } })
+  if (!res.ok) throw new Error(`Matrix rejected the token: ${res.status} ${await res.text()}`)
+  return (await res.json()).user_id
 }
 
 const routes = {
@@ -105,8 +114,10 @@ const routes = {
     return html(`<p>Stored the app password for <b>${escape(handle)}</b>.</p><p><a href="/">Back</a></p>`)
   },
   'POST /matrix': async (req) => {
-    const { user, password, homeserver } = await readForm(req)
-    const { token, user: userId } = await providers.matrix.login({ homeserver, user, password })
+    const { user, password, homeserver, token: pasted } = await readForm(req)
+    const { token, user: userId } = pasted
+      ? { token: pasted, user: await matrixWhoami(homeserver, pasted) }
+      : await providers.matrix.login({ homeserver, user, password })
     await putSecret('FEEDBAI_MATRIX_TOKEN', token)
     console.log(`Matrix bot ${userId} logged in; token stored. FEEDBAI_MATRIX_USER should be ${userId}.`)
     return html(`<p>Stored a token for <b>${escape(userId)}</b>.</p><p><a href="/">Back</a></p>`)
