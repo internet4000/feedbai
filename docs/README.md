@@ -8,6 +8,7 @@
 - [Concepts](concepts.md): projects, channels, accounts, items, roles, cursors, the hub; with diagrams
 - [Agents](agents.md): Claude Code, Codex, pi and others; the triage workflow
 - [Feedback → issues](issues.md): what gets filed, idempotency, scheduled runs
+- [On your own](on-your-own.md): use feedbai without our hub or App: your bot accounts, your CI
 
 **Reference**
 - [CLI](cli.md): every command, option, environment variable and exit code

@@ -1,6 +1,9 @@
 {
   "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
   "name": "feedbai-hub",
+  // internet4000's Cloudflare account (not a secret): deploys and `wrangler secret put` go here,
+  // even when you are logged in to several accounts. Remove or change it for your own hub.
+  "account_id": "46bcc6e9a78b2e839068c0685143e1a2",
   "main": "hub/worker.js",
   "compatibility_date": "2026-10-01",
   // process.env is populated from vars and secrets: src/config.js reads accounts from it
@@ -11,7 +14,9 @@
   "routes": [{ "pattern": "feedbai.internet4000.com", "custom_domain": true }],
   "vars": {
     "FEEDBAI_MATRIX_USER": "@feedbai:matrix.org",
-    "FEEDBAI_BLUESKY_IDENTIFIER": "feedbai.bsky.social",
+    "FEEDBAI_BLUESKY_IDENTIFIER": "feedbai.internet4000.com",
+    // served at /.well-known/atproto-did: makes the hub's domain the bot's Bluesky handle
+    "FEEDBAI_BLUESKY_DID": "did:plc:kwx5rsbzzksolfdxfjnu3lx4",
     "FEEDBAI_APP_URL": "https://github.com/apps/feedbai"
   },
   // Preview builds (wrangler preview, per branch): no cron, no secrets, so the page
@@ -19,7 +24,9 @@
   "previews": {
     "vars": {
       "FEEDBAI_MATRIX_USER": "@feedbai:matrix.org",
-      "FEEDBAI_BLUESKY_IDENTIFIER": "feedbai.bsky.social",
+      "FEEDBAI_BLUESKY_IDENTIFIER": "feedbai.internet4000.com",
+    // served at /.well-known/atproto-did: makes the hub's domain the bot's Bluesky handle
+    "FEEDBAI_BLUESKY_DID": "did:plc:kwx5rsbzzksolfdxfjnu3lx4",
       "FEEDBAI_APP_URL": "https://github.com/apps/feedbai"
     }
   },

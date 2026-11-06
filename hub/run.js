@@ -38,7 +38,9 @@ export const runHub = async ({ env = process.env, fetchImpl, log = console.log }
   const joined = await acceptInvites({ homeserver, token, fetchImpl })
   if (joined.length) log(`joined ${joined.length} room(s)`)
 
-  for (const repo of await installedRepos({ appId: env.FEEDBAI_APP_ID, privateKey: env.FEEDBAI_APP_PRIVATE_KEY, fetchImpl })) {
+  const repos = await installedRepos({ appId: env.FEEDBAI_APP_ID, privateKey: env.FEEDBAI_APP_PRIVATE_KEY, fetchImpl })
+  log(`${repos.length} repo(s) with the GitHub App${repos.length ? '' : ': nothing to file (install it on a repo)'}`)
+  for (const repo of repos) {
     try {
       const config = await repoConfig({ ...repo, fetchImpl })
       if (!config) continue

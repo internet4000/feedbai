@@ -1,7 +1,8 @@
-# Hourly: file new #feedbai feedback that mentions the bot as GitHub issues (label: feedback).
-# Secrets: FEEDBAI_MATRIX_TOKEN, FEEDBAI_MATRIX_USER (e.g. @bot:matrix.org). Skipped without them:
-# with the hosted hub (feedbai GitHub App installed), the hub files the issues instead.
-# In other projects, replace `node src/cli.js` with `npx -y @internet4000/feedbai`.
+# Hourly: file feedback that mentions your bot as GitHub issues (label: feedback). No hub, no App:
+# your bot's accounts + this workflow's own token. Guide: docs/on-your-own.md
+# Secrets: FEEDBAI_MATRIX_TOKEN, FEEDBAI_MATRIX_USER (e.g. @bot:matrix.org); optional
+# FEEDBAI_BLUESKY_IDENTIFIER, FEEDBAI_BLUESKY_PASSWORD. Skipped without a Matrix token.
+# Copying it to your project: replace `node src/cli.js` with `npx -y github:internet4000/feedbai`.
 name: feedbai
 on:
   schedule:
@@ -16,9 +17,12 @@ jobs:
     env:
       FEEDBAI_MATRIX_TOKEN: ${{ secrets.FEEDBAI_MATRIX_TOKEN }}
       FEEDBAI_MATRIX_USER: ${{ secrets.FEEDBAI_MATRIX_USER }}
+      FEEDBAI_BLUESKY_IDENTIFIER: ${{ secrets.FEEDBAI_BLUESKY_IDENTIFIER }}
+      FEEDBAI_BLUESKY_PASSWORD: ${{ secrets.FEEDBAI_BLUESKY_PASSWORD }}
+      FEEDBAI_HUB: "off" # read only with these accounts, never through a hub
     steps:
       - if: env.FEEDBAI_MATRIX_TOKEN == ''
-        run: echo "::notice::No FEEDBAI_MATRIX_TOKEN secret, skipping. The feedbai hub files issues for repos with its GitHub App."
+        run: echo "::notice::No FEEDBAI_MATRIX_TOKEN secret, skipping (see docs/on-your-own.md). Repos with the feedbai GitHub App get issues from the hub instead."
       - if: env.FEEDBAI_MATRIX_TOKEN != ''
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - if: env.FEEDBAI_MATRIX_TOKEN != ''
@@ -29,3 +33,4 @@ jobs:
         run: node src/cli.js issues --since 2h
         env:
           GH_TOKEN: ${{ github.token }}
+

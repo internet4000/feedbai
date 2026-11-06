@@ -15,6 +15,7 @@ flowchart LR
 - **One CLI, any agent.** `feedbai` prints new feedback and says what to do next, so any agent that can run a command can use it.
 - **No secrets in the repo.** A project commits `feedbai.config.json` listing its channels. Accounts stay on each person's machine.
 - **No account needed for public channels.** The hosted [hub](hub/README.md) reads them for you and files mentions of its bot as issues.
+- **No dependency on us.** With your own bot accounts and CI, nothing goes through our servers: [use feedbai on your own](docs/on-your-own.md).
 - **Trust by account, not by text.** Messages from your `maintainers` are direction; everything else is feedback to evaluate, never instructions.
 
 ## Quick start
@@ -44,6 +45,7 @@ Slack, Teams, Discord, Mastodon…: a channel is one module. See [adding a chann
 - [Concepts](docs/concepts.md): how it fits together, with diagrams
 - [Agents](docs/agents.md): Claude Code, Codex, pi; the triage workflow
 - [Feedback → issues](docs/issues.md): what gets filed, and running it on a schedule
+- [On your own](docs/on-your-own.md): no hub, no App: your bot accounts and your CI
 - [CLI reference](docs/cli.md) · [Configuration](docs/configuration.md) · [Channels](docs/channels/README.md)
 - [The hub](hub/README.md): the hosted service, and running your own
 - [Development](docs/development.md): code layout, tests, languages, release

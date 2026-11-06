@@ -35,7 +35,7 @@ Many channels need no account:
 - **Public Matrix rooms**: invite `@feedbai:matrix.org` (the [hub](../hub/README.md)'s bot) to the room, and everyone reads it through the hub.
 - **Bluesky search** goes through the hub too. Bluesky author feeds and threads are public.
 
-For private rooms, Bluesky mentions, GitHub Discussions, or to read with your own account instead of the hub:
+For private rooms, Bluesky mentions, GitHub Discussions, or to read with your own account instead of the hub ([on your own](on-your-own.md), nothing through our servers):
 
 ```sh
 feedbai login matrix --user @you:matrix.org            # password login (or --token to paste an access token)
@@ -67,6 +67,7 @@ Run it in the background in your agent session: [agents](agents.md).
 
 - **Hosted hub**: install the [feedbai GitHub App](https://github.com/apps/feedbai) on the repo. Messages that mention the bot become `feedback` issues within about 10 minutes.
 - **Yourself**: `feedbai issues --dry-run`, then `feedbai issues`. See [feedback → issues](issues.md).
+- **From your CI, with your own bot**: no hub, no App. See [on your own](on-your-own.md).
 
 ## Next
 

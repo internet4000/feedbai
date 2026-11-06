@@ -136,6 +136,22 @@ test('without an account, Matrix sources read through the hub (FEEDBAI_HUB=off d
   }
 })
 
+test('a hub that is down says so and how to read without it (never a silent failure)', async () => {
+  const { default: matrix } = await import('../src/providers/matrix.js')
+  const down = async () => {
+    throw Object.assign(new TypeError('fetch failed'), { cause: { code: 'ENOTFOUND' } })
+  }
+  process.env.FEEDBAI_HUB = 'https://hub.test'
+  try {
+    await assert.rejects(
+      matrix.fetch({ project: { id: 'p' }, source: { id: 's', type: 'matrix', room: '#r:x' }, account: null, since: null, limit: 10, fetchImpl: down }),
+      (error) => /hub \(https:\/\/hub\.test\) is unreachable \(ENOTFOUND\)/.test(error.message) && /feedbai login matrix/.test(error.message),
+    )
+  } finally {
+    delete process.env.FEEDBAI_HUB
+  }
+})
+
 test('Bluesky searches and author feeds are read for sentiment, never filed as issues', async () => {
   const { filesIssues } = await import('../src/issues.js')
   const files = (source) => filesIssues({ source })
