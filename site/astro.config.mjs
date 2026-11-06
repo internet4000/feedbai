@@ -10,6 +10,8 @@ const groups = [...new Set(DOCS.map((d) => d.group))]
 
 export default defineConfig({
   site: 'https://feedbai.internet4000.com',
+  // The home page used to have one tab per way to use feedbai; their links still work
+  redirects: { '/button': '/docs/button/', '/agent': '/docs/agents/', '/diy': '/docs/on-your-own/', '/self-host': '/docs/hub/', '/give': '/feedback/' },
   integrations: [
     // Draws ```mermaid blocks in the browser, from our own bundle (no CDN)
     mermaid({ theme: 'neutral', autoTheme: true }),
@@ -23,12 +25,14 @@ export default defineConfig({
       // We use our own feedback button (public/embed.js): feedback on any page reaches this repo
       head: [{ tag: 'script', attrs: { type: 'module', src: '/embed.js', 'data-project': REPO, 'data-matrix': '#feedbai:matrix.org', 'data-bluesky': '#feedbai' } }],
       lastUpdated: false,
+      // Start open; the reference and project pages fold away until needed
       sidebar: groups.map((label) => ({
         label,
+        collapsed: label !== 'Start',
         items: DOCS.filter((d) => d.group === label).map((d) => ({ slug: d.route.slice(1), ...(d.label ? { label: d.label } : {}) })),
       })),
       // Every link and #anchor between pages must exist, or the build fails
-      plugins: [starlightLinksValidator({ errorOnLocalLinks: false, exclude: ['/', '/button', '/agent', '/diy', '/self-host', '/give', '/feedback', '/#ways', '/agent#ways'] })],
+      plugins: [starlightLinksValidator({ errorOnLocalLinks: false, exclude: ['/', '/#start', '/feedback'] })],
     }),
   ],
 })
