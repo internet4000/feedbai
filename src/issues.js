@@ -40,10 +40,19 @@ export const indexIssues = async (client) => {
 }
 
 /**
- * User text made inert for a GitHub issue: "@name" would notify that GitHub user (a zero-width
- * space after "@" stops it), and "<!--" could hide text or forge an item marker.
+ * User text made inert for a GitHub issue (a zero-width space breaks each autolink):
+ * - "@name" would notify that GitHub user;
+ * - "#12", "owner/repo#12", "GH-12" and github.com issue links would add a "mentioned this" event to
+ *   that issue, in any public repo (feedbai would become a way to spam other projects);
+ * - "<!--" could hide text or forge an item marker.
  */
-export const inert = (text) => text.replace(/@(?=[\w-])/g, '@\u200b').replace(/<!--/g, '&lt;!--')
+export const inert = (text) =>
+  text
+    .replace(/@(?=[\w-])/g, '@\u200b')
+    .replace(/#(?=\d)/g, '#\u200b')
+    .replace(/\bGH-(?=\d)/gi, (m) => `${m.slice(0, 2)}\u200b-`)
+    .replace(/\bgithub\.com\//gi, (m) => `${m.slice(0, 6)}\u200b${m.slice(6)}`)
+    .replace(/<!--/g, '&lt;!--')
 
 const quote = (entry) => {
   const who = inert(entry.author.name ? `${entry.author.name} (${entry.author.id})` : entry.author.id)
@@ -66,7 +75,7 @@ export const planIssues = (items, index) => {
     const body = fresh.map(quote).join('\n\n')
     if (linked) actions.push({ type: 'comment', issue: linked, body })
     else {
-      const title = `${t('issues.titlePrefix')} ${truncate(oneLine(trigger.text), 72)}`
+      const title = `${t('issues.titlePrefix')} ${truncate(inert(oneLine(trigger.text)), 72)}`
       actions.push({ type: 'create', title, body: `${t('issues.header', { source: `${root.project}/${root.source}` })}\n\n${body}` })
     }
     for (const entry of fresh) index.set(entry.id, linked ?? 'pending')
