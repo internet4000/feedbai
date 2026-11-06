@@ -1,8 +1,10 @@
 # feedbai hub
 
+> **Optional, and being retired.** feedbai aims at no infrastructure ([vision](../docs/vision.md)): projects file issues from their own CI ([feedback → issues](../docs/issues.md)). The hosted instance at feedbai.internet4000.com is offline. The code stays for anyone who wants to run one; the CLI uses a hub only with `FEEDBAI_HUB=<url>`.
+
 Runs feedbai for every project that installed the feedbai GitHub App, so projects need no bot account, no secrets and no machine of their own.
 
-Hosted at **https://feedbai.internet4000.com** (Cloudflare Worker, every 10 minutes).
+Was hosted at https://feedbai.internet4000.com (Cloudflare Worker, every 10 minutes); offline now.
 
 What it does per channel:
 

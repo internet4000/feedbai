@@ -79,7 +79,7 @@ test('the bot is mentioned by pill or "@name", never by the bare word (bots shar
   const account = { user: '@feedbai:matrix.org' }
   const says = (text, mentions) => mentionsSelf({ text, mentions }, { account })
   assert.equal(says('i don\'t think "feedbai" is an agent'), false)
-  assert.equal(says('https://feedbai.internet4000.com/'), false)
+  assert.equal(says('https://feedbai.example.org/'), false)
   assert.equal(says('mail me at x@feedbai.org'), false)
   assert.equal(says('@feedbai the play button is broken'), true)
   assert.equal(says('hey @feedbai: broken', []), true)
@@ -131,6 +131,7 @@ test('without an account, Matrix sources read through the hub (FEEDBAI_HUB=off d
     const { items } = await matrix.fetch({ project: { id: 'p' }, source: { id: 's', room: '#r:x' }, account: null, since: null, limit: 10, fetchImpl })
     assert.deepEqual(items.map((i) => [i.project, i.source, i.text]), [['p', 's', 'hi']])
     assert.equal(hubUrl({ FEEDBAI_HUB: 'off' }), null)
+    assert.equal(hubUrl({}), null, 'no default hub: opt-in only')
   } finally {
     delete process.env.FEEDBAI_HUB
   }

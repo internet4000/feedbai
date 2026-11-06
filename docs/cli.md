@@ -8,7 +8,7 @@
 | --- | --- |
 | `feedbai` | This project: setup guide if it has no channels; otherwise each channel's status, the feedback new since your last run, the repo's open issues and pull requests (with checks, review and merge state; needs a GitHub token), then what to do next. Moves your cursor. |
 | `feedbai fetch` | Feedback from every configured project (filter with `--project`, `--source`). Doesn't move cursors unless `--since last`. |
-| `feedbai sources` | Each source and whether it can be read (`ok`, `ok (public)`, `via the hub`, `needs an account`). `--format json` for a list. |
+| `feedbai sources` | Each source and whether it can be read (`ok`, `ok (public)`, `via the hub` with `FEEDBAI_HUB`, `needs an account`). `--format json` for a list. |
 | `feedbai add <type> …` | Add a source to the project's `feedbai.config.json` (created at the git root if missing). Forms per channel: [channels](channels/README.md). |
 | `feedbai remove <source-id>` | Remove a source. |
 | `feedbai login <type> …` | Save an account; prompts for the secret. Run it in your own terminal. Forms per channel: [channels](channels/README.md). |
@@ -43,7 +43,7 @@
 | variable | |
 | --- | --- |
 | `FEEDBAI_AGENT` | Default for `--as`. |
-| `FEEDBAI_HUB` | `off` disables the hub; a URL points at another hub. Default `https://feedbai.internet4000.com`. |
+| `FEEDBAI_HUB` | URL of a [hub](../hub/README.md) to read through when a source has no account. Unset (default): no hub. |
 | `FEEDBAI_CONFIG` | Global config file (default `~/.config/feedbai/config.json`, under `XDG_CONFIG_HOME`). |
 | `FEEDBAI_SECRETS` | Secrets file (default `~/.config/feedbai/secrets.env`). Variables already set in the environment win over it. |
 | `XDG_STATE_HOME` | State (cursors) under `feedbai/state.json` (default `~/.local/state`). |

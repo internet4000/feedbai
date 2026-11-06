@@ -4,11 +4,11 @@ A channel is a platform feedbai can read: each one is a module in [`src/provider
 
 | channel | `type` | read without an account | needs an account | filed as issues | `post` |
 | --- | --- | --- | --- | --- | --- |
-| [Matrix](matrix.md) | `matrix` | public rooms the hub's bot is in | private rooms; reading with your own bot | messages that mention the bot | yes |
-| [Bluesky](bluesky.md) | `bluesky` | `search` (via the hub), `author`, `thread` | `mentions`; `search` without the hub | `thread`, `mentions` | no |
+| [Matrix](matrix.md) | `matrix` | no | always (a bot works) | messages that mention the bot | yes |
+| [Bluesky](bluesky.md) | `bluesky` | `author`, `thread` | `search`, `mentions` | `thread`, `mentions` | no |
 | [GitHub Discussions](github.md) | `github` | no | always (a token) | no | no |
 
-"Filed as issues" is what `feedbai issues` and the hub file on their own ([feedback → issues](../issues.md)). Agents still read everything and file what is actionable.
+"Filed as issues" is what `feedbai issues` files on its own ([feedback → issues](../issues.md)). Agents still read everything and file what is actionable.
 
 ## Next channels
 

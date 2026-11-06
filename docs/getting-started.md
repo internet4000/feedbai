@@ -32,10 +32,10 @@ feedbai add github discussions you/yourproject
 
 Many channels need no account:
 
-- **Public Matrix rooms**: invite `@feedbai:matrix.org` (the [hub](../hub/README.md)'s bot) to the room, and everyone reads it through the hub.
-- **Bluesky search** goes through the hub too. Bluesky author feeds and threads are public.
+- **Bluesky author feeds and threads** are public.
+- Everything else needs an account: use a bot account for the project, so its token can also go in CI.
 
-For private rooms, Bluesky mentions, GitHub Discussions, or to read with your own account instead of the hub:
+For Matrix rooms, Bluesky search and mentions, and GitHub Discussions:
 
 ```sh
 feedbai login matrix --user @you:matrix.org            # password login (or --token to paste an access token)
@@ -65,7 +65,7 @@ Run it in the background in your agent session: [agents](agents.md).
 
 ## 6. Turn feedback into issues (optional)
 
-- **Hosted hub**: install the [feedbai GitHub App](https://github.com/apps/feedbai) on the repo. Messages that mention the bot become `feedback` issues within about 10 minutes.
+- **Your CI**: copy [`.github/workflows/feedbai.yml`](../.github/workflows/feedbai.yml) and add the bot's secrets; messages that mention the bot become `feedback` issues every hour. See [feedback → issues](issues.md).
 - **Yourself**: `feedbai issues --dry-run`, then `feedbai issues`. See [feedback → issues](issues.md).
 
 ## Next

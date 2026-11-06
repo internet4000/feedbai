@@ -90,9 +90,9 @@ An account's `secrets` maps a field (`token`, `password`) to the **name** of an 
 
 Rules:
 
-- **Keep accounts in the global config.** A project config is shared and may come from anyone (the hub reads every installed repo's), so feedbai ignores accounts there, and a source's `account` can only pick one of yours. See [SECURITY.md](../SECURITY.md).
+- **Keep accounts in the global config.** A project config is shared and may come from anyone (a hub reads every installed repo's), so feedbai ignores accounts there, and a source's `account` can only pick one of yours. See [SECURITY.md](../SECURITY.md).
 - **Accounts from the environment** (`FEEDBAI_MATRIX_TOKEN`, `FEEDBAI_BLUESKY_PASSWORD`, `GH_TOKEN`…; [CLI → environment](cli.md#environment)) are used when no configured account of that type exists.
-- **No account** for a source that needs one: feedbai reads through the [hub](../hub/README.md) when the channel supports it, otherwise the source says which `feedbai login …` to run.
+- **No account** for a source that needs one: the source says which `feedbai login …` to run (or reads through a hub, if you set `FEEDBAI_HUB`).
 
 ## Other projects
 

@@ -12,9 +12,9 @@ feedbai add matrix '#yourproject:matrix.org' --join
 | `room` | required: `#alias:server`, `!id:server` or a `https://matrix.to/#/…` link |
 | `join` | `true`: join the room before reading (otherwise the account must have joined once) |
 
-## Reading without an account: the hub
+## Reading without an account
 
-Invite `@feedbai:matrix.org` to the room (anyone in a public room can). After that, everyone running `feedbai` in the repo reads the room through the [hub](../../hub/README.md), with no Matrix account. The hub only serves public rooms. The source's status says `ok via the feedbai hub`. If the bot isn't in the room, the error says to invite it.
+Matrix needs an account to read a room. Use a bot account for the project (its token also goes in CI), or your own. A self-hosted [hub](../../hub/README.md) can read public rooms for people without one (`FEEDBAI_HUB=<url>`).
 
 ## Reading with your own account
 
@@ -40,7 +40,7 @@ feedbai post 'https://matrix.to/#/!room:server/$event' "Fixed in #43"   # reply 
 feedbai post matrix "New release is out"                                # a new message in the source's room
 ```
 
-Messages are prefixed with 🤖. Add your bot to the project's `agents` so other readers (the hub) know its reports are not feedback.
+Messages are prefixed with 🤖. Add your bot to the project's `agents` so other readers know its reports are not feedback.
 
 ## Limits
 

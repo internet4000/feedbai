@@ -17,7 +17,7 @@ src/
   hub.js                 reading through the hub
   providers/<type>.js    one module per channel; providers/index.js registers them
   locales/<lang>.json    every user-facing string, through t()
-hub/                     the hosted hub (Cloudflare Worker): run.js, api.js, worker.js, setup.js
+hub/                     optional self-hosted hub (Cloudflare Worker; being retired): run.js, api.js, worker.js, setup.js
 skills/feedbai/          the agent skill
 schemas/                 JSON schema for configs
 cms/                     Sveltia/Decap CMS collection

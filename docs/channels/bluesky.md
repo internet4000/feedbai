@@ -11,7 +11,7 @@ feedbai add bluesky mentions                               # mentions, replies a
 
 | mode | source fields | account | filed as issues |
 | --- | --- | --- | --- |
-| `search` | `query` | via the hub, or yours | no: read for the overall mood |
+| `search` | `query` | yours (Bluesky requires one for search) | no: read for the overall mood |
 | `author` | `actor` (handle or DID), optional `filter` (`posts_with_replies`, `posts_no_replies`, `posts_and_author_threads`) | not needed | no |
 | `thread` | `post` (bsky.app link or AT URI), optional `depth` (default 10) | not needed | yes |
 | `mentions` | none | yours (it reads that account's notifications) | yes |
@@ -22,6 +22,6 @@ feedbai add bluesky mentions                               # mentions, replies a
 feedbai login bluesky --identifier you.bsky.social      # an app password: https://bsky.app/settings/app-passwords
 ```
 
-Use an app password, never your main one. Without an account, `search` reads through the [hub](../../hub/README.md), which searches with its own (`feedbai.bsky.social`). In CI: `FEEDBAI_BLUESKY_IDENTIFIER`, `FEEDBAI_BLUESKY_PASSWORD`.
+Use an app password, never your main one. Bluesky's search API needs an account. In CI: `FEEDBAI_BLUESKY_IDENTIFIER`, `FEEDBAI_BLUESKY_PASSWORD`.
 
-The hub ignores `mentions` sources in repo configs: it would read its own mentions, not yours.
+A self-hosted [hub](../../hub/README.md) ignores `mentions` sources in repo configs: it would read its own mentions, not yours.

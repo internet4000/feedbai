@@ -24,8 +24,6 @@ Every quoted message carries a hidden marker (`<!-- feedbai:item=… -->`). Befo
 
 ## Ways to run it
 
-**The hosted hub** (nothing to run): install the [feedbai GitHub App](https://github.com/apps/feedbai) on the repo, and commit `feedbai.config.json`. Every 10 minutes the hub files from the channels it can read (public Matrix rooms its bot is in, Bluesky threads), using its own accounts. See [the hub](../hub/README.md).
-
 **By hand or from an agent**:
 
 ```sh
@@ -35,4 +33,4 @@ feedbai issues               # file it; default window --since 1d
 
 It needs a GitHub token (`GH_TOKEN`, `GITHUB_TOKEN`, or a `gh` login) and the repo (`GH_REPO`, `GITHUB_REPOSITORY`, or the git remote).
 
-**GitHub Actions, with your own bot**: copy [`.github/workflows/feedbai.yml`](../.github/workflows/feedbai.yml) (hourly, `feedbai issues --since 2h`) and add the bot's secrets to the repository: `FEEDBAI_MATRIX_TOKEN`, `FEEDBAI_MATRIX_USER`. For Bluesky `mentions`, also pass `FEEDBAI_BLUESKY_IDENTIFIER` and `FEEDBAI_BLUESKY_PASSWORD` in the workflow's `env`. Without a Matrix token the workflow skips, so it doesn't run alongside the hub.
+**GitHub Actions, with your own bot**: copy [`.github/workflows/feedbai.yml`](../.github/workflows/feedbai.yml) (hourly, `feedbai issues --since 2h`) and add the bot's secrets to the repository: `FEEDBAI_MATRIX_TOKEN`, `FEEDBAI_MATRIX_USER`. For Bluesky `mentions`, also pass `FEEDBAI_BLUESKY_IDENTIFIER` and `FEEDBAI_BLUESKY_PASSWORD` in the workflow's `env`. Without a Matrix token the workflow skips.

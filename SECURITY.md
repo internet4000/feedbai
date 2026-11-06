@@ -30,7 +30,7 @@ Rules that follow from it, enforced in code:
 
 **GitHub Actions** (`.github/workflows/feedbai.yml`). Uses a dedicated bot account from repository secrets and the job's `GITHUB_TOKEN` (`issues: write`, `contents: read`). Secrets are not given to workflows from forks. Actions are pinned to commit SHAs and kept current by Dependabot.
 
-**The hosted hub** (`hub/`, Cloudflare Worker). Any repo can install its GitHub App, so a repo's config is untrusted there: the hub drops accounts, joins and Bluesky mentions from it (`sanitize` in `hub/run.js`) and reads with its own bot only. Its GitHub access is a short-lived installation token per repo (issues write, contents read). The bot joins only rooms it is invited to; kick it to stop. The read API serves public rooms and Bluesky search only, cached for 60 seconds. Secrets are Worker secrets, set by `hub/setup.js` (a localhost-only page with a per-run token) and never written to disk.
+**A hub** (`hub/`, Cloudflare Worker; optional and self-hosted only, the CLI uses one only with `FEEDBAI_HUB`). Any repo can install its GitHub App, so a repo's config is untrusted there: the hub drops accounts, joins and Bluesky mentions from it (`sanitize` in `hub/run.js`) and reads with its own bot only. Its GitHub access is a short-lived installation token per repo (issues write, contents read). The bot joins only rooms it is invited to; kick it to stop. The read API serves public rooms and Bluesky search only, cached for 60 seconds. Secrets are Worker secrets, set by `hub/setup.js` (a localhost-only page with a per-run token) and never written to disk.
 
 **Self-hosted hub.** Same code and rules. You are responsible for your bot account, App key and logs.
 

@@ -8,20 +8,20 @@ People talk about a project in many places. Maintainers and their agents want th
 sequenceDiagram
   actor User as Person using the project
   participant Channel as Channel (Matrix, Bluesky, …)
-  participant Hub as feedbai hub
+  participant CI as Your CI (feedbai issues)
   participant Agent as Agent + feedbai CLI
   participant GitHub
 
-  User->>Channel: "the player skips on Safari @feedbai"
-  Hub->>Channel: reads every 10 min (its own bot account)
-  Hub->>GitHub: issue #35;42 (label: feedback, links the message)
+  User->>Channel: "the player skips on Safari @yourbot"
+  CI->>Channel: reads every hour (the project's bot account)
+  CI->>GitHub: issue #35;42 (label: feedback, links the message)
   Agent->>Channel: feedbai --as claude (new since last run)
   Agent->>GitHub: triage: comment, label, link duplicates
   Agent->>GitHub: fix → pull request "Fixes #35;42"
   Agent->>Channel: feedbai post #lt;message link#gt; "🤖 Fixed in #35;43"
 ```
 
-The hub and the agent are independent: use either or both. Without the hub, `feedbai issues` (run by you, an agent, or a scheduled workflow) does the filing.
+CI and the agent are independent: use either or both. `feedbai issues` (run by you, an agent, or a scheduled workflow) does the filing.
 
 ## Architecture
 
@@ -44,17 +44,11 @@ flowchart LR
     issues["GitHub issues<br/>label: feedback"]
   end
 
-  hub["feedbai hub<br/>Cloudflare Worker"]
-
   config --> cli
   personal --- cli
   cli --> providers
   providers -->|read| platforms
-  providers -.->|"no account:<br/>read through"| hub
-  hub -->|"its own bot<br/>accounts"| platforms
   cli -->|feedbai issues| issues
-  hub -.->|reads| config
-  hub -->|"files mentions,<br/>every 10 min"| issues
 ```
 
 ## Projects and channels
@@ -69,7 +63,7 @@ A project's `feedbai.config.json` lives in its repo and is shared. It never hold
 
 Some sources need an account to read (private rooms, searches, mentions). **Accounts are personal**: they live in your global config, never in a project's. Secrets live in `secrets.env` (mode 600), or come from environment variables in CI. An account holds the *names* of those variables, never the values.
 
-When a source needs an account and you have none, feedbai reads public channels through the **hub**, which uses its own accounts.
+When a source needs an account and you have none, it says which `feedbai login …` to run. A project usually has one bot account, used by people, agents and CI alike.
 
 ## Items
 
@@ -110,11 +104,6 @@ Agents start fresh every session. GitHub issues labelled `feedback` are what per
 
 Not everything becomes an issue. Chat rooms are conversations, so only messages that mention the bot start one. Searches and discussions are read for the overall mood, and agents file only what's actionable.
 
-## The hub
+## No infrastructure
 
-The [hub](../hub/README.md) is a small always-on service (a Cloudflare Worker at https://feedbai.internet4000.com):
-
-- **Reads public channels for people without accounts**: Matrix rooms its bot was invited to, and Bluesky searches.
-- **Files issues** every 10 minutes for repos that installed the feedbai GitHub App, from each repo's `feedbai.config.json`.
-
-A repo's config is untrusted there: the hub always uses its own accounts, and files a Matrix room into a repo only if the room is public or its topic names the repo. Turn it off with `FEEDBAI_HUB=off`, or point at your own with `FEEDBAI_HUB=<url>`.
+feedbai runs where you already work: your machine, an agent session, your CI. There's nothing to host. The [hub](../hub/README.md) (a Worker that read and filed for repos with its GitHub App) is optional and self-hosted only (`FEEDBAI_HUB=<url>`); it's being retired. Where feedbai is going next: [vision](vision.md).

@@ -91,4 +91,4 @@ These are what keep feedbai safe to run on untrusted channels ([SECURITY.md](../
 
 ## The hub
 
-The hosted hub ([`hub/`](../../hub/README.md)) files issues for every repo with the feedbai GitHub App, using the hub's own accounts (`envAccount`). For a new channel to work there too, the hub needs an account for it (a Worker secret). To let people read it without an account, add a read endpoint in [`hub/api.js`](../../hub/api.js) and fall back to it in `fetch` with `readViaHub` (see `matrix.js` and `bluesky.js`).
+A self-hosted hub ([`hub/`](../../hub/README.md), optional, being retired: [vision](../vision.md)) files issues for every repo with its GitHub App, using the hub's own accounts (`envAccount`). For a new channel to work there too, the hub needs an account for it (a Worker secret). To let people read it without an account, add a read endpoint in [`hub/api.js`](../../hub/api.js) and fall back to it in `fetch` with `readViaHub` (see `matrix.js` and `bluesky.js`).

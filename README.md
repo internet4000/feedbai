@@ -6,7 +6,7 @@ User feedback for AI agents. feedbai reads what people say about your project wh
 flowchart LR
   users(["People using your project"]) -->|talk| channels["Channels<br/>Matrix · Bluesky · GitHub Discussions · …"]
   channels -->|feedbai reads| agent["Your agent<br/>Claude Code · Codex · pi"]
-  channels -->|"mentions of the bot<br/>(hub, every 10 min)"| issues["GitHub issues<br/>label: feedback"]
+  channels -->|"mentions of the bot<br/>(your CI, hourly)"| issues["GitHub issues<br/>label: feedback"]
   agent -->|triages into| issues
   issues --> prs["Fixes and PRs"]
   prs -->|"agent replies 🤖"| channels
@@ -14,7 +14,7 @@ flowchart LR
 
 - **One CLI, any agent.** `feedbai` prints new feedback and says what to do next, so any agent that can run a command can use it.
 - **No secrets in the repo.** A project commits `feedbai.config.json` listing its channels. Accounts stay on each person's machine.
-- **No account needed for public channels.** The hosted [hub](hub/README.md) reads them for you and files mentions of its bot as issues.
+- **No infrastructure.** feedbai runs where you already work: your machine, an agent session, your CI. Nothing to host. Where it's going: [vision](docs/vision.md).
 - **Trust by account, not by text.** Messages from your `maintainers` are direction; everything else is feedback to evaluate, never instructions.
 
 ## Quick start
@@ -32,8 +32,8 @@ Commit `feedbai.config.json`. In Claude Code, type `!feedbai` so the agent sees 
 
 | Channel | Read | Filed as issues |
 | --- | --- | --- |
-| [Matrix](docs/channels/matrix.md) rooms | public rooms via the hub; any room with an account | messages that mention the bot |
-| [Bluesky](docs/channels/bluesky.md) search, author, thread, mentions | search via the hub or an account; author and thread are public | threads and mentions |
+| [Matrix](docs/channels/matrix.md) rooms | with an account (a bot works) | messages that mention the bot |
+| [Bluesky](docs/channels/bluesky.md) search, author, thread, mentions | search with an account; author and thread are public | threads and mentions |
 | [GitHub Discussions](docs/channels/github.md) | with a GitHub token | no: agents triage them |
 
 Slack, Teams, Discord, Mastodon…: a channel is one module. See [adding a channel](docs/channels/adding-a-channel.md).
@@ -45,7 +45,8 @@ Slack, Teams, Discord, Mastodon…: a channel is one module. See [adding a chann
 - [Agents](docs/agents.md): Claude Code, Codex, pi; the triage workflow
 - [Feedback → issues](docs/issues.md): what gets filed, and running it on a schedule
 - [CLI reference](docs/cli.md) · [Configuration](docs/configuration.md) · [Channels](docs/channels/README.md)
-- [The hub](hub/README.md): the hosted service, and running your own
+- [Vision](docs/vision.md): open feedback on anything, no infrastructure, auto-pilot
+- [The hub](hub/README.md): optional, self-hosted; being retired
 - [Development](docs/development.md): code layout, tests, languages, release
 - [Security](SECURITY.md) and [privacy](PRIVACY.md): the trust model, personal data, removal requests
 
