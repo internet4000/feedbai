@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">feedbai</title>
+  <rect width="64" height="64" rx="14" fill="#0b2a1a"/>
+  <!-- a speech bubble (what users say)… -->
+  <rect x="8" y="13" width="48" height="31" rx="7" fill="#3ddc84"/>
+  <polygon points="17,40 31,40 17,53" fill="#3ddc84"/>
+  <!-- …with messages, one picked up by an agent -->
+  <circle cx="21" cy="28.5" r="3.6" fill="#0b2a1a"/>
+  <circle cx="32" cy="28.5" r="3.6" fill="#0b2a1a"/>
+  <circle cx="43" cy="28.5" r="3.6" fill="#ffffff"/>
+</svg>

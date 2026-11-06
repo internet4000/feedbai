@@ -1,0 +1,7 @@
+---
+import Home from '../components/Home.astro'
+import { WAYS } from '../ways.mjs'
+
+export const getStaticPaths = () => WAYS.filter((w) => w.path !== '/').map((w) => ({ params: { way: w.path.slice(1) } }))
+---
+<Home path={`/${Astro.params.way}`} />

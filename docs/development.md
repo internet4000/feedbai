@@ -17,8 +17,8 @@ src/
   hub.js                 reading through the hub
   providers/<type>.js    one module per channel; providers/index.js registers them
   locales/<lang>.json    every user-facing string, through t()
-hub/                     the hosted hub (Cloudflare Worker): run.js, api.js, worker.js, setup.js;
-                         site.js + markdown.js + docs.js: the website, which serves these docs
+hub/                     the hosted hub (Cloudflare Worker): run.js, api.js, worker.js, setup.js
+site/                    the website and docs (Astro + Starlight; its own dependencies)
 skills/feedbai/          the agent skill
 schemas/                 JSON schema for configs
 cms/                     Sveltia/Decap CMS collection
@@ -41,7 +41,13 @@ Messages live in `src/locales/<lang>.json`. feedbai picks the language from `FEE
 
 ## The website and docs
 
-https://feedbai.internet4000.com is served by the hub Worker: `/` and its tabs show the ways to use feedbai, `/docs/…` renders the Markdown in this repo (the same files as on GitHub, so docs are written once). Links between docs become site routes; links to other repo files go to GitHub. A new doc goes in `DOCS` (`hub/site.js`) and `hub/docs.js`; `test/site.test.js` fails until it's in both, and also checks that every link and heading anchor between docs exists. Preview locally: `npx wrangler@4 dev`.
+https://feedbai.internet4000.com is [`site/`](../site/): Astro + Starlight, with its own `package.json` (the CLI keeps zero dependencies). The home page and its tabs are Astro pages (`site/src/pages`, `site/src/ways.mjs`); the docs are the Markdown in this repo, copied into Starlight at build time by `site/scripts/sync-docs.mjs`, so they are written once and read the same on GitHub and on the site. A new doc goes in `DOCS` (`site/docs.mjs`); `test/site.test.js` fails until it's there, and the site build fails on any broken link or `#anchor` between pages.
+
+```sh
+cd site && npm install && npm run dev   # http://localhost:4321 (Node ≥ 22.23, see site/.nvmrc)
+```
+
+The hub Worker serves the built site (`assets` in `wrangler.jsonc`; `wrangler deploy` builds it first).
 
 ## The hub
 
