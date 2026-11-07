@@ -8,6 +8,8 @@ import { authState, entries } from './shared.js'
 const DEFAULT_INTERVAL = 60
 const MAX_INTERVAL = 900
 const BACKOFF = 1.5
+/** A refused login is not retried (it would only lock the account); a rate limit waits this long. */
+const RATE_LIMIT_PAUSE = 15 * 60
 
 /**
  * Long-running listener for agents: run it in the background and treat every
@@ -21,11 +23,19 @@ export default async ({ opts }) => {
   const max = Math.max(base, MAX_INTERVAL)
   let interval = base
   let lastErrors = ''
+  const paused = new Map() // source key → resume time (Infinity: login refused, fix it and restart)
+  const keyOf = (e) => `${e.project.id ?? e.project}/${e.source.id ?? e.source}`
   const seen = new Set() // polls overlap (cursor = poll start), so the same item can come back once
   process.stderr.write(t('watch.start', { count: usable.length, consumer, interval: base }) + '\n')
 
   while (true) {
-    const { groups, errors } = await collect(usable, { since: 'last', consumer, limit: opts.limit })
+    const active = usable.filter((e) => !(paused.get(keyOf(e)) > Date.now()))
+    const { groups, errors } = await collect(active, { since: 'last', consumer, limit: opts.limit })
+    for (const e of errors) {
+      if (e.status !== 401 && e.status !== 429) continue
+      paused.set(keyOf(e), e.status === 401 ? Infinity : Date.now() + RATE_LIMIT_PAUSE * 1000)
+      process.stderr.write(t(e.status === 401 ? 'watch.pausedLogin' : 'watch.pausedRate', { source: keyOf(e), minutes: RATE_LIMIT_PAUSE / 60 }) + '\n')
+    }
     const fresh = groups.flatMap((g) => g.items).filter((entry) => !seen.has(entry.id) && entry.role !== 'agent')
     for (const entry of fresh) seen.add(entry.id)
     if (fresh.length) {

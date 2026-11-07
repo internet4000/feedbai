@@ -10,11 +10,13 @@ The first release shaped by a real user's first try (thanks oskar).
 
 ### Added
 - **Guided setup with an agent**: in a project that isn't set up, bare `feedbai` tells the agent to say what feedbai does, ask which setup you want (read in agent sessions / also turn chat mentions into issues with the hub / also a website button), do the config itself, and end with your own steps, numbered 1-2-3.
+- `feedbai file <message link…> --title "…" --note "…"`: the agent decides what becomes an issue, and files it in feedbai's format (duplicate checks and "This is fixed" replies work on it). First step of an agent in the loop (#70).
 - `feedbai react <message link> [emoji]`: a ✅ (by default) on a message, so the person sees their feedback was picked up, without a new message in the room. The skill tells agents to react when they pick up an item. Matrix for now.
 
 ### Fixed
 - The shared bot says why when it declines a private room ("feedbai rejected the invite: …"), instead of silently.
 - The digest lists a maintainer's message once, not twice.
+- `feedbai watch` stops polling a source whose login was refused, and pauses a rate-limited one for 15 minutes, instead of retrying every minute (which got the account locked, for the hub too when it shares it).
 - Bluesky: accounts remember their DID and log in with it, so a handle change (e.g. to a custom domain) no longer breaks reading. A failed login is retried next time instead of sticking, and says what to do (`feedbai login bluesky …`, or wait when Bluesky rate-limits logins). The hub's status check reuses its session instead of logging in each time.
 
 ### Security
