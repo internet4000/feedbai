@@ -4,6 +4,9 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
+### Fixed
+- `feedbai watch` stops polling a source whose login was refused, and pauses one that is rate-limited for 15 minutes, instead of retrying every minute (which got the account locked, for the hub too when it shares the account).
+
 ### Added
 - `feedbai react <message link> [emoji]`: a ✅ (by default) on a message, so the person sees their feedback was picked up, without a new message in the room. The skill tells agents to react when they pick up an item. Matrix for now.
 
