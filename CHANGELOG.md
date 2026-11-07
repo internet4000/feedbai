@@ -4,10 +4,17 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
+## 0.3.0 — 2026-11-07
+
+The first release shaped by a real user's first try (thanks oskar).
+
 ### Added
+- **Guided setup with an agent**: in a project that isn't set up, bare `feedbai` tells the agent to say what feedbai does, ask which setup you want (read in agent sessions / also turn chat mentions into issues with the hub / also a website button), do the config itself, and end with your own steps, numbered 1-2-3.
 - `feedbai react <message link> [emoji]`: a ✅ (by default) on a message, so the person sees their feedback was picked up, without a new message in the room. The skill tells agents to react when they pick up an item. Matrix for now.
 
 ### Fixed
+- The shared bot says why when it declines a private room ("feedbai rejected the invite: …"), instead of silently.
+- The digest lists a maintainer's message once, not twice.
 - Bluesky: accounts remember their DID and log in with it, so a handle change (e.g. to a custom domain) no longer breaks reading. A failed login is retried next time instead of sticking, and says what to do (`feedbai login bluesky …`, or wait when Bluesky rate-limits logins). The hub's status check reuses its session instead of logging in each time.
 
 ### Security
