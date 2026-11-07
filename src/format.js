@@ -19,13 +19,18 @@ export const mdItem = (entry, max = Infinity) => {
   return `- ${entry.createdAt} **${who(entry)}**${reply}${edit} — ${truncate(oneLine(entry.text), max)}\n  <${entry.url}>`
 }
 
-/** Maintainer messages in full, then one line per thread with reply count and latest reply. */
+/**
+ * Maintainer messages in full, then one line per thread with reply count and latest reply.
+ * Threads made only of maintainer messages are already shown in full above: not listed twice.
+ */
 const mdDigest = (items) => {
   const lines = []
   const maintainers = items.filter((entry) => entry.role === 'maintainer')
   if (maintainers.length) lines.push(t('md.fromMaintainers'), ...maintainers.map((entry) => mdItem(entry)))
-  lines.push(t('md.threads', { count: items.length }))
-  for (const { root, replies } of threads(items)) {
+  const others = threads(items).filter(({ root, replies }) => [root, ...replies].some((entry) => entry.role !== 'maintainer'))
+  if (!others.length) return lines.join('\n')
+  lines.push(t('md.threads', { count: others.reduce((n, { replies }) => n + 1 + replies.length, 0) }))
+  for (const { root, replies } of others) {
     lines.push(mdItem(root, DIGEST_TEXT))
     const last = replies.at(-1)
     if (last) lines.push(`  ${t('md.replies', { count: replies.length, who: who(last), text: truncate(oneLine(last.text), DIGEST_REPLY) })}`)
