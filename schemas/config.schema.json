@@ -113,6 +113,11 @@
           "items": {
             "type": "string"
           }
+        },
+        "replies": {
+          "type": "boolean",
+          "default": true,
+          "description": "When a feedback issue is fixed (closed by a pull request or commit, or labelled fixed), reply where the feedback was given (the hub, Matrix for now). false turns it off."
         }
       }
     },

@@ -222,12 +222,12 @@ export default {
   },
 
   /** Send `text` to `room` (or the source's room); with `replyTo` (event id) as a reply in that thread. Returns the new event's link. */
-  async post({ account, source, room = source?.room, text, replyTo, fetchImpl }) {
+  /** `txn`: a stable transaction id makes a retried send a no-op on the homeserver (default: a new one). */
+  async post({ account, source, room = source?.room, text, replyTo, txn = `feedbai-${Date.now()}-${Math.random().toString(36).slice(2)}`, fetchImpl }) {
     const accessToken = token(account)
     if (!accessToken) throw new Error(t('error.authRequired', { source: account?.id ?? 'matrix', mode: 'post', type: 'matrix' }))
     const homeserver = account.homeserver ?? DEFAULT_HOMESERVER
     const roomId = await resolveRoomId(homeserver, parseRoom(room), fetchImpl)
-    const txn = `feedbai-${Date.now()}-${Math.random().toString(36).slice(2)}`
     const body = { msgtype: 'm.text', body: text, ...(replyTo && { 'm.relates_to': { 'm.in_reply_to': { event_id: replyTo } } }) }
     const url = api(homeserver, `/rooms/${encodeURIComponent(roomId)}/send/m.room.message/${txn}`)
     const data = await request(url, { method: 'PUT', token: accessToken, body, fetchImpl })
