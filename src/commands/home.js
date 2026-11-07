@@ -28,7 +28,7 @@ const onboarding = (project, file) => {
     t('home.title', { project: project.id }),
     t(file ? 'home.noSources' : 'home.notSetUp', { root: project.root, file }),
     found.length && `${t('home.found')}\n\n${suggestions(found)}`,
-    t('home.setup', { id: project.id, root: project.root, channels: channelText('setup', { id: project.id }), logins: channelText('login') }),
+    t('home.setup', { id: project.id, root: project.root, source: t(found.length ? 'home.setup.found' : 'home.setup.ask'), channels: channelText('setup', { id: project.id }), logins: channelText('login') }),
     otherProjects(),
   ].filter(Boolean).join('\n\n')
 }
