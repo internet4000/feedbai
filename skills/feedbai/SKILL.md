@@ -9,7 +9,7 @@ description: Read user feedback for the current project from its channels (Matri
 
 `--as` gives you your own "last run" cursor, so other agents on the same machine don't consume your feedback. The output tells you what to do next:
 
-- **Not set up**: it lists channel links found in the repository and the exact `feedbai add …` commands. Ask the user which channels to follow (use your multiple-choice question UI if you have one, pre-filled with what was found), run the `add` commands, then `feedbai` again. Suggest committing `feedbai.config.json`.
+- **Not set up** (or the user says "set up feedbai with me"): guide them, don't dump commands. Say in two lines what feedbai does; ask which setup they want (read feedback in agent sessions / also turn chat mentions into issues with the hosted hub / also a Feedback button on their site); run the `feedbai add …` commands yourself, from the channels found in the repo or the ones they name; then end with **their** steps only, numbered 1-2-3 (invite the bot to a **public** room, install the GitHub App, log in an account in their own terminal, commit `feedbai.config.json`). The output of bare `feedbai` spells this out.
 - **Set up**: each source's auth state, then feedback new since your last run. Busy sources are digested by thread automatically.
 
 ## Listen during a session
