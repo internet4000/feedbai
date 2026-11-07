@@ -86,14 +86,14 @@ test('the bot is mentioned by pill or "@name", never by the bare word (bots shar
   assert.equal(says('feedbai: broken', ['@feedbai:matrix.org']), true)
 })
 
-test('read API serves public rooms the bot is in, and says what to do otherwise', async () => {
+test('read API serves only rooms readable without joining (world_readable) the bot is in, and says what to do otherwise', async () => {
   const { readMatrix } = await import('../hub/api.js')
   const env = { FEEDBAI_MATRIX_USER: '@feedbai:matrix.org', FEEDBAI_MATRIX_TOKEN: 'bot-token' }
   const event = { event_id: '$1', type: 'm.room.message', sender: '@u:x', origin_server_ts: 1, content: { body: 'hi' } }
-  const room = (rule, messages = [{ chunk: [event] }, 200]) =>
+  const room = (visibility, messages = [{ chunk: [event] }, 200]) =>
     fakeFetch([
       [(u) => u.includes('/directory/room/'), { room_id: '!r:x' }],
-      [(u) => u.includes('m.room.join_rules'), { join_rule: rule }],
+      [(u) => u.includes('m.room.history_visibility'), { history_visibility: visibility }],
       [(u) => u.includes('/messages'), ...messages],
     ])
   const ask = async (fetchImpl) => {
@@ -102,17 +102,21 @@ test('read API serves public rooms the bot is in, and says what to do otherwise'
   }
   process.env.FEEDBAI_MATRIX_TOKEN = 'bot-token' // the provider reads secrets from process.env, as in the Worker
   try {
-    const ok = await ask(room('public'))
+    const ok = await ask(room('world_readable'))
     assert.equal(ok.status, 200)
     assert.deepEqual(ok.body.items.map((i) => i.text), ['hi'])
-    assert.equal((await ask(room('invite'))).status, 403)
-    const notJoined = await ask(room('public', [{ errcode: 'M_FORBIDDEN' }, 403]))
+    // A public room whose history is for members (the default) is not shared: join it with your own account
+    const members = await ask(room('shared'))
+    assert.equal(members.status, 403)
+    assert.match(members.body.error, /feedbai login matrix/)
+    assert.match(members.body.error, /Who can read history/)
+    const notJoined = await ask(room('world_readable', [{ errcode: 'M_FORBIDDEN' }, 403]))
     assert.equal(notJoined.status, 403)
     assert.match(notJoined.body.error, /invite @feedbai:matrix\.org to #r:x/)
     // A bot outside the room cannot even read its join rules: that is "invite", not "private"
     const outside = fakeFetch([
       [(u) => u.includes('/directory/room/'), { room_id: '!r:x' }],
-      [(u) => u.includes('m.room.join_rules'), { errcode: 'M_FORBIDDEN' }, 403],
+      [(u) => u.includes('m.room.history_visibility'), { errcode: 'M_FORBIDDEN' }, 403],
     ])
     assert.match((await ask(outside)).body.error, /invite @feedbai:matrix\.org/)
   } finally {
@@ -232,4 +236,41 @@ test('items drop terminal escapes and bidi overrides', async () => {
   const entry = item({ id: '1', author: { id: 'a', name: 'x‮evil' }, text: 'ok\u001b[2Jcleared\nnext\tline' })
   assert.equal(entry.text, 'ok[2Jcleared\nnext\tline')
   assert.equal(entry.author.name, 'xevil')
+})
+
+test('the shared bot joins only public rooms: declines other invites, leaves rooms that stopped being public', async () => {
+  const { acceptInvites } = await import('../hub/matrix.js')
+  const rules = (rule) => ({ invite_state: { events: [{ type: 'm.room.join_rules', content: { join_rule: rule } }] } })
+  const fetchImpl = fakeFetch([
+    [(u) => u.includes('/sync'), { rooms: { invite: { '!pub:x': rules('public'), '!priv:x': rules('invite') }, join: { '!still:x': {}, '!closed:x': {} } } }],
+    [(u) => u.includes('!still%3Ax/state/m.room.join_rules'), { join_rule: 'public' }],
+    [(u) => u.includes('!closed%3Ax/state/m.room.join_rules'), { join_rule: 'invite' }],
+    [(u, i) => i?.method === 'POST', {}],
+  ])
+  assert.deepEqual(await acceptInvites({ homeserver: 'https://x', token: 't', fetchImpl }), { joined: ['!pub:x'], declined: ['!priv:x'], left: ['!closed:x'] })
+  const posts = fetchImpl.calls.filter((c) => c.init?.method === 'POST').map((c) => c.url.replace('https://x/_matrix/client/v3', ''))
+  assert.deepEqual(posts, ['/join/!pub%3Ax', '/rooms/!priv%3Ax/leave', '/rooms/!closed%3Ax/leave'])
+})
+
+test('the read API cache key ignores what could skip the cache', async () => {
+  const { cacheKey } = await import('../hub/worker.js')
+  const key = (q) => cacheKey(new URL(`https://h.example/v1/matrix?${q}`))
+  assert.equal(key('room=%23r%3Ax&since=2026-11-07T10:00:42.123Z&limit=7&x=1'), key('room=%23r%3Ax&since=2026-11-07T10:00:05Z&limit=10'))
+  assert.notEqual(key('room=%23r%3Ax&limit=10'), key('room=%23s%3Ax&limit=10'))
+  assert.match(key('room=%23r%3Ax&limit=500'), /limit=100/)
+})
+
+test('/v1/status says which hub secret stopped working, without details', async () => {
+  const { readStatus } = await import('../hub/status.js')
+  const { generateKeyPairSync } = await import('node:crypto')
+  const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 })
+  const env = { FEEDBAI_MATRIX_TOKEN: 't', FEEDBAI_APP_ID: '1', FEEDBAI_APP_PRIVATE_KEY: privateKey.export({ type: 'pkcs1', format: 'pem' }) }
+  const ok = await readStatus({ env, fetchImpl: fakeFetch([[() => true, {}]]) })
+  assert.equal(ok.status, 200)
+  assert.deepEqual((await ok.json()).checks, { matrix: 'ok', github: 'ok', bluesky: 'unset' })
+  const revoked = await readStatus({ env, fetchImpl: fakeFetch([[(u) => u.includes('whoami'), { errcode: 'M_UNKNOWN_TOKEN' }, 401], [() => true, {}]]) })
+  assert.equal(revoked.status, 503)
+  const body = await revoked.json()
+  assert.equal(body.checks.matrix, 'rejected')
+  assert.doesNotMatch(JSON.stringify(body), /M_UNKNOWN_TOKEN/)
 })

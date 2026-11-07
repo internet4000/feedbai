@@ -14,7 +14,7 @@ feedbai add matrix '#yourproject:matrix.org' --join
 
 ## Reading without an account: the hub
 
-Invite `@feedbai:matrix.org` to the room (anyone in a public room can). After that, everyone running `feedbai` in the repo reads the room through the [hub](../../hub/README.md), with no Matrix account. The hub only serves public rooms. The source's status says `ok via the feedbai hub`. If the bot isn't in the room, the error says to invite it.
+Invite `@feedbai:matrix.org` to the room (anyone in a public room can). The hub's bot joins public rooms only. If the room's admins also let anyone read it without joining (Room settings → Security & Privacy → "Who can read history?" → **Anyone**), everyone running `feedbai` in the repo reads it through the [hub](../../hub/README.md), with no Matrix account. Otherwise, people read it with their own account (`feedbai login matrix`), joining it visibly. The source's status says `ok via the feedbai hub`. If the bot isn't in the room, the error says to invite it.
 
 ## Reading with your own account
 

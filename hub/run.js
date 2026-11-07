@@ -37,8 +37,11 @@ export const sanitize = (config) => ({
 export const runHub = async ({ env = process.env, fetchImpl, log = console.log } = {}) => {
   const homeserver = env.FEEDBAI_MATRIX_HOMESERVER ?? 'https://matrix.org'
   const token = env.FEEDBAI_MATRIX_TOKEN
-  const joined = await acceptInvites({ homeserver, token, fetchImpl })
-  if (joined.length) log(`joined ${joined.length} room(s)`)
+  // Matrix down must not stop filing for repos that don't use it
+  const rooms = await acceptInvites({ homeserver, token, fetchImpl }).catch((error) => (log(`matrix: ${error.message}`), null))
+  if (rooms?.joined.length) log(`joined ${rooms.joined.length} public room(s)`)
+  if (rooms?.declined.length) log(`declined ${rooms.declined.length} invite(s) to non-public rooms (private rooms: use your own bot)`)
+  if (rooms?.left.length) log(`left ${rooms.left.length} room(s) that are no longer public`)
 
   const repos = await installedRepos({ appId: env.FEEDBAI_APP_ID, privateKey: env.FEEDBAI_APP_PRIVATE_KEY, fetchImpl })
   log(`${repos.length} repo(s) with the GitHub App${repos.length ? '' : ': nothing to file (install it on a repo)'}`)

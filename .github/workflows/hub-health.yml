@@ -19,15 +19,17 @@ jobs:
     steps:
       - run: |
           open=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number -q '.[0].number')
-          # Liveness and the Matrix bot's token: read the project's own public room through the hub
-          if curl -fsS -m 30 -o /dev/null "$HUB/v1/matrix?room=%23feedbai%3Amatrix.org&limit=1"; then
+          # Each hub secret still works (/v1/status: matrix, github, bluesky), and the site and sign-in page answer.
+          # A rejected secret means: rotate it (SECURITY.md, "Rotation").
+          check() { curl -fsS -m 30 -o /dev/null "$HUB/v1/status" && curl -fsS -m 30 -o /dev/null "$HUB/" && curl -fsS -m 30 -o /dev/null "https://auth.feedbai.internet4000.com/connect/"; }
+          if check; then
             [ -n "$open" ] && gh issue close "$open" --comment "Back up: $HUB answers again ($(date -u +%FT%TZ))."
             exit 0
           fi
-          reason=$(curl -sS -m 30 "$HUB/v1/matrix?room=%23feedbai%3Amatrix.org&limit=1" 2>&1 | head -c 300)
+          reason=$(curl -sS -m 30 "$HUB/v1/status" 2>&1 | head -c 300)
           if [ -z "$open" ]; then
             printf '%s\n' "The hub at $HUB does not answer (hourly check in the \`feedbai\` workflow, $(date -u +%FT%TZ))." "" '```' "$reason" '```' "" \
-              "Until it's back, people without accounts can't read Matrix rooms or Bluesky searches through it, and repos with the feedbai GitHub App get no issues filed. Redeploy: hub/README.md." > body.md
+              "Until it's back, people without accounts can't read Matrix rooms or Bluesky searches through it, and repos with the feedbai GitHub App get no issues filed. A \`rejected\` check means that secret was revoked or expired: rotate it (SECURITY.md, Rotation). Otherwise redeploy: hub/README.md." > body.md
             gh issue create --title "$TITLE" --body-file body.md
           fi
           exit 1

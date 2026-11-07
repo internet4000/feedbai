@@ -6,6 +6,18 @@
  */
 import { runHub } from './run.js'
 import { readMatrix, readBlueskySearch } from './api.js'
+import { readStatus } from './status.js'
+
+/** The read API's cache key: `since` rounded down to the minute, `limit` up to 10, 25, 50 or 100, nothing else. */
+export const cacheKey = (url) => {
+  const key = new URL(url.pathname, url.origin)
+  for (const name of ['room', 'query']) if (url.searchParams.has(name)) key.searchParams.set(name, url.searchParams.get(name))
+  const since = Date.parse(url.searchParams.get('since') ?? '')
+  if (!Number.isNaN(since)) key.searchParams.set('since', new Date(since - (since % 60000)).toISOString())
+  else if (url.searchParams.has('since')) key.searchParams.set('since', url.searchParams.get('since')) // let the API say it's invalid
+  if (url.searchParams.has('limit')) key.searchParams.set('limit', String([10, 25, 50, 100].find((n) => n >= Number(url.searchParams.get('limit'))) ?? 100))
+  return key.toString()
+}
 
 /** The site's own 404 page, with a 404 status. */
 const notFound = async (request, env) => {
@@ -47,14 +59,21 @@ export default {
     const url = new URL(request.url)
     // The hub's domain is its Bluesky bot's handle (AT Protocol handle verification over HTTPS)
     if (url.pathname === '/.well-known/atproto-did' && env.FEEDBAI_BLUESKY_DID) return new Response(env.FEEDBAI_BLUESKY_DID, { headers: { 'content-type': 'text/plain' } })
-    const read = { '/v1/matrix': readMatrix, '/v1/bluesky/search': readBlueskySearch }[url.pathname]
+    const read = { '/v1/matrix': readMatrix, '/v1/bluesky/search': readBlueskySearch, '/v1/status': readStatus }[url.pathname]
     if (!read) return env.ASSETS ? site(request, env, url) : notFound(request, env)
     if (request.method !== 'GET') return notFound(request, env)
-    // Public data, cached briefly so a busy room costs one Matrix read per minute
-    const cached = await caches.default.match(request)
+    // Per client: the API reads with the hub's own accounts, so nobody gets to spend them freely (#31)
+    if (env.READ_LIMITER) {
+      const { success } = await env.READ_LIMITER.limit({ key: request.headers.get('cf-connecting-ip') ?? 'unknown' })
+      if (!success) return new Response(JSON.stringify({ error: 'too many requests: try again in a minute, or read with your own account' }), { status: 429, headers: { 'content-type': 'application/json', 'retry-after': '60' } })
+    }
+    // Cached briefly (a busy room costs one Matrix read per minute). The key is normalized, so varying
+    // `since` or `limit` can't skip the cache.
+    const key = new Request(cacheKey(url), request)
+    const cached = await caches.default.match(key)
     if (cached) return cached
-    const response = await read({ params: url.searchParams, env })
-    if (response.ok) ctx.waitUntil(caches.default.put(request, response.clone()))
+    const response = await read({ params: new URL(key.url).searchParams, env })
+    if (response.ok) ctx.waitUntil(caches.default.put(key, response.clone()))
     return response
   },
   async scheduled(controller, env, ctx) {

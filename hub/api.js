@@ -1,12 +1,13 @@
 /**
- * The hub's read API: feedback from public Matrix rooms the bot was invited to, for anyone
- * running feedbai without a Matrix account (the CLI falls back to it). Same items as `feedbai fetch`.
+ * The hub's read API: feedback from Matrix rooms the bot was invited to *and* whose admins made them readable
+ * without joining (history visibility "world_readable"), for anyone running feedbai without a Matrix account
+ * (the CLI falls back to it). Same items as `feedbai fetch`. Rate-limited per client (hub/worker.js).
  * GET /v1/matrix?room=#room:server[&since=ISO][&limit=n]
  * GET /v1/bluesky/search?query=…[&since=ISO][&limit=n] (Bluesky search needs an account; the hub's)
  */
 import matrix from '../src/providers/matrix.js'
 import bluesky from '../src/providers/bluesky.js'
-import { roomPublic } from './matrix.js'
+import { roomWorldReadable } from './matrix.js'
 
 const MAX_LIMIT = 100
 const CACHE_SECONDS = 60
@@ -33,8 +34,10 @@ export const readMatrix = async ({ params, env, fetchImpl }) => {
   const bot = env.FEEDBAI_MATRIX_USER
   const invite = `invite ${bot} to ${room}, or read it with your own account (feedbai login matrix)`
   try {
-    if (!(await roomPublic({ homeserver, token: env.FEEDBAI_MATRIX_TOKEN, room, fetchImpl }))) {
-      return json(403, { error: `${room} is not public; the hub only serves public rooms` })
+    if (!(await roomWorldReadable({ homeserver, token: env.FEEDBAI_MATRIX_TOKEN, room, fetchImpl }))) {
+      return json(403, {
+        error: `${room} is for its members to read (its history isn't visible to non-members), so the hub doesn't share it: read it with your own account (feedbai login matrix). Room admins can allow reading without joining: Room settings → Security & Privacy → "Who can read history?" → Anyone.`,
+      })
     }
     const account = { id: 'hub', type: 'matrix', homeserver, user: bot, secrets: { token: 'FEEDBAI_MATRIX_TOKEN' } }
     const source = { id: 'matrix', type: 'matrix', room }

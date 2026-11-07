@@ -4,6 +4,14 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
+### Security
+- The shared hub bot joins **public rooms only**: it declines other invites and leaves rooms that stop being public, so its token can't expose private conversations. Private rooms: your own bot.
+- The read API shares a room only when its admins made it readable without joining (history visibility "world_readable"), rate-limited per client (30 a minute), with a cache that can't be skipped by varying `since` or `limit` (#31).
+- `GET /v1/status`: whether each hub secret still works; the hourly check opens an issue when one is rejected.
+- Rotation: `hub/setup.js` signs out the bot's old sessions when logging it in again; SECURITY.md has the rotation table.
+- Docs: SECURITY.md "The shared hub bot"; "Your project's agent" (its own account, its token never ours).
+- Filing: a newline in a display name, a thread pointing at a reply, and feedback records dated in the future or flooding (#60).
+
 ## 0.2.0 — 2026-11-07
 
 The first release on npm since 0.0.1: `npx @internet4000/feedbai`.
