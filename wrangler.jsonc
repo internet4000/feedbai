@@ -11,15 +11,21 @@
   // The website (site/: Astro + Starlight, docs synced from docs/), built before every deploy and `wrangler dev`.
   // Its files are served first; the Worker gets the rest (/v1/…, /.well-known/atproto-did, 404s).
   "build": { "command": "npm ci --prefix site && npm run build --prefix site" },
-  "assets": { "directory": "./site/dist", "binding": "ASSETS" },
+  // The Worker runs first: it keeps the sign-in page alone on FEEDBAI_AUTH_HOST (hub/worker.js)
+  "assets": { "directory": "./site/dist", "binding": "ASSETS", "run_worker_first": true },
   "triggers": { "crons": ["*/10 * * * *"] },
-  "routes": [{ "pattern": "feedbai.internet4000.com", "custom_domain": true }],
+  "routes": [
+    { "pattern": "feedbai.internet4000.com", "custom_domain": true },
+    // "Save to my Bluesky account" signs in here, on its own origin
+    { "pattern": "auth.feedbai.internet4000.com", "custom_domain": true }
+  ],
   "vars": {
     "FEEDBAI_MATRIX_USER": "@feedbai:matrix.org",
     "FEEDBAI_BLUESKY_IDENTIFIER": "feedbai.internet4000.com",
     // served at /.well-known/atproto-did: makes the hub's domain the bot's Bluesky handle
     "FEEDBAI_BLUESKY_DID": "did:plc:kwx5rsbzzksolfdxfjnu3lx4",
-    "FEEDBAI_APP_URL": "https://github.com/apps/feedbai"
+    "FEEDBAI_APP_URL": "https://github.com/apps/feedbai",
+    "FEEDBAI_AUTH_HOST": "auth.feedbai.internet4000.com"
   },
   // Preview builds (wrangler preview, per branch): no cron, no secrets, so the page
   // renders and the API answers with a clear error. Public values only.

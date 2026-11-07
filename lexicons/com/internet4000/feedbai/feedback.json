@@ -1,0 +1,54 @@
+{
+  "lexicon": 1,
+  "id": "com.internet4000.feedbai.feedback",
+  "description": "Feedback about a project (and the page it was given on), saved by the person who gave it, in their own account. Read by feedbai (https://github.com/internet4000/feedbai) through backlink indexes; projects file it as GitHub issues.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["project", "text", "createdAt"],
+        "properties": {
+          "project": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 512,
+            "description": "The project the feedback is for, as its repository URL: https://github.com/owner/name"
+          },
+          "subject": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 2048,
+            "description": "The page the feedback is about: origin and path only (no query string or fragment, which can hold tokens or personal data)"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 10000,
+            "maxGraphemes": 3000,
+            "description": "The feedback, as plain text"
+          },
+          "kind": {
+            "type": "string",
+            "knownValues": ["bug", "idea", "question", "praise"],
+            "description": "Optional: what kind of feedback it is"
+          },
+          "langs": {
+            "type": "array",
+            "maxLength": 3,
+            "items": { "type": "string", "format": "language" }
+          },
+          "post": {
+            "type": "ref",
+            "ref": "com.atproto.repo.strongRef",
+            "description": "Optional: a Bluesky post made at the same time, where replies can go"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      }
+    }
+  }
+}

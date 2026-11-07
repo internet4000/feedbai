@@ -7,6 +7,7 @@ A channel is a platform feedbai can read: each one is a module in [`src/provider
 | [Matrix](matrix.md) | `matrix` | public rooms the hub's bot is in | private rooms; reading with your own bot | messages that mention the bot | yes |
 | [Bluesky](bluesky.md) | `bluesky` | `search` (via the hub), `author`, `thread` | `mentions`; `search` without the hub | `thread`, `mentions` | no |
 | [GitHub Discussions](github.md) | `github` | no | always (a token) | no | no |
+| [AT Protocol records](atproto.md) | `atproto` | yes (public index) | never | yes, records naming the repo | no |
 
 "Filed as issues" is what `feedbai issues` and the hub file on their own ([feedback → issues](../issues.md)). Agents still read everything and file what is actionable.
 

@@ -41,7 +41,8 @@
           "enum": [
             "matrix",
             "bluesky",
-            "github"
+            "github",
+            "atproto"
           ]
         },
         "homeserver": {
@@ -129,7 +130,8 @@
           "enum": [
             "matrix",
             "bluesky",
-            "github"
+            "github",
+            "atproto"
           ]
         },
         "account": {
@@ -214,6 +216,20 @@
           },
           "required": [
             "repo"
+          ]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "atproto"
+            },
+            "project": {
+              "type": "string",
+              "description": "https://github.com/owner/name (or owner/name): the project feedback records name"
+            }
+          },
+          "required": [
+            "project"
           ]
         }
       ]

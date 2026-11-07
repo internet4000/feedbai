@@ -24,6 +24,11 @@
           "type": "bluesky",
           "mode": "search",
           "query": "#feedbai"
+        },
+        {
+          "id": "atproto",
+          "type": "atproto",
+          "project": "https://github.com/internet4000/feedbai"
         }
       ]
     }

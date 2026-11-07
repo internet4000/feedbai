@@ -1,16 +1,20 @@
 # <img src="assets/logo.svg" alt="" width="40" height="40" align="top"> feedbai
 
-User feedback for AI agents. feedbai reads what people say about your project where they already talk (Matrix rooms, Bluesky, GitHub Discussions, and more as channels get added), so your agents (Claude Code, Codex, pi, …) can triage it into GitHub issues, fixes and pull requests.
+**Hear your community. Let your agents act on it.**
+
+feedbai gathers feedback wherever people talk about your project (chat, Bluesky, a button on your site), turns it into work for you and your AI agents (Claude Code, Codex, …), and answers back. Open, decentralized, nothing stored by us.
 
 ```mermaid
 flowchart LR
-  users(["People using your project"]) -->|talk| channels["Channels<br/>Matrix · Bluesky · GitHub Discussions · …"]
-  channels -->|feedbai reads| agent["Your agent<br/>Claude Code · Codex · pi"]
-  channels -->|"mentions of the bot<br/>(hub, every 10 min)"| issues["GitHub issues<br/>label: feedback"]
-  agent -->|triages into| issues
-  issues --> prs["Fixes and PRs"]
-  prs -->|"agent replies 🤖"| channels
+  people["Your community"] -->|"speaks: chat, Bluesky,<br/>the Feedback button"| feedbai["feedbai"]
+  feedbai -->|"issues and a live feed"| agents["You and your AI agents"]
+  agents -->|"fix it"| fix["Fix"]
+  fix -->|"everyone hears back"| people
 ```
+
+People give feedback where they already are: a Matrix room (mentioning the bot), Bluesky, the [Feedback button](docs/button.md) on your site, or records in their own account. feedbai gathers it as GitHub issues and as a live feed your agent reads, so the loop closes: fixed, and answered.
+
+Website and docs: **https://feedbai.internet4000.com**
 
 - **One CLI, any agent.** `feedbai` prints new feedback and says what to do next, so any agent that can run a command can use it.
 - **No secrets in the repo.** A project commits `feedbai.config.json` listing its channels. Accounts stay on each person's machine.

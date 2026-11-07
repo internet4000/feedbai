@@ -1,0 +1,38 @@
+---
+/**
+ * /feedback?project=…&matrix=…&bluesky=…&page=…: the feedbai button as a page, for a plain link
+ * (no script on the linking site) or where popups and floating buttons don't fit.
+ */
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro'
+---
+<StarlightPage frontmatter={{ title: 'Send feedback', description: 'Tell a project what works and what doesn’t, where it already listens.', tableOfContents: false }}>
+  <p>Write your feedback, then pick where to send it. It opens there prefilled, from your own account.</p>
+  <div id="form" class="not-content"></div>
+  <div id="missing" hidden>
+    <p><strong>Giving feedback on a project that uses feedbai?</strong></p>
+    <ol>
+      <li>Look for its <strong>Feedback</strong> button, often at the bottom right of its site (like this one).</li>
+      <li>Or write in its chat room and mention the bot, <code>@feedbai:matrix.org</code>: your message becomes an issue its makers see.</li>
+    </ol>
+    <p>Either way, you'll hear back where you wrote. This link had no project in it: projects share links like <code>/feedback?project=https://github.com/owner/repo</code>.</p>
+  </div>
+</StarlightPage>
+
+<script is:inline type="module">
+  // embed.js is already on every page of this site (astro.config.mjs head); here it fills the form, not a floating button
+  const { pageAddress } = await import('/embed.js')
+  const params = new URLSearchParams(location.search)
+  const project = params.get('project')
+  if (!project) document.getElementById('missing').hidden = false
+  else {
+    const el = document.createElement('feedbai-button')
+    el.setAttribute('inline', '')
+    el.setAttribute('page', pageAddress(params.get('page') ?? ''))
+    for (const key of ['project', 'matrix', 'bluesky', 'bot']) if (params.get(key)) el.setAttribute(key, params.get(key))
+    document.getElementById('form').append(el)
+  }
+</script>
+
+<style is:global>
+  feedbai-button[floating] { display: none; }
+</style>
