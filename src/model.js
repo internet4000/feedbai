@@ -18,10 +18,13 @@
  */
 
 /**
- * Terminal control codes (ANSI escapes can rewrite what a person sees in the terminal) and
- * bidirectional overrides (they make text read differently than it is), kept out of all output.
+ * Kept out of all output: terminal control codes (ANSI escapes can rewrite what a person sees in the
+ * terminal), bidirectional overrides (text reads differently than it is), and invisible characters
+ * (Unicode tags U+E0000–E007F, zero-width space/joiners' invisible kin, word joiner, BOM) that can hide
+ * instructions an AI agent reads but a person reviewing the issue doesn't see. ZWJ/ZWNJ (U+200C/D) stay:
+ * emoji sequences and several scripts need them.
  */
-const UNSAFE = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g
+const UNSAFE = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u200b\u200e\u200f\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff]|[\u{e0000}-\u{e007f}]/gu
 export const clean = (text) => (typeof text === 'string' ? text.replace(UNSAFE, '') : text)
 
 export const item = (fields) => ({
