@@ -234,6 +234,22 @@ export default {
     return `https://matrix.to/#/${encodeURIComponent(roomId)}/${encodeURIComponent(data.event_id)}`
   },
 
+  /**
+   * React to a message (✅ = seen, I'm on it): an m.annotation, the lightest way to tell someone they were heard.
+   * The transaction id is stable per message and emoji, so reacting twice is a no-op on the homeserver.
+   */
+  async react({ account, room, replyTo, key = '✅', fetchImpl }) {
+    const accessToken = token(account)
+    if (!accessToken) throw new Error(t('error.authRequired', { source: account?.id ?? 'matrix', mode: 'react', type: 'matrix' }))
+    if (!replyTo) throw new Error(t('error.missingField', { source: 'react', field: '<message link>' }))
+    const homeserver = account.homeserver ?? DEFAULT_HOMESERVER
+    const roomId = await resolveRoomId(homeserver, parseRoom(room), fetchImpl)
+    const txn = `feedbai-react-${[...`${replyTo}${key}`].reduce((h, c) => (h * 31 + c.codePointAt(0)) >>> 0, 7).toString(36)}`
+    const body = { 'm.relates_to': { rel_type: 'm.annotation', event_id: replyTo, key } }
+    await request(api(homeserver, `/rooms/${encodeURIComponent(roomId)}/send/m.reaction/${txn}`), { method: 'PUT', token: accessToken, body, fetchImpl })
+    return `${key} https://matrix.to/#/${encodeURIComponent(roomId)}/${encodeURIComponent(replyTo)}`
+  },
+
   /** Exchange a password for an access token. */
   async login({ homeserver = DEFAULT_HOMESERVER, user, password, fetchImpl }) {
     const data = await request(api(homeserver, '/login'), {

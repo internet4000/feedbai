@@ -15,6 +15,7 @@
 | `feedbai watch` | Keep polling; print one line per new item on stdout, status on stderr. Polls every `--interval` seconds (default 60), slowing down to 15 minutes while quiet. Skips `[agent]` messages. |
 | `feedbai issues` | File feedback as GitHub issues in this repo ([feedback → issues](issues.md)). `--dry-run` shows what it would do. Default window `--since 1d`. |
 | `feedbai post <link\|source-id> <text>` | Reply in a thread (a message link) or post to a source; the text is prefixed with 🤖. `-` reads the text from stdin. Matrix for now. |
+| `feedbai react <link> [emoji]` | React to a message (default ✅: seen, on it), without adding a message to the conversation. Agents do it when they pick up feedback. Matrix for now. |
 | `feedbai skill` | Print the agent workflow ([skills/feedbai/SKILL.md](../skills/feedbai/SKILL.md)). |
 | `feedbai skill install` | Link the skill into `~/.claude/skills`, `~/.codex/skills`, `~/.pi/agent/skills` (for the agents installed). |
 | `feedbai paths` | Where the global config, project config, secrets and state are. |

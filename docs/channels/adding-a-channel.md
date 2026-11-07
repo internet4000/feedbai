@@ -46,6 +46,7 @@ export default {
   // Replying
   parseLink: (link) => null,            // optional: a message link → where `post` replies
   async post({ account, source, text, replyTo, ...where }) {}, // optional: `feedbai post` → link to the message
+  async react({ account, replyTo, key, ...where }) {}, // optional: `feedbai react` (✅ = seen) on a message link
 }
 ```
 

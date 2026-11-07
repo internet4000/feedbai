@@ -10,5 +10,6 @@ import help from './help.js'
 import watch from './watch.js'
 import issues from './issues.js'
 import post from './post.js'
+import react from './react.js'
 
-export const commands = { home, fetch, sources, add, remove, login, skill, paths, help, watch, issues, post }
+export const commands = { home, fetch, sources, add, remove, login, skill, paths, help, watch, issues, post, react }
