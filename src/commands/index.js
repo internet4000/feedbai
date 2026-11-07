@@ -11,5 +11,6 @@ import watch from './watch.js'
 import issues from './issues.js'
 import post from './post.js'
 import react from './react.js'
+import file from './file.js'
 
-export const commands = { home, fetch, sources, add, remove, login, skill, paths, help, watch, issues, post, react }
+export const commands = { home, fetch, sources, add, remove, login, skill, paths, help, watch, issues, post, react, file }

@@ -24,6 +24,8 @@ const { values: opts, positionals } = parseArgs({
     identifier: { type: 'string' },
     service: { type: 'string' },
     account: { type: 'string' },
+    title: { type: 'string' },
+    note: { type: 'string' },
     help: { type: 'boolean', short: 'h' },
   },
 })
