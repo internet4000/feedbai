@@ -4,6 +4,9 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
+### Added
+- `feedbai react <message link> [emoji]`: a ✅ (by default) on a message, so the person sees their feedback was picked up, without a new message in the room. The skill tells agents to react when they pick up an item. Matrix for now.
+
 ### Fixed
 - Bluesky: accounts remember their DID and log in with it, so a handle change (e.g. to a custom domain) no longer breaks reading. A failed login is retried next time instead of sticking, and says what to do (`feedbai login bluesky …`, or wait when Bluesky rate-limits logins). The hub's status check reuses its session instead of logging in each time.
 
