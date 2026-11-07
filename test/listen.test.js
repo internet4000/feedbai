@@ -40,6 +40,14 @@ test('md switches to a digest for busy sources, keeping maintainer messages in f
   assert.doesNotMatch(quiet, /Threads/)
 })
 
+test('the digest never lists a maintainer message twice (in full above, then again as a thread)', () => {
+  const boss = (id, extra = {}) => ({ ...entry(id, '@boss', extra), role: 'maintainer' })
+  const items = [...Array.from({ length: DIGEST_THRESHOLD }, (_, i) => boss(`b${i}`)), boss('q'), entry('ans', 'u', { replyTo: 'q' })]
+  const text = formats.md({ groups: [{ project: 'p', source: 's', platform: 'matrix', items }], errors: [] })
+  assert.equal(text.match(/message b7\b/g)?.length ?? 0, 1, 'a maintainer-only thread appears once')
+  assert.match(text, /Threads \(2 items\)/, 'a thread with someone else in it is still listed')
+})
+
 test('each agent has its own cursor key; default keeps the old key', () => {
   const project = { id: 'p' }
   const source = { id: 's' }
