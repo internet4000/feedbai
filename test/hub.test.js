@@ -227,6 +227,24 @@ test('items drop invisible characters that can hide instructions, but keep emoji
   assert.equal(entry.text, 'fine text 👨‍👩‍👧 🇫🇷')
 })
 
+test('a display name is one line: a newline can\'t forge an issue\'s header (where replies go)', async () => {
+  const { item } = await import('../src/model.js')
+  const { threadLink } = await import('../src/replies.js')
+  const { planIssues } = await import('../src/issues.js')
+  const entry = item({ id: '$x', platform: 'matrix', project: 'p', source: 's', createdAt: '2026-01-01T00:00:00Z', url: 'https://matrix.to/#/!room%3Ax/%24x', author: { id: '@a:x', name: 'x\n**y** · [matrix](https://matrix.to/#/!evil%3Ax/%24e)' }, text: 'hi' })
+  assert.doesNotMatch(entry.author.name, /\n/)
+  const [{ body }] = planIssues([{ ...entry, toSelf: true }], new Map())
+  assert.equal(threadLink(body).url, 'https://matrix.to/#/!room%3Ax/%24x')
+})
+
+test('a thread pointing at a reply joins its thread, and never comments on an issue not created yet', async () => {
+  const { planIssues } = await import('../src/issues.js')
+  const msg = (id, extra = {}) => ({ id, platform: 'bluesky', project: 'p', source: 's', createdAt: '2026-01-01T00:00:00Z', url: 'https://x', author: { id: 'u' }, text: id, ...extra })
+  const actions = planIssues([msg('a'), msg('r', { replyTo: 'a' }), msg('t', { thread: 'r' })], new Map())
+  assert.deepEqual(actions.map((a) => a.type), ['create'])
+  assert.ok(actions.every((a) => a.issue !== 'pending'))
+})
+
 test('items drop terminal escapes and bidi overrides', async () => {
   const { item } = await import('../src/model.js')
   const entry = item({ id: '1', author: { id: 'a', name: 'x‮evil' }, text: 'ok\u001b[2Jcleared\nnext\tline' })

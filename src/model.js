@@ -32,7 +32,8 @@ export const item = (fields) => ({
   platform: fields.platform,
   project: fields.project,
   source: fields.source,
-  author: { ...fields.author, ...(fields.author?.name && { name: clean(fields.author.name) }) },
+  // A name is one line: a newline in a display name could forge an issue's header line (where replies go)
+  author: { ...fields.author, ...(fields.author?.name && { name: clean(fields.author.name).replace(/\s+/g, ' ').trim() }) },
   text: clean(fields.text ?? ''),
   url: fields.url,
   createdAt: fields.createdAt,

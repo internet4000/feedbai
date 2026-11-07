@@ -70,13 +70,17 @@ export const planIssues = (items, index) => {
     const fresh = all.filter((entry) => !known(entry))
     if (!fresh.length) continue
     const linked = all.map((entry) => index.get(entry.id) ?? index.get(entry.replyTo) ?? index.get(entry.edits) ?? index.get(entry.thread)).find(Boolean)
+    if (linked === 'pending') continue // its issue is created in this run: comment on the next one
     const trigger = all.find(triggers)
     if (!linked && !trigger) continue
     const body = fresh.map(quote).join('\n\n')
     if (linked) actions.push({ type: 'comment', issue: linked, body })
     else {
       const title = `${t('issues.titlePrefix')} ${truncate(inert(oneLine(trigger.text)), 72)}`
-      actions.push({ type: 'create', title, body: `${t('issues.header', { source: `${root.project}/${root.source}` })}\n\n${body}` })
+      // A thread key that isn't a message (e.g. a day of feedback records) gets a marker too, so later runs add to this issue
+      const keys = [...new Set(all.map((entry) => entry.thread).filter((key) => key && !all.some((entry) => entry.id === key)))]
+      actions.push({ type: 'create', title, body: `${t('issues.header', { source: `${root.project}/${root.source}` })}\n\n${body}${keys.map((key) => `\n${itemMarker(key)}`).join('')}` })
+      for (const key of keys) index.set(key, 'pending')
     }
     for (const entry of fresh) index.set(entry.id, linked ?? 'pending')
   }
