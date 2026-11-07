@@ -43,6 +43,7 @@ Both files have the same shape and are validated by [`schemas/config.schema.json
 | `sources` | the channels to read (below) |
 | `maintainers` | author ids (Matrix user ids, Bluesky handles…) whose messages are marked `[maintainer]`: direction for agents, not just feedback |
 | `agents` | author ids of bots that work on the project: marked `[agent]`, never open an issue, skipped by `watch` |
+| `replies` | `true` by default: when a feedback issue is closed as completed, the hub replies "🤖 Fixed" with the issue link where the feedback was given ([closing the loop](issues.md#closing-the-loop)). `false` turns it off |
 
 ### Source fields
 

@@ -26,6 +26,7 @@ New channels (GitHub Discussions, Fediverse, …) are added when a project needs
 - a repo may file a Matrix room only if the room is public, or its topic names the repo (`github.com/owner/repo`, whole name); the same rule applies to `feedbai issues` anywhere
 - the bot joins rooms only when invited; kick it to stop
 - GitHub access is the App's installation token: issues write + contents read, per repo
+- when a feedback issue is closed as completed, the bot replies "🤖 Fixed" with its link, once, in the thread it came from ([closing the loop](../docs/issues.md#closing-the-loop); `"replies": false` in the config stops it)
 
 Personal data, retention and removal requests: [PRIVACY.md](../PRIVACY.md). Security model: [SECURITY.md](../SECURITY.md).
 
