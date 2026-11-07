@@ -121,5 +121,7 @@
   "home.setup.ask": "nothing was found in this repository, so ask where their community talks (a Matrix room link, a Bluesky handle or search, GitHub Discussions).",
   "error.badReactTarget": "Can't react to \"{target}\": give a message link (from feedbai's output) on a channel that supports reactions ({channels}).",
   "file.missing": "Not found in the last {since}: {links}. Use the links feedbai printed, or a wider --since (e.g. 90d).",
-  "file.existing": "Already filed: {url}"
+  "file.existing": "Already filed: {url}",
+  "watch.pausedLogin": "watch: {source} stopped: its login was refused, and retrying would only get the account rate-limited. Fix the login, then restart watch.",
+  "watch.pausedRate": "watch: {source} paused for {minutes} minutes: the platform is rate-limiting this account."
 }

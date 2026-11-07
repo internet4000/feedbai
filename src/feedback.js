@@ -37,7 +37,7 @@ export const collect = async (entries, { since, limit, consumer, fetchImpl, now 
       groups.push({ project: project.id, source: source.id, platform: source.type, items, ...(notices.length && { notices }) })
       if (useState) state.sources[key(entries[i])] = now.toISOString()
     } else {
-      errors.push({ project: project.id, source: source.id, error: t('error.sourceFailed', { source: source.id, reason: result.reason.message }) })
+      errors.push({ project: project.id, source: source.id, status: result.reason.status, error: t('error.sourceFailed', { source: source.id, reason: result.reason.message }) })
     }
   })
   if (useState) writeState(state)

@@ -4,6 +4,9 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
+### Fixed
+- `feedbai watch` stops polling a source whose login was refused, and pauses one that is rate-limited for 15 minutes, instead of retrying every minute (which got the account locked, for the hub too when it shares the account).
+
 ### Added
 - `feedbai file <message link…> --title "…" --note "…"`: the agent decides what becomes an issue, and files it in feedbai's format (duplicate checks and "This is fixed" replies work on it). First step of an agent in the loop (#70).
 
