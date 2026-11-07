@@ -16,6 +16,11 @@ const state = (homeserver, roomId, type, auth) =>
   })
 
 /** From the invite's stripped state (no need to join to read it). */
+/** Shown by Matrix clients in the room ("feedbai rejected the invite: …"), so a decline is never silent. */
+export const DECLINE_REASON =
+  'The shared feedbai bot only joins public rooms, so its shared token never sees private conversations. Make the room public (Room settings → Security & Privacy → Public), then invite it again; or use your own bot: https://feedbai.internet4000.com/docs/on-your-own/'
+const LEAVE_REASON = 'This room is no longer public; the shared feedbai bot only stays in public rooms. Use your own bot for private rooms: https://feedbai.internet4000.com/docs/on-your-own/'
+
 const invitedPublic = (invite) => invite?.invite_state?.events?.find((e) => e.type === 'm.room.join_rules')?.content?.join_rule === 'public'
 
 /**
@@ -31,13 +36,13 @@ export const acceptInvites = async ({ homeserver, token, fetchImpl }) => {
   for (const [roomId, invite] of Object.entries(sync.rooms?.invite ?? {})) {
     const room = encodeURIComponent(roomId)
     const isPublic = invitedPublic(invite)
-    await request(api(homeserver, isPublic ? `/join/${room}` : `/rooms/${room}/leave`), { method: 'POST', body: {}, ...auth })
+    await request(api(homeserver, isPublic ? `/join/${room}` : `/rooms/${room}/leave`), { method: 'POST', body: isPublic ? {} : { reason: DECLINE_REASON }, ...auth })
     ;(isPublic ? joined : declined).push(roomId)
   }
   const left = []
   for (const roomId of Object.keys(sync.rooms?.join ?? {})) {
     if ((await state(homeserver, roomId, 'm.room.join_rules', auth)).join_rule === 'public') continue
-    await request(api(homeserver, `/rooms/${encodeURIComponent(roomId)}/leave`), { method: 'POST', body: {}, ...auth })
+    await request(api(homeserver, `/rooms/${encodeURIComponent(roomId)}/leave`), { method: 'POST', body: { reason: LEAVE_REASON }, ...auth })
     left.push(roomId)
   }
   return { joined, declined, left }

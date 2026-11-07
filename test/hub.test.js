@@ -268,6 +268,9 @@ test('the shared bot joins only public rooms: declines other invites, leaves roo
   assert.deepEqual(await acceptInvites({ homeserver: 'https://x', token: 't', fetchImpl }), { joined: ['!pub:x'], declined: ['!priv:x'], left: ['!closed:x'] })
   const posts = fetchImpl.calls.filter((c) => c.init?.method === 'POST').map((c) => c.url.replace('https://x/_matrix/client/v3', ''))
   assert.deepEqual(posts, ['/join/!pub%3Ax', '/rooms/!priv%3Ax/leave', '/rooms/!closed%3Ax/leave'])
+  // Never a silent decline: the reason shows in the room ("feedbai rejected the invite: …")
+  const declineBody = JSON.parse(fetchImpl.calls.find((c) => c.url.includes('!priv%3Ax/leave')).init.body)
+  assert.match(declineBody.reason, /only joins public rooms.*Make the room public.*on-your-own/s)
 })
 
 test('the read API cache key ignores what could skip the cache', async () => {
