@@ -13,6 +13,8 @@ import { fileIssues } from '../src/issues.js'
 import { githubClient } from '../src/github.js'
 import { installedRepos, repoConfig } from './github.js'
 import { acceptInvites } from './matrix.js'
+import { sendReplies } from '../src/replies.js'
+import { providers } from '../src/providers/index.js'
 
 const SINCE = '1h' // runs are idempotent; the window only needs to cover missed schedules
 
@@ -44,13 +46,18 @@ export const runHub = async ({ env = process.env, fetchImpl, log = console.log }
     try {
       const config = await repoConfig({ ...repo, fetchImpl })
       if (!config) continue
-      const { urls, errors } = await fileIssues({
-        entries: selectSources(mergeConfigs(sanitize(config))),
-        client: githubClient({ token: repo.token, repo: repo.fullName, fetchImpl }),
-        since: SINCE,
-      })
+      const client = githubClient({ token: repo.token, repo: repo.fullName, fetchImpl })
+      const { urls, errors } = await fileIssues({ entries: selectSources(mergeConfigs(sanitize(config))), client, since: SINCE })
       log(`${repo.fullName}: ${urls.length} filed${errors.length ? `, ${errors.length} source error(s)` : ''}`)
       for (const e of errors) log(`  ${e.error}`)
+      // Close the loop: answer where the feedback was given, once its issue is closed as completed
+      if (!config.projects?.some((p) => p.replies === false)) {
+        const sent = await sendReplies({ client, accounts: { matrix: providers.matrix.envAccount(env) }, fetchImpl }).catch((error) => {
+          log(`${repo.fullName}: replies: ${error.message}`)
+          return []
+        })
+        if (sent.length) log(`${repo.fullName}: ${sent.length} replied`)
+      }
     } catch (error) {
       log(`${repo.fullName}: ${error.message}`) // one broken repo never stops the others
     }

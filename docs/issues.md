@@ -36,3 +36,11 @@ feedbai issues               # file it; default window --since 1d
 It needs a GitHub token (`GH_TOKEN`, `GITHUB_TOKEN`, or a `gh` login) and the repo (`GH_REPO`, `GITHUB_REPOSITORY`, or the git remote).
 
 **GitHub Actions, with your own bot**: copy [`.github/workflows/feedbai.yml`](../.github/workflows/feedbai.yml) (hourly, `feedbai issues --since 2h`) and add the bot's secrets to the repository: `FEEDBAI_MATRIX_TOKEN`, `FEEDBAI_MATRIX_USER`. For Bluesky `mentions`, also pass `FEEDBAI_BLUESKY_IDENTIFIER` and `FEEDBAI_BLUESKY_PASSWORD` in the workflow's `env`. Without a Matrix token the workflow skips, so it doesn't run alongside the hub.
+
+## Closing the loop
+
+When a `feedback` issue is **closed as completed**, the hub replies once where the feedback was given, in the same thread:
+
+> 🤖 Fixed, thank you for the feedback: https://github.com/you/repo/issues/42
+
+and notes the reply on the issue. Closing as "not planned" sends nothing. It's the same short text every time, never written by a model or copied from anyone's message. Matrix for now (the hub's bot must be in the room, which it is if it filed the message); Bluesky and feedback records next. Only issues closed in the last week are answered, so turning it on never answers old ones in a burst. To turn it off, set `"replies": false` on the project in `feedbai.config.json`.
