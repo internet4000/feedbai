@@ -36,7 +36,7 @@ Lines starting with `> ⚠` under a source (`notices` in JSON) mean feedback is 
 3. Make GitHub issues the shared memory, so other sessions and agents don't triage the same thing again. `feedbai issues` files threads that mention the bot (and Bluesky mentions/threads) automatically and idempotently. Bluesky searches and author feeds are never filed: read them for the overall sentiment (what people like, recurring complaints) and summarize that in your report; file an issue only for a concrete, actionable item. For everything else:
    - Search first: `gh issue list --label feedback --search "<item url>"` and by topic.
    - Existing issue: comment with the new item's link and a one-line summary.
-   - New bug/feature: `gh issue create --label feedback` with a short summary, the item `url`s (no personal data beyond the public link), and your proposed fix. Create the `feedback` label if missing.
+   - New bug/feature: `feedbai file <item url…> --title "<short, clear title>" --note "<summary and proposed fix>"`. It quotes the messages with links back and hidden markers, so duplicates are caught and "This is fixed" goes back to the people when a PR closes it. Messages already filed are added to their issue. Check with `--dry-run` first if unsure.
    - Questions, praise and noise: no issue; mention them in your report.
 4. Report to the user: a short table (kind, summary, issue, proposed action).
 5. Act on what the user or a maintainer asks (a clear maintainer request in the room is the go-ahead): a branch with the fix/feature and a PR "Fixes #N" that links the feedback `url`s.
@@ -53,6 +53,7 @@ feedbai add matrix '#room:server'        # add bluesky search <q> | author <hand
 feedbai remove <source-id>
 feedbai post <item url> <text>         # reply in that thread, marked 🤖 (Matrix)
 feedbai react <item url> [emoji]       # ✅ by default: seen, on it (Matrix)
+feedbai file <item url…> --title "…" --note "…"   # file chosen messages as one issue (or add them to theirs)
 feedbai help
 ```
 

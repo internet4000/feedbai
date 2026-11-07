@@ -5,6 +5,9 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 ## Unreleased
 
 ### Added
+- `feedbai file <message link…> --title "…" --note "…"`: the agent decides what becomes an issue, and files it in feedbai's format (duplicate checks and "This is fixed" replies work on it). First step of an agent in the loop (#70).
+
+### Added
 - `feedbai react <message link> [emoji]`: a ✅ (by default) on a message, so the person sees their feedback was picked up, without a new message in the room. The skill tells agents to react when they pick up an item. Matrix for now.
 
 ### Fixed

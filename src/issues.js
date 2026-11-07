@@ -110,11 +110,14 @@ const withContext = async (items, entries) => {
   return items.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
 }
 
-/** Sources whose messages may go to `repo`'s issues (see each provider's `mayFile`), and errors for the others. */
-const fileable = async (entries, repo) => {
+/**
+ * Sources whose messages may go to `repo`'s issues (see each provider's `mayFile`), and errors for the others.
+ * `chosen`: an agent picked the messages itself, so read-only sources (searches) count too; `mayFile` still applies.
+ */
+const fileable = async (entries, repo, { chosen = false } = {}) => {
   const allowed = []
   const errors = []
-  for (const entry of entries.filter(filesIssues)) {
+  for (const entry of chosen ? entries : entries.filter(filesIssues)) {
     const refuse = (error) => errors.push({ project: entry.project.id, source: entry.source.id, error })
     try {
       if (await (entry.provider.mayFile?.({ ...entry, repo }) ?? true)) allowed.push(entry)
@@ -136,4 +139,52 @@ export const fileIssues = async ({ entries, client, since = '1d', limit, dryRun 
   if (dryRun || !actions.length) return { actions, urls: [], errors }
   await client.ensureLabel({ name: LABEL, color: '0E8A16', description: t('issues.labelDescription') })
   return { actions, urls: await applyIssues(actions, client), errors }
+}
+
+/** A message link as feedbai prints it, comparable however it was copied (encoding, trailing slash). */
+const linkKey = (link) => {
+  try {
+    return decodeURIComponent(link.trim()).replace(/\/$/, '')
+  } catch {
+    return link.trim()
+  }
+}
+
+/**
+ * `feedbai file`: the agent chose which messages make one issue, and wrote its title (and a summary).
+ * Same format as automatic filing (quotes, links back, hidden markers), so duplicate checks and the
+ * "This is fixed" replies work on it. Messages already filed go to their issue as a comment instead.
+ * Returns { action, url, missing, errors }.
+ */
+export const fileChosen = async ({ entries, client, links, title, note = '', since = '30d', dryRun = false }) => {
+  const { allowed, errors: refused } = await fileable(entries, client.repo, { chosen: true })
+  const { groups, errors: failed } = await collect(allowed, { since, limit: 500 })
+  const errors = [...refused, ...failed]
+  const wanted = new Map(links.map((link) => [linkKey(link), link]))
+  const items = groups.flatMap((g) => g.items).filter((entry) => wanted.has(linkKey(entry.url)) || wanted.has(linkKey(entry.id)))
+  const found = new Set(items.flatMap((entry) => [linkKey(entry.url), linkKey(entry.id)]))
+  const missing = [...wanted].filter(([key]) => !found.has(key)).map(([, link]) => link)
+  if (!items.length) return { action: null, url: null, missing, errors }
+  items.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+  const index = await indexIssues(client)
+  const filed = items.map((entry) => index.get(entry.id) ?? index.get(entry.thread)).find(Boolean)
+  const fresh = items.filter((entry) => !index.has(entry.id))
+  const quotes = fresh.map(quote).join('\n\n')
+  // The agent's own words: no pings or hidden markers, but its links to this repo's issues (#70) stay links
+  const summary = note.trim() ? `${note.trim().replace(/@(?=[\w-])/g, '@\u200b').replace(/<!--/g, '&lt;!--')}\n\n` : ''
+  let action
+  if (filed) action = fresh.length ? { type: 'comment', issue: filed, body: `${summary}${quotes}` } : { type: 'existing', issue: filed }
+  else {
+    const root = items[0]
+    const keys = [...new Set(items.map((entry) => entry.thread).filter((key) => key && !items.some((entry) => entry.id === key)))]
+    action = {
+      type: 'create',
+      title: truncate(inert(oneLine(title)), 120),
+      body: `${summary}${t('issues.header', { source: `${root.project}/${root.source}` })}\n\n${quotes}${keys.map((key) => `\n${itemMarker(key)}`).join('')}`,
+    }
+  }
+  if (dryRun || action.type === 'existing') return { action, url: action.type === 'existing' ? `https://github.com/${client.repo}/issues/${action.issue}` : null, missing, errors }
+  await client.ensureLabel({ name: LABEL, color: '0E8A16', description: t('issues.labelDescription') })
+  const [url] = await applyIssues([action], client)
+  return { action, url, missing, errors }
 }

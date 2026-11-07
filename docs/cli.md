@@ -16,6 +16,7 @@
 | `feedbai issues` | File feedback as GitHub issues in this repo ([feedback → issues](issues.md)). `--dry-run` shows what it would do. Default window `--since 1d`. |
 | `feedbai post <link\|source-id> <text>` | Reply in a thread (a message link) or post to a source; the text is prefixed with 🤖. `-` reads the text from stdin. Matrix for now. |
 | `feedbai react <link> [emoji]` | React to a message (default ✅: seen, on it), without adding a message to the conversation. Agents do it when they pick up feedback. Matrix for now. |
+| `feedbai file <link…> --title "…" [--note "…"]` | File messages an agent chose as one issue, in feedbai's format: quotes with links back and hidden markers, so duplicates are caught and "This is fixed" replies work. Already-filed messages are added to their issue. `--since 30d` by default, `--dry-run` to preview. Private rooms follow the same rule as automatic filing. |
 | `feedbai skill` | Print the agent workflow ([skills/feedbai/SKILL.md](../skills/feedbai/SKILL.md)). |
 | `feedbai skill install` | Link the skill into `~/.claude/skills`, `~/.codex/skills`, `~/.pi/agent/skills` (for the agents installed). |
 | `feedbai paths` | Where the global config, project config, secrets and state are. |
