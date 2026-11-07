@@ -74,3 +74,19 @@ test('an expired session is renewed once (long-lived runtimes outlive the token)
   assert.equal(items.length, 1)
   assert.equal(sessionsCreated, 2)
 })
+
+test('login uses the DID (handles change), a failed login is retried next time, and says what to do', async () => {
+  const { session } = await import('../src/providers/bluesky.js')
+  process.env.TEST_BSKY_PW = 'pw'
+  const account = { id: 'b-retry', type: 'bluesky', identifier: 'old.bsky.social', did: 'did:plc:x', secrets: { password: 'TEST_BSKY_PW' } }
+  let attempts = 0
+  const failing = fakeFetch([[(u) => u.includes('createSession'), () => (attempts++, { error: 'AuthenticationRequired' }), 401]])
+  await assert.rejects(session(account, failing), /feedbai login bluesky/)
+  assert.equal(JSON.parse(failing.calls[0].init.body).identifier, 'did:plc:x')
+  const limited = fakeFetch([[(u) => u.includes('createSession'), { error: 'RateLimitExceeded' }, 429]])
+  await assert.rejects(session(account, limited), /rate-limiting/)
+  const ok = fakeFetch([[(u) => u.includes('createSession'), { accessJwt: 'jwt', handle: 'new.example' }]])
+  assert.equal((await session(account, ok)).token, 'jwt', 'the failure was not cached')
+  await session(account, ok)
+  assert.equal(ok.calls.length, 1, 'a working session is reused')
+})

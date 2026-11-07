@@ -48,17 +48,29 @@ const fromPost = (post, ctx) => toItem({ ...post, ...ctx })
 
 const password = (account) => getSecret(account?.secrets?.password)
 
-/** One session per account per process; dropped on expiry (long-lived runtimes like Workers outlive the ~2h token). */
+/**
+ * One session per account per process (Bluesky rate-limits logins); dropped on expiry (long-lived runtimes like
+ * Workers outlive the ~2h token) and never kept when the login failed, so the next call retries.
+ * Logs in with the account's DID when known: it never changes, unlike the handle.
+ */
 const sessions = new Map()
 const expired = (error) => error.status === 401 || error.data?.error === 'ExpiredToken'
-const session = async (account, fetchImpl) => {
+export const session = async (account, fetchImpl) => {
   if (!sessions.has(account.id)) {
     const service = account.service ?? DEFAULT_SERVICE
     const promise = request(`${service}/xrpc/com.atproto.server.createSession`, {
       method: 'POST',
       fetchImpl,
-      body: { identifier: account.identifier, password: password(account) },
-    }).then((data) => ({ base: service, token: data.accessJwt, handle: data.handle }))
+      body: { identifier: account.did ?? account.identifier, password: password(account) },
+    })
+      .then((data) => ({ base: service, token: data.accessJwt, handle: data.handle }))
+      .catch((error) => {
+        sessions.delete(account.id)
+        const who = account.did ?? account.identifier
+        if (error.status === 429) throw Object.assign(new Error(t('error.blueskyRateLimited', { who })), { status: 429 })
+        if (error.status === 401) throw Object.assign(new Error(t('error.blueskyLogin', { who, identifier: account.identifier })), { status: 401 })
+        throw error
+      })
     sessions.set(account.id, promise)
   }
   return sessions.get(account.id)
@@ -177,8 +189,9 @@ export default {
   async authenticate({ service = DEFAULT_SERVICE, identifier, account }, { promptHidden }) {
     if (!identifier) throw new Error(t('error.missingField', { source: 'login', field: '--identifier' }))
     const secret = await promptHidden(t('prompt.appPassword', { identifier }))
-    const { handle } = await this.login({ service, identifier, password: secret })
-    return { account: { id: account ?? `bluesky-${handle}`, type: 'bluesky', service, identifier: handle }, secrets: { password: secret } }
+    const { handle, did } = await this.login({ service, identifier, password: secret })
+    // The DID logs in even after the handle changes (e.g. to a custom domain)
+    return { account: { id: account ?? `bluesky-${handle}`, type: 'bluesky', service, identifier: handle, did }, secrets: { password: secret } }
   },
 
   /** Searches and author feeds are a sentiment signal to read, never a backlog. */

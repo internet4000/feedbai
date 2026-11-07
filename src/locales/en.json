@@ -10,6 +10,8 @@
   "error.authRequired": "Source {source} ({mode}) requires an authenticated {type} account",
   "error.badSince": "Cannot understand --since \"{value}\"",
   "error.http": "{method} {url} failed: {status} {body}",
+  "error.blueskyLogin": "Bluesky refused the login for {who} (wrong or revoked app password, or the handle changed). Log in again in your own terminal: `feedbai login bluesky --identifier <your handle>` (it saves the account's DID, which doesn't change).",
+  "error.blueskyRateLimited": "Bluesky is rate-limiting logins for {who} (too many recent attempts). Wait a few minutes; if it keeps failing, check the login: `feedbai login bluesky --identifier <your handle>`.",
   "error.matrixForbidden": "Cannot read {room}: not joined. Join it once with your account (or set \"join\": true on the source).",
   "error.sourceFailed": "Source {source} failed: {reason}",
   "error.noSources": "No sources match the given filters",

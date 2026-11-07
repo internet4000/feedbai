@@ -4,6 +4,9 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
+### Fixed
+- Bluesky: accounts remember their DID and log in with it, so a handle change (e.g. to a custom domain) no longer breaks reading. A failed login is retried next time instead of sticking, and says what to do (`feedbai login bluesky …`, or wait when Bluesky rate-limits logins). The hub's status check reuses its session instead of logging in each time.
+
 ### Security
 - The shared hub bot joins **public rooms only**: it declines other invites and leaves rooms that stop being public, so its token can't expose private conversations. Private rooms: your own bot.
 - The read API shares a room only when its admins made it readable without joining (history visibility "world_readable"), rate-limited per client (30 a minute), with a cache that can't be skipped by varying `since` or `limit` (#31).
