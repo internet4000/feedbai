@@ -83,6 +83,25 @@ const readForm = async (req) => {
   return form
 }
 
+/**
+ * Rotation: after a new login, sign out the bot's other "feedbai" sessions, so the token they held stops working.
+ * Matrix asks for the password again to delete devices (user-interactive auth).
+ */
+const signOutOldSessions = async (homeserver, token, user, password) => {
+  const base = `${homeserver.replace(/\/$/, '')}/_matrix/client/v3`
+  const headers = { authorization: `Bearer ${token}`, 'content-type': 'application/json' }
+  const { device_id: current } = await (await fetch(`${base}/account/whoami`, { headers })).json()
+  const { devices = [] } = await (await fetch(`${base}/devices`, { headers })).json()
+  const old = devices.filter((d) => d.display_name === 'feedbai' && d.device_id !== current).map((d) => d.device_id)
+  if (!old.length) return 0
+  const first = await fetch(`${base}/delete_devices`, { method: 'POST', headers, body: JSON.stringify({ devices: old }) })
+  const { session } = await first.json()
+  const auth = { type: 'm.login.password', identifier: { type: 'm.id.user', user }, password, session }
+  const res = await fetch(`${base}/delete_devices`, { method: 'POST', headers, body: JSON.stringify({ devices: old, auth }) })
+  if (!res.ok) throw new Error(`Couldn't sign out the old sessions: ${res.status} ${await res.text()}`)
+  return old.length
+}
+
 /** Checks a pasted Matrix access token and returns whose it is. */
 const matrixWhoami = async (homeserver, token) => {
   const res = await fetch(`${homeserver.replace(/\/$/, '')}/_matrix/client/v3/account/whoami`, { headers: { authorization: `Bearer ${token}` } })
@@ -119,8 +138,13 @@ const routes = {
       ? { token: pasted, user: await matrixWhoami(homeserver, pasted) }
       : await providers.matrix.login({ homeserver, user, password })
     await putSecret('FEEDBAI_MATRIX_TOKEN', token)
-    console.log(`Matrix bot ${userId} logged in; token stored. FEEDBAI_MATRIX_USER should be ${userId}.`)
-    return html(`<p>Stored a token for <b>${escape(userId)}</b>.</p><p><a href="/">Back</a></p>`)
+    // The old token is revoked only once the new one is in place
+    const revoked = pasted ? 0 : await signOutOldSessions(homeserver, token, userId, password)
+    console.log(`Matrix bot ${userId} logged in; token stored${revoked ? `, ${revoked} old session(s) signed out` : ''}. FEEDBAI_MATRIX_USER should be ${userId}.`)
+    const note = pasted
+      ? '<p>To revoke the old token: in a Matrix client logged in as the bot, Settings → Sessions, sign out the older "feedbai" sessions.</p>'
+      : `<p>${revoked} old "feedbai" session(s) signed out: their tokens no longer work.</p>`
+    return html(`<p>Stored a token for <b>${escape(userId)}</b>.</p>${note}<p><a href="/">Back</a></p>`)
   },
 }
 

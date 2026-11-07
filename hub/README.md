@@ -10,7 +10,7 @@ What it does per channel:
 
 | Channel | Read with `feedbai`, no account | Filed as `feedback` issues |
 | --- | --- | --- |
-| Matrix room | public rooms the bot `@feedbai:matrix.org` was invited to | threads that mention the bot |
+| Matrix room | public rooms the bot `@feedbai:matrix.org` was invited to, whose history anyone may read ("world_readable") | threads that mention the bot, in public rooms |
 | Bluesky search | yes, with the hub's account (`feedbai.internet4000.com`) | no: sentiment, read only |
 | Bluesky thread, author | yes (public, no account needed anyway) | thread: yes; author: no |
 | Bluesky mentions | no: they are per account, so a repo can't use the hub's | no |
@@ -19,11 +19,13 @@ New channels (GitHub Discussions, Fediverse, …) are added when a project needs
 
 **For a project**: commit `feedbai.config.json` with your channels (`npx @internet4000/feedbai` finds them in the repo and prints the `feedbai add …` commands), invite the bot to your Matrix room, and install the App on your repo to get issues within ~10 minutes.
 
-**For people and agents without accounts**: the CLI reads through the hub's read API when no account of its own is configured. `GET /v1/matrix?room=#room:server[&since=ISO][&limit=n]` (public rooms only) and `GET /v1/bluesky/search?query=…` return the same items as `feedbai fetch --format json` (cached 60s). Bluesky `mentions` sources are dropped from repo configs in the hub: they would read the hub's own mentions.
+**For people and agents without accounts**: the CLI reads through the hub's read API when no account of its own is configured. `GET /v1/matrix?room=#room:server[&since=ISO][&limit=n]` (only rooms readable without joining: "world_readable") and `GET /v1/bluesky/search?query=…` return the same items as `feedbai fetch --format json` (cached 60s). Bluesky `mentions` sources are dropped from repo configs in the hub: they would read the hub's own mentions.
 
 **Rules** (any repo can install the App, so its config is untrusted):
 - the hub always reads with its own bot account; `accounts` and `join` in a repo's config are ignored
-- a repo may file a Matrix room only if the room is public, or its topic names the repo (`github.com/owner/repo`, whole name); the same rule applies to `feedbai issues` anywhere
+- the bot joins **public rooms only**: it declines invites to others and leaves rooms that stop being public, so its shared token can't expose private conversations. Private rooms: your own bot ([on your own](../docs/on-your-own.md)); with it, a private room is filed only if its topic names the repo (`github.com/owner/repo`)
+- the read API is rate-limited per client (30 a minute) and only serves rooms readable without joining
+- `GET /v1/status` says whether each hub secret still works; the hourly check opens an issue when one is rejected. Rotation: [SECURITY.md](../SECURITY.md#rotation)
 - the bot joins rooms only when invited; kick it to stop
 - GitHub access is the App's installation token: issues write + contents read, per repo
 - when a feedback issue is fixed (closed by a pull request or commit, or labelled `fixed`), the bot replies "🤖 This is fixed" with its link, once, in the thread it came from ([closing the loop](../docs/issues.md#closing-the-loop); `"replies": false` in the config stops it)

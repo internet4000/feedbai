@@ -49,6 +49,17 @@ Every hour it files messages that mention the bot as `feedback` issues, using th
 
 That's the whole loop: users → your bot → your CI → issues → your agents → reply. No server.
 
+## Your project's agent
+
+When an AI agent works on your project and talks in your room (answers questions, reports progress, says when something is fixed), give it **its own account**, one per project: e.g. `@yourproject-agent:matrix.org`, display name "yourproject agent 🤖".
+
+- **Its token stays with you**: `feedbai login matrix --user @yourproject-agent:matrix.org` on the machine the agent runs on, or a CI secret. feedbai never sends it anywhere but your homeserver.
+- **Invite it only to your project's rooms**, with no admin rights.
+- **List it under `agents`** in `feedbai.config.json`: its messages are marked `[agent]` and never open issues.
+- **Never use the shared hub bot** (`@feedbai:matrix.org`) as your agent: its token can't be on your machine, and its messages are fixed texts by design ([SECURITY.md](../SECURITY.md#the-shared-hub-bot)).
+
+One account per project means a leaked token exposes one project, room admins can mute one agent without touching others, and every message says who wrote it.
+
 ## Or run your own hub
 
 If several projects (or people without accounts) should share one bot, run a hub: a Cloudflare Worker or any cron job, same code. See [the hub](../hub/README.md) ("Run your own"), then point everyone at it with `FEEDBAI_HUB=https://your-hub.example`.

@@ -13,6 +13,10 @@
   "build": { "command": "npm ci --prefix site && npm run build --prefix site" },
   // The Worker runs first: it keeps the sign-in page alone on FEEDBAI_AUTH_HOST (hub/worker.js)
   "assets": { "directory": "./site/dist", "binding": "ASSETS", "run_worker_first": true },
+  // The read API, per client IP: 30 requests a minute (hub/worker.js)
+  "ratelimits": [{ "name": "READ_LIMITER", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } }],
+  // The deployed version's id, shown by /v1/status
+  "version_metadata": { "binding": "CF_VERSION_METADATA" },
   "triggers": { "crons": ["*/10 * * * *"] },
   "routes": [
     { "pattern": "feedbai.internet4000.com", "custom_domain": true },
