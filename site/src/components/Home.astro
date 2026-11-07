@@ -7,7 +7,8 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro'
 
 const REPO = 'https://github.com/internet4000/feedbai'
 const BOT = '@feedbai:matrix.org'
-const SNIPPET = '<script type="module" src="https://feedbai.internet4000.com/embed.js" data-project="https://github.com/you/repo"></script>'
+const SNIPPET = '<script type="module" src="https://feedbai.internet4000.com/embed.js" data-project="https://github.com/you/repo" data-bluesky="#yourproject"></script>'
+const INSTALL = 'npm i -g @internet4000/feedbai && feedbai'
 
 // The loop, shown beside the headline
 const loop = `<ol class="loop" aria-label="How it works">
@@ -58,22 +59,22 @@ const others = [
     </ul>
 
     <h2 id="start">Get started</h2>
-    <p class="sub">Three steps, about two minutes. Each one works on its own.</p>
+    <p class="sub">About two minutes. Step 1 sets up your project; then add the ways people reach you.</p>
     <ol class="steps">
       <li>
-        <p><b>Let people give feedback on your site.</b> Add the Feedback button, with your repo:</p>
-        <div class="copy"><code>{SNIPPET}</code><button type="button" data-copy={SNIPPET}>Copy</button></div>
-        <p class="note">Try it: bottom right of this page. <a href="/docs/button/">Options</a></p>
+        <p><b>Set up your project.</b> In its folder, run:</p>
+        <div class="copy"><code>{INSTALL}</code><button type="button" data-copy={INSTALL}>Copy</button></div>
+        <p class="note">It finds your chat rooms and channels, says what to add, and writes <code>feedbai.config.json</code>: commit it. Your agent reads feedback the same way: <code>!feedbai</code> in Claude Code.</p>
       </li>
       <li>
-        <p><b>Listen to your chat.</b> Invite the bot to your Matrix room, and install the GitHub App so messages that mention it become issues:</p>
+        <p><b>Listen to your chat.</b> Invite the bot to your Matrix room, and install the GitHub App: messages that mention the bot become issues.</p>
         <div class="copy"><code>{BOT}</code><button type="button" data-copy={BOT}>Copy</button></div>
-        <a class="btn" href="https://github.com/apps/feedbai">Install the GitHub App</a>
+        <a class="btn ghost" href="https://github.com/apps/feedbai">Install the GitHub App</a>
       </li>
       <li>
-        <p><b>Hand it to your agent.</b> In your project, run:</p>
-        <div class="copy"><code>npx github:internet4000/feedbai</code><button type="button" data-copy="npx github:internet4000/feedbai">Copy</button></div>
-        <p class="note">It finds your channels, shows new feedback and says what to do next. In Claude Code: <code>!feedbai</code>.</p>
+        <p><b>Let people give feedback on your site.</b> Add the Feedback button, with your repo and a hashtag:</p>
+        <div class="copy"><code>{SNIPPET}</code><button type="button" data-copy={SNIPPET}>Copy</button></div>
+        <p class="note">Try it: bottom right of this page. Bluesky posts with your hashtag reach you through <code>feedbai add bluesky search '#yourproject'</code>. <a href="/docs/button/">Options</a></p>
       </li>
     </ol>
 
@@ -135,6 +136,7 @@ const others = [
   .home :global(code) { background: var(--sl-color-gray-6); padding: 0.05rem 0.3rem; border-radius: 0.3rem; font-size: 0.9em; }
   .home a:not(.btn) { color: var(--sl-color-text-accent); }
   .note { font-size: var(--sl-text-sm); color: var(--sl-color-gray-3); }
+  .btn.ghost { background: transparent; color: var(--sl-color-white); border: 1px solid var(--sl-color-gray-5); }
   .btn { margin-top: auto; display: flex; align-items: center; justify-content: center; min-height: 3rem; border-radius: 0.75rem; background: var(--sl-color-accent); color: var(--sl-color-black); font-weight: 600; text-decoration: none; }
   .copy { min-width: 0; display: flex; align-items: center; gap: 0.5rem; background: var(--sl-color-gray-6); border-radius: 0.75rem; padding: 0.35rem 0.35rem 0.35rem 0.85rem; min-height: 3rem; }
   .copy code { flex: 1; overflow-x: auto; white-space: nowrap; font-family: var(--__sl-font-mono); font-size: var(--sl-text-sm); background: none; padding: 0; }

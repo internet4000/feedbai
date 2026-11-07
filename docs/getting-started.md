@@ -3,8 +3,8 @@
 ## Install
 
 ```sh
-npm i -g github:internet4000/feedbai    # latest main (recommended until the next npm release; npm has 0.0.1)
-npm i -g @internet4000/feedbai          # from npm; or without installing: npx @internet4000/feedbai …
+npm i -g @internet4000/feedbai          # or without installing: npx @internet4000/feedbai …
+npm i -g github:internet4000/feedbai    # the latest main, unreleased
 ```
 
 Node ≥ 22. No dependencies.

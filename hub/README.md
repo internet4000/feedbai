@@ -17,7 +17,7 @@ What it does per channel:
 
 New channels (GitHub Discussions, Fediverse, …) are added when a project needs one: [#10](https://github.com/internet4000/feedbai/issues/10).
 
-**For a project**: commit `feedbai.config.json` with your channels (`npx feedbai` finds them in the repo and prints the `feedbai add …` commands), invite the bot to your Matrix room, and install the App on your repo to get issues within ~10 minutes.
+**For a project**: commit `feedbai.config.json` with your channels (`npx @internet4000/feedbai` finds them in the repo and prints the `feedbai add …` commands), invite the bot to your Matrix room, and install the App on your repo to get issues within ~10 minutes.
 
 **For people and agents without accounts**: the CLI reads through the hub's read API when no account of its own is configured. `GET /v1/matrix?room=#room:server[&since=ISO][&limit=n]` (public rooms only) and `GET /v1/bluesky/search?query=…` return the same items as `feedbai fetch --format json` (cached 60s). Bluesky `mentions` sources are dropped from repo configs in the hub: they would read the hub's own mentions.
 

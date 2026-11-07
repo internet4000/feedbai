@@ -152,7 +152,7 @@ Because feedback is public and indexed by subject, anyone can compute views acro
 | Agent skill, bare `feedbai` status with issues and PRs | ✅ |
 | Scheduled workflow | ✅ but only files with a Matrix bot token |
 | Hosted hub | ❌ offline (the Worker was removed, unnoticed); being redeployed, outages now reported (#44) |
-| npm package | ❌ 0.0.1 only; release publish fails (trusted publishing not set up) |
+| npm package | ✅ `@internet4000/feedbai` 0.2.0, published from GitHub releases (trusted publishing, provenance) |
 | Subjects, claims (`.well-known`) | — |
 | AT feedback / status records, index reader, `say` | — |
 | Widget, extension, relay | — |

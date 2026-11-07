@@ -2,7 +2,7 @@
 # your bot's accounts + this workflow's own token. Guide: docs/on-your-own.md
 # Secrets: FEEDBAI_MATRIX_TOKEN, FEEDBAI_MATRIX_USER (e.g. @bot:matrix.org); optional
 # FEEDBAI_BLUESKY_IDENTIFIER, FEEDBAI_BLUESKY_PASSWORD. Skipped without a Matrix token.
-# Copying it to your project: replace `node src/cli.js` with `npx -y github:internet4000/feedbai`.
+# Copying it to your project: replace `node src/cli.js` with `npx -y @internet4000/feedbai`.
 name: feedbai
 on:
   schedule:
