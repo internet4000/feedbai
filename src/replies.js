@@ -2,9 +2,12 @@ import { providers } from './providers/index.js'
 import { LABEL } from './issues.js'
 
 /**
- * Close the loop: when a `feedback` issue is closed as completed, reply once where the feedback was given
- * ("🤖 Fixed: <issue>"), then note it on the issue. Idempotent through a hidden marker in that note.
- * The reply is a fixed template: no model- or user-written text is ever posted back.
+ * Close the loop: when a `feedback` issue is fixed, reply once where the feedback was given ("🤖 Fixed: <issue>").
+ * "Fixed" means closed by a pull request or commit ("Fixes #12"), or labelled `fixed`: closing a question or
+ * noise (GitHub's default "Close" is also "completed") sends nothing.
+ * Exactly once: the note with the hidden marker is written *before* posting (a failure can miss a reply, never
+ * repeat one), and the Matrix send uses a stable transaction id. The reply is a fixed template: no model- or
+ * user-written text is ever posted back.
  */
 export const REPLIED = '<!-- feedbai:replied -->'
 const RECENT = 7 * 24 * 3600 * 1000 // only issues closed in the last week (never a burst of replies to old ones)
@@ -25,9 +28,14 @@ export const threadLink = (body = '') => {
   return null
 }
 
-export const replyText = (issue) => `🤖 Fixed, thank you for the feedback: ${issue.html_url}`
+export const replyText = (issue) => `🤖 This is fixed, thank you for telling us: ${issue.html_url}`
+export const FIXED_LABEL = 'fixed'
 
-/** Closed-as-completed feedback issues not answered yet, with where to answer (channels that can post). */
+/** Closed by a pull request or commit (its last "closed" event has a commit), or labelled `fixed`. */
+export const isFixed = (issue, timeline = []) =>
+  issue.labels?.some((l) => (l.name ?? l) === FIXED_LABEL) || Boolean(timeline.filter((e) => e.event === 'closed').at(-1)?.commit_id)
+
+/** Closed-as-completed feedback issues not answered yet, with where to answer (channels that can post). Fixed or not is checked when sending. */
 export const planReplies = ({ issues, comments, now = Date.now() }) => {
   const replied = new Set(comments.filter((c) => c.body?.includes(REPLIED)).map((c) => Number(c.issue_url.split('/').pop())))
   return issues
@@ -44,9 +52,12 @@ export const sendReplies = async ({ client, accounts, fetchImpl, now }) => {
   for (const { issue, link } of plans) {
     const account = accounts[link.platform]
     if (!account) continue
+    if (!isFixed(issue, await client.timeline(issue.number))) continue
     const provider = providers[link.platform]
-    const posted = await provider.post({ account, ...provider.parseLink(link.url), text: replyText(issue), fetchImpl })
-    await client.comment(issue.number, `Replied where the feedback was given: ${posted}\n\n${REPLIED}`)
+    // Claim first: if anything below fails, the next run sees the marker and never posts twice
+    const note = await client.comment(issue.number, `Replying where the feedback was given…\n\n${REPLIED}`)
+    const posted = await provider.post({ account, ...provider.parseLink(link.url), text: replyText(issue), txn: `feedbai-fixed-${client.repo}-${issue.number}`.replace(/[^\w.-]/g, '-'), fetchImpl })
+    await client.editComment(note.id, `Replied where the feedback was given: ${posted}\n\n${REPLIED}`).catch(() => {})
     sent.push(posted)
   }
   return sent

@@ -50,7 +50,7 @@ export const runHub = async ({ env = process.env, fetchImpl, log = console.log }
       const { urls, errors } = await fileIssues({ entries: selectSources(mergeConfigs(sanitize(config))), client, since: SINCE })
       log(`${repo.fullName}: ${urls.length} filed${errors.length ? `, ${errors.length} source error(s)` : ''}`)
       for (const e of errors) log(`  ${e.error}`)
-      // Close the loop: answer where the feedback was given, once its issue is closed as completed
+      // Close the loop: answer where the feedback was given, once its issue is fixed (closed by a PR or commit, or labelled fixed)
       if (!config.projects?.some((p) => p.replies === false)) {
         const sent = await sendReplies({ client, accounts: { matrix: providers.matrix.envAccount(env) }, fetchImpl }).catch((error) => {
           log(`${repo.fullName}: replies: ${error.message}`)

@@ -39,8 +39,8 @@ It needs a GitHub token (`GH_TOKEN`, `GITHUB_TOKEN`, or a `gh` login) and the re
 
 ## Closing the loop
 
-When a `feedback` issue is **closed as completed**, the hub replies once where the feedback was given, in the same thread:
+When a `feedback` issue is **fixed** (closed by a pull request or commit, e.g. "Fixes #42", or labelled `fixed`), the hub replies once where the feedback was given, in the same thread:
 
-> 🤖 Fixed, thank you for the feedback: https://github.com/you/repo/issues/42
+> 🤖 This is fixed, thank you for telling us: https://github.com/you/repo/issues/42
 
-and notes the reply on the issue. Closing as "not planned" sends nothing. It's the same short text every time, never written by a model or copied from anyone's message. Matrix for now (the hub's bot must be in the room, which it is if it filed the message); Bluesky and feedback records next. Only issues closed in the last week are answered, so turning it on never answers old ones in a burst. To turn it off, set `"replies": false` on the project in `feedbai.config.json`.
+and notes the reply on the issue. Closing it any other way (answered, duplicate, not planned) sends nothing. It's the same short text every time, never written by a model or copied from anyone's message. Matrix for now (the hub's bot must be in the room, which it is if it filed the message); Bluesky and feedback records next. Only issues closed in the last week are answered, so turning it on never answers old ones in a burst. To turn it off, set `"replies": false` on the project in `feedbai.config.json`.

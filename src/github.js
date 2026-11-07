@@ -20,6 +20,8 @@ export const githubClient = ({ token, repo, fetchImpl }) => {
     comments: () => all(`/repos/${repo}/issues/comments`),
     createIssue: ({ title, body, labels }) => call(`/repos/${repo}/issues`, { method: 'POST', body: { title, body, labels } }),
     comment: (number, body) => call(`/repos/${repo}/issues/${number}/comments`, { method: 'POST', body: { body } }),
+    editComment: (id, body) => call(`/repos/${repo}/issues/comments/${id}`, { method: 'PATCH', body: { body } }),
+    timeline: (number) => call(`/repos/${repo}/issues/${number}/timeline?per_page=100`),
     ensureLabel: ({ name, color, description }) =>
       call(`/repos/${repo}/labels`, { method: 'POST', body: { name, color, description } }).catch((error) => {
         if (error.status !== 422) throw error // 422: already exists
