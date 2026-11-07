@@ -39,6 +39,7 @@ export const runHub = async ({ env = process.env, fetchImpl, log = console.log }
   const token = env.FEEDBAI_MATRIX_TOKEN
   // Matrix down must not stop filing for repos that don't use it
   const rooms = await acceptInvites({ homeserver, token, fetchImpl }).catch((error) => (log(`matrix: ${error.message}`), null))
+  if (rooms) log(`matrix: ${rooms.joined.length + rooms.declined.length} new invite(s), ${rooms.left.length} room(s) left`)
   if (rooms?.joined.length) log(`joined ${rooms.joined.length} public room(s)`)
   if (rooms?.declined.length) log(`declined ${rooms.declined.length} invite(s) to non-public rooms (private rooms: use your own bot)`)
   if (rooms?.left.length) log(`left ${rooms.left.length} room(s) that are no longer public`)
