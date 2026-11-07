@@ -56,7 +56,7 @@ export const readBlueskySearch = async ({ params, env, fetchImpl }) => {
   const { since, limit, error } = readWindow(params)
   if (error) return error
   if (!env.FEEDBAI_BLUESKY_PASSWORD) return json(503, { error: 'this hub has no Bluesky account' })
-  const account = { id: 'hub-bluesky', type: 'bluesky', identifier: env.FEEDBAI_BLUESKY_IDENTIFIER, secrets: { password: 'FEEDBAI_BLUESKY_PASSWORD' } }
+  const account = { id: 'hub-bluesky', type: 'bluesky', identifier: env.FEEDBAI_BLUESKY_IDENTIFIER, did: env.FEEDBAI_BLUESKY_DID, secrets: { password: 'FEEDBAI_BLUESKY_PASSWORD' } }
   try {
     const items = await bluesky.fetch({ project: { id: 'hub' }, source: { id: 'search', type: 'bluesky', mode: 'search', query }, account, since, limit, fetchImpl })
     return json(200, { query, items })

@@ -74,6 +74,10 @@
               "type": "string"
             }
           }
+        },
+        "did": {
+          "type": "string",
+          "description": "bluesky: the account's DID (saved by feedbai login; used to log in, as it never changes)"
         }
       }
     },
