@@ -12,6 +12,7 @@ export const COLLECTION = 'com.internet4000.feedbai.feedback'
 const CONSTELLATION = 'https://constellation.microcosm.blue'
 const PLC = 'https://plc.directory'
 const PAGE = 100
+const PER_AUTHOR_DAY = 3
 
 /** A project as records name it: "https://github.com/owner/name" (Constellation only indexes full URLs). */
 export const projectUri = (value = '') => {
@@ -82,7 +83,8 @@ export default {
           // The index can lag behind an edit: trust the record itself
           if (projectUri(value?.project ?? '') !== target || typeof value.text !== 'string' || !value.text.trim()) return null
           const createdAt = new Date(value.createdAt)
-          if (Number.isNaN(createdAt.getTime())) return null
+          // The author writes createdAt: no dates in the future (they'd dodge the daily grouping and `since`)
+          if (Number.isNaN(createdAt.getTime()) || createdAt > Date.now() + 5 * 60 * 1000) return null
           const page = typeof value.subject === 'string' && /^https?:\/\//.test(value.subject) ? `\n\nPage: ${value.subject}` : ''
           return item({
             id: uri,
@@ -103,8 +105,16 @@ export default {
         }
       }),
     )
+    // At most a few records per author per day: one account can't flood a project
+    const perAuthorDay = new Map()
     const found = items
       .filter(Boolean)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+      .filter((entry) => {
+        const key = `${entry.author.id}:${entry.createdAt.slice(0, 10)}`
+        perAuthorDay.set(key, (perAuthorDay.get(key) ?? 0) + 1)
+        return perAuthorDay.get(key) <= PER_AUTHOR_DAY
+      })
       .filter((entry) => !since || new Date(entry.createdAt) >= since)
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
       .slice(-limit)

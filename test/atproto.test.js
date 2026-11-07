@@ -60,7 +60,26 @@ test('a day of records is one issue: a flood of records costs one issue, the res
   const day = (rkey, hour) => ({ id: `at://did:plc:${rkey}/c/${rkey}`, platform: 'atproto', project: 'feedbai', source: 'records', author: { id: `did:plc:${rkey}` }, text: `spam ${rkey}`, url: 'https://x', createdAt: `2026-11-01T0${hour}:00:00.000Z`, thread: 'records:2026-11-01' })
   const actions = planIssues([day('a', 1), day('b', 2), day('c', 3)], new Map())
   assert.deepEqual(actions.map((a) => a.type), ['create'])
-  assert.equal((actions[0].body.match(/feedbai:item=/g) ?? []).length, 3)
+  assert.equal((actions[0].body.match(/feedbai:item=at:/g) ?? []).length, 3)
+  assert.match(actions[0].body, /<!-- feedbai:item=records:2026-11-01 -->/, 'the day is marked too')
+  // The next run: new records that day are comments on the same issue, not a new one
+  const { indexIssues } = await import('../src/issues.js')
+  const index = await indexIssues({ issues: async () => [{ number: 7, body: actions[0].body }], comments: async () => [] })
+  const next = planIssues([day('d', 5), day('e', 6)], index)
+  assert.deepEqual(next.map((a) => [a.type, a.issue]), [['comment', 7]])
+})
+
+test('records dated in the future are dropped; one author counts at most 3 records a day', async () => {
+  const refs = ['f', 'a1', 'a2', 'a3', 'a4'].map((rkey) => ({ did: 'did:plc:a', collection: 'com.internet4000.feedbai.feedback', rkey }))
+  const fetchImpl = fakeFetch([
+    [(u) => u.includes('getBacklinks'), { records: refs, cursor: null }],
+    [(u) => u.startsWith('https://plc.directory/'), didDoc('did:plc:a', 'alice.example')],
+    [(u) => u.includes('rkey=f'), record({ createdAt: '2999-01-01T00:00:00Z' })],
+    [(u) => /rkey=a\d/.test(u), (u) => record({ text: u.match(/rkey=(a\d)/)[1] })],
+  ])
+  const items = await atproto.fetch({ project, source, limit: 50, fetchImpl })
+  assert.equal(items.length, 3)
+  assert.ok(items.every((i) => !i.createdAt.startsWith('2999')))
 })
 
 test('a repo files only the records naming itself', async () => {
