@@ -10,6 +10,9 @@ updates:
     directory: /site
     schedule:
       interval: weekly
+    # Releases at least two weeks old only: new releases are where supply-chain attacks and regressions show up
+    cooldown:
+      default-days: 14
     groups:
       site:
         patterns: ["*"]
