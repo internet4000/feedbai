@@ -8,7 +8,7 @@ feedbai doesn't need anything run by us. The hub at feedbai.internet4000.com is 
 | --- | --- | --- |
 | Our hub's read API | a Matrix room or Bluesky search source has **no account** | log in with your own account, and set `FEEDBAI_HUB=off` |
 | Our hub filing issues | you installed the feedbai GitHub App | don't install it; file from your CI (below) |
-| Installing | `npx github:internet4000/feedbai` downloads from GitHub | vendor or fork it: it has no dependencies, `node src/cli.js` runs from a checkout |
+| Installing | `npm i -g @internet4000/feedbai` downloads from npm | vendor or fork it: it has no dependencies, `node src/cli.js` runs from a checkout |
 
 Nothing else: no telemetry, no account with us. feedbai talks directly to Matrix, Bluesky and GitHub.
 

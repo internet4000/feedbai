@@ -25,7 +25,7 @@ Website and docs: **https://feedbai.internet4000.com**
 ## Quick start
 
 ```sh
-npm i -g github:internet4000/feedbai   # latest main (npm has an old 0.0.1 until the next release)
+npm i -g @internet4000/feedbai        # or without installing: npx @internet4000/feedbai
 feedbai                                # in your project: finds your channels and says how to add them
 feedbai add matrix '#yourproject:matrix.org'
 feedbai                                # new feedback since the last run
