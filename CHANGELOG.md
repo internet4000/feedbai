@@ -4,6 +4,11 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
+### Added
+- `feedbai triage`: a model proposes what to file and ✅ (no tools, no secrets, checked plan), plain code acts (`--apply`). Any OpenAI-compatible model; GitHub Models in GitHub Actions needs no key. Follows the project's `.feedbai/guidelines.md` (#63).
+- `.github/workflows/feedbai-agent.yml`: the agent in the loop every hour, in three jobs with different powers (read / triage / act).
+- `"filing": "agent"` in a project's config: the hub stops copying mentions into issues, the project's agent triages (#70).
+
 ## 0.3.0 — 2026-11-08
 
 The first release shaped by a real user's first try (thanks oskar).

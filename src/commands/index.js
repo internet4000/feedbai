@@ -12,5 +12,6 @@ import issues from './issues.js'
 import post from './post.js'
 import react from './react.js'
 import file from './file.js'
+import triage from './triage.js'
 
-export const commands = { home, fetch, sources, add, remove, login, skill, paths, help, watch, issues, post, react, file }
+export const commands = { home, fetch, sources, add, remove, login, skill, paths, help, watch, issues, post, react, file, triage }

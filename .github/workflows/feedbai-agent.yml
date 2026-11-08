@@ -1,0 +1,107 @@
+# The project's agent in the loop (docs/architecture.md), every hour, in three jobs with different powers:
+#   read   — the agent's Matrix token, reads the channels; no model, can't write to GitHub
+#   triage — a model (GitHub Models: no API key, `models: read`), sees the messages; no secrets, can't write anything
+#   act    — files issues and reacts ✅ from the checked plan (plain code); has tokens, no model
+# Each job is a separate, throwaway machine: the one that reads strangers' messages with a model can't act,
+# and the ones that act never run a model.
+#
+# Needs repository secrets FEEDBAI_MATRIX_TOKEN and FEEDBAI_MATRIX_USER (the project's own agent account,
+# never a person's); without them it skips. Set `"filing": "agent"` in feedbai.config.json so the hub stops
+# copying mentions into issues for this repo.
+# Copying it to your project: replace `node src/cli.js` with `npx -y @internet4000/feedbai`.
+name: feedbai agent
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: feedbai-agent
+  cancel-in-progress: false
+jobs:
+  read:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    env:
+      FEEDBAI_MATRIX_TOKEN: ${{ secrets.FEEDBAI_MATRIX_TOKEN }}
+      FEEDBAI_MATRIX_USER: ${{ secrets.FEEDBAI_MATRIX_USER }}
+    steps:
+      - id: check
+        run: |
+          if [ -z "$FEEDBAI_MATRIX_TOKEN" ]; then
+            echo "::notice::No FEEDBAI_MATRIX_TOKEN secret: the agent is not set up for this repo, skipping."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.check.outputs.ready == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - if: steps.check.outputs.ready == 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      # New feedback of the last 70 minutes (runs overlap; filing is idempotent)
+      - if: steps.check.outputs.ready == 'true'
+        run: node src/cli.js fetch --format json --since 70m > feedback.json
+      - if: steps.check.outputs.ready == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: feedback
+          path: feedback.json
+          retention-days: 1
+
+  triage:
+    needs: read
+    if: needs.read.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    # No secrets in this job. Its token can read the repo and call GitHub Models, nothing else.
+    permissions:
+      contents: read
+      models: read
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: feedback
+      - run: node src/cli.js triage --input feedback.json > plan.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: plan
+          path: plan.json
+          retention-days: 7
+
+  act:
+    needs: triage
+    runs-on: ubuntu-latest
+    # No model in this job: plain code files the issues and reacts ✅, from the checked plan
+    permissions:
+      contents: read
+      issues: write
+    env:
+      FEEDBAI_MATRIX_TOKEN: ${{ secrets.FEEDBAI_MATRIX_TOKEN }}
+      FEEDBAI_MATRIX_USER: ${{ secrets.FEEDBAI_MATRIX_USER }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: plan
+      - run: node src/cli.js triage --apply plan.json

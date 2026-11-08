@@ -122,6 +122,14 @@
           "type": "boolean",
           "default": true,
           "description": "When a feedback issue is fixed (closed by a pull request or commit, or labelled fixed), reply where the feedback was given (the hub, Matrix for now). false turns it off."
+        },
+        "filing": {
+          "enum": [
+            "hub",
+            "agent"
+          ],
+          "default": "hub",
+          "description": "Who files feedback as issues: \"hub\" (the hub copies messages that mention its bot) or \"agent\" (the project's own agent triages, e.g. `feedbai triage` in CI; the hub then only replies)."
         }
       }
     },
