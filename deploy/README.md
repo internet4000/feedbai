@@ -10,7 +10,7 @@ Any provider or machine with a recent Debian works (Hetzner, OVH, Scaleway, a Ra
 
 1. **Your account:** turn on two-factor authentication.
 2. **Firewall** (Firewalls → Create): no inbound rules except **SSH (22) from your own IP address**, for the prototype only. All outbound allowed.
-3. **Server:** the smallest ARM type (like a Raspberry Pi, so the same setup works there later), **Debian 13** (or 12 if 13 isn't offered), the firewall above.
+3. **Server:** the smallest available type (ARM or x86: the file works on both), **Debian 13** (or 12 if 13 isn't offered), IPv4 and IPv6 (GitHub's API is IPv4 only), the firewall above. Too small later? Rescale it (CPU and RAM only, so it can scale back down).
    - **SSH keys:** none of yours is needed. The agent's prototype key is in the setup file; emergencies go through Hetzner's web console or a rebuild.
    - **Cloud config / user data:** paste `deploy/cloud-init.yaml` (with your own agent's public key if you reuse it).
 4. **Wait** a few minutes, until `/var/lib/cloud/feedbai-ready` exists. Then give the agent the server's address.
