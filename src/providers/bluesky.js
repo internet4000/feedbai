@@ -63,7 +63,7 @@ export const session = async (account, fetchImpl) => {
       fetchImpl,
       body: { identifier: account.did ?? account.identifier, password: password(account) },
     })
-      .then((data) => ({ base: service, token: data.accessJwt, handle: data.handle }))
+      .then((data) => ({ base: service, token: data.accessJwt, handle: data.handle, did: data.did }))
       .catch((error) => {
         sessions.delete(account.id)
         const who = account.did ?? account.identifier

@@ -28,6 +28,9 @@ const { values: opts, positionals } = parseArgs({
     note: { type: 'string' },
     input: { type: 'string' },
     apply: { type: 'string' },
+    via: { type: 'string' },
+    yes: { type: 'boolean' },
+    page: { type: 'string' },
     help: { type: 'boolean', short: 'h' },
   },
 })

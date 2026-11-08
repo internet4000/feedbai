@@ -13,5 +13,6 @@ import post from './post.js'
 import react from './react.js'
 import file from './file.js'
 import triage from './triage.js'
+import send from './send.js'
 
-export const commands = { home, fetch, sources, add, remove, login, skill, paths, help, watch, issues, post, react, file, triage }
+export const commands = { home, fetch, sources, add, remove, login, skill, paths, help, watch, issues, post, react, file, triage, send }

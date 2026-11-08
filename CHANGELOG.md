@@ -4,6 +4,9 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
+### Added
+- `feedbai send <site | owner/repo> "…"`: give feedback to another project, from your own accounts. Reads its `/.well-known/feedbai.json` or `feedbai.config.json`, shows the draft and the ways it listens (GitHub issue, Matrix, Bluesky post, contact links), and sends only with `--via … --yes`. Marked 🤖, 5 per project per day. The skill tells agents to propose it, never to send without a yes (#53). Our site publishes `/.well-known/feedbai.json`.
+
 ## 0.4.0 — 2026-11-08
 
 An agent in the loop: each project's own agent triages its feedback, with no secrets to create.
