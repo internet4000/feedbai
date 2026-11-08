@@ -15,6 +15,14 @@ on:
   schedule:
     - cron: "17 * * * *"
   workflow_dispatch:
+    inputs:
+      since:
+        description: "How far back to read (e.g. 70m, 2d)"
+        default: "70m"
+      dry_run:
+        description: "Stop after triage: read the plan, file nothing"
+        type: boolean
+        default: false
 permissions: {}
 concurrency:
   group: feedbai-agent
@@ -34,9 +42,11 @@ jobs:
           node-version: "22"
       # New feedback of the last 70 minutes (runs overlap; filing is idempotent). Exit code 2 means some
       # sources failed (listed in the log and in feedback.json): the others still go on to triage.
-      - run: |
+      - env:
+          SINCE: ${{ inputs.since }}
+        run: |
           set +e
-          node src/cli.js fetch --format json --since 70m > feedback.json
+          node src/cli.js fetch --format json --since "${SINCE:-70m}" > feedback.json
           code=$?
           [ "$code" -le 2 ] || exit "$code"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -64,7 +74,9 @@ jobs:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: feedback
-      - run: node src/cli.js triage --input feedback.json > plan.json
+      - run: |
+          node src/cli.js triage --input feedback.json > plan.json
+          cat plan.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: plan
@@ -73,6 +85,7 @@ jobs:
 
   act:
     needs: triage
+    if: ${{ !inputs.dry_run }}
     runs-on: ubuntu-latest
     # No model in this job: plain code files the issues and reacts ✅, from the checked plan
     permissions:
