@@ -4,7 +4,7 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
-## 0.3.0 — 2026-11-07
+## 0.3.0 — 2026-11-08
 
 The first release shaped by a real user's first try (thanks oskar).
 
@@ -18,6 +18,11 @@ The first release shaped by a real user's first try (thanks oskar).
 - The digest lists a maintainer's message once, not twice.
 - `feedbai watch` stops polling a source whose login was refused, and pauses a rate-limited one for 15 minutes, instead of retrying every minute (which got the account locked, for the hub too when it shares it).
 - Bluesky: accounts remember their DID and log in with it, so a handle change (e.g. to a custom domain) no longer breaks reading. A failed login is retried next time instead of sticking, and says what to do (`feedbai login bluesky …`, or wait when Bluesky rate-limits logins). The hub's status check reuses its session instead of logging in each time.
+
+### Changed
+- One parser for GitHub repository and page addresses (`src/links.js`), shared by the CLI, the providers and the sign-in page; the Feedback button keeps its own copy (one self-hostable file), checked against it. The button now also accepts `www.github.com` links.
+- Removed the unused CMS collection (`cms/`) and the always-skipped hub Actions workflow (`hub.yml`): the hub runs as the Worker, or `node hub/run.js` from any cron.
+- CI runs on pull requests (forks too) and on Node 22, the oldest supported, as well as the current LTS.
 
 ### Security
 - The shared hub bot joins **public rooms only**: it declines other invites and leaves rooms that stop being public, so its token can't expose private conversations. Private rooms: your own bot.

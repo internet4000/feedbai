@@ -2,17 +2,15 @@ import { request } from '../http.js'
 import { getSecret } from '../secrets.js'
 import { item, requireFields } from '../model.js'
 import { t } from '../i18n.js'
+import { parseRepo } from '../links.js'
+
+export { parseRepo }
 
 const GRAPHQL = 'https://api.github.com/graphql'
 const DISCUSSIONS = 25 // most recently updated discussions read per run
 const COMMENTS = 50
 const REPLIES = 20
 
-/** Accept "owner/name" or a github.com link to the repo (or anything under it). */
-export const parseRepo = (repo) => {
-  const match = /^(?:https?:\/\/github\.com\/)?([\w.-]+)\/([\w.-]+?)(?:\.git)?(?:[/?#].*)?$/.exec(repo.trim())
-  return match ? { owner: match[1], name: match[2] } : null
-}
 
 const token = (account) => getSecret(account?.secrets?.token)
 

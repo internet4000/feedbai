@@ -23,6 +23,7 @@ export const DOCS = [
   { group: 'Reference', file: 'docs/channels/atproto.md', route: '/docs/channels/atproto', label: 'AT Protocol records' },
   { group: 'Reference', file: 'hub/README.md', route: '/docs/hub', label: 'The hub' },
   { group: 'Project', file: 'docs/vision.md', route: '/docs/vision', label: 'Vision' },
+  { group: 'Project', file: 'docs/architecture.md', route: '/docs/architecture', label: 'Architecture' },
   { group: 'Project', file: 'docs/channels/adding-a-channel.md', route: '/docs/channels/adding-a-channel' },
   { group: 'Project', file: 'docs/development.md', route: '/docs/development' },
   { group: 'Project', file: 'PRIVACY.md', route: '/docs/privacy', label: 'Privacy' },

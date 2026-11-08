@@ -1,6 +1,9 @@
 import { request, query } from '../http.js'
 import { item, requireFields } from '../model.js'
 import { t } from '../i18n.js'
+import { projectUri } from '../links.js'
+
+export { projectUri }
 
 /**
  * Feedback records on the AT Protocol: `com.internet4000.feedbai.feedback` records that people save in their
@@ -14,11 +17,6 @@ const PLC = 'https://plc.directory'
 const PAGE = 100
 const PER_AUTHOR_DAY = 3
 
-/** A project as records name it: "https://github.com/owner/name" (Constellation only indexes full URLs). */
-export const projectUri = (value = '') => {
-  const match = /^(?:https?:\/\/)?(?:www\.)?github\.com\/([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/i.exec(value.trim()) ?? /^([\w.-]+)\/([\w.-]+)$/.exec(value.trim())
-  return match ? `https://github.com/${match[1]}/${match[2]}` : null
-}
 
 /** A DID's server (PDS) and handle, from its DID document (did:plc via plc.directory, did:web via its host). */
 export const resolveDid = async (did, fetchImpl) => {

@@ -10,9 +10,8 @@ A channel (Slack, Microsoft Teams, Discord, Mastodon, Discourse, GitLab, a web f
 2. **`src/providers/index.js`**: import it and add it to `providers`.
 3. **`src/locales/en.json`**: the `channel.<type>.*` strings (below).
 4. **`schemas/config.schema.json`**: add `<type>` to the source (and account) `type` enums, and a `oneOf` entry with its fields.
-5. **`cms/config.yml`**: a `types` entry with the same fields.
-6. **`test/<type>.test.js`**: `fetch` against a fake API (`test/helpers.js` → `fakeFetch`). `test/providers.test.js` already checks steps 2–5 for every registered channel.
-7. **Docs**: a page in `docs/channels/<type>.md`, and a row in the channel table in [`docs/channels/README.md`](README.md).
+5. **`test/<type>.test.js`**: `fetch` against a fake API (`test/helpers.js` → `fakeFetch`). `test/providers.test.js` already checks steps 2–4 for every registered channel.
+6. **Docs**: a page in `docs/channels/<type>.md`, and a row in the channel table in [`docs/channels/README.md`](README.md).
 
 Run `npm test`. The contract test fails with the name of whatever is missing.
 
