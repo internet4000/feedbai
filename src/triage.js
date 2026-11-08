@@ -77,7 +77,12 @@ export const askModel = async ({ model, messages, fetchImpl }) => {
     const { response_format, ...plain } = body
     return request(url, { method: 'POST', token: model.key, fetchImpl, body: plain })
   })
-  return data.choices?.[0]?.message?.content ?? ''
+  const choice = data.choices?.[0]
+  const content = choice?.message?.content
+  if (typeof content === 'string' && content.trim()) return content
+  // No text: say why (the model's stop reason, a refusal, an error in the body), never a silent nothing
+  const why = JSON.stringify({ finish_reason: choice?.finish_reason, refusal: choice?.message?.refusal, error: data.error, keys: Object.keys(data) }).slice(0, 400)
+  throw new Error(`the model returned no text: ${why}`)
 }
 
 const oneLine = (text, max) => String(text ?? '').replace(/\s+/g, ' ').trim().slice(0, max)
