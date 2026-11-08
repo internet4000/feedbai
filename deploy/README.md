@@ -1,25 +1,51 @@
 # The feedbai box
 
-The hosted tier ([architecture](../docs/architecture.md#the-hosted-tier-one-small-box-many-projects-sealed-from-each-other)) runs on one small server, set up entirely from [`cloud-init.yaml`](cloud-init.yaml). The server is disposable: nothing on it matters that can't be restored. Rebuilding is creating a new server with the same file, restoring the encrypted backup, and adding fresh secrets.
+The hosted tier ([architecture](../docs/architecture.md#the-hosted-tier-one-small-box-many-projects-sealed-from-each-other)) runs on one small machine, set up entirely by [`cloud-init.yaml`](cloud-init.yaml) and verified by [`check.sh`](check.sh). It works the same on any cloud and on a machine at home: cloud-init is the standard first-boot setup that nearly every provider and Debian's own images understand. The box is disposable: rebuild it from the same file at any time, or whenever it may be compromised.
 
-**Status: prototype.** The base system is set up; the hosted runner itself is still being built. The first thing to settle on the real hardware is the sandbox for each run (rootless Podman, maybe gVisor).
+**Status: prototype.** The base system is set up; the hosted runner itself is still being built.
 
-## Create it
+## What the box knows
 
-Any provider or machine with a recent Debian works (Hetzner, OVH, Scaleway, a Raspberry Pi). On Hetzner Cloud:
+The aim is that the box knows as little as possible, and nothing it could leak alone:
 
-1. **Your account:** turn on two-factor authentication.
-2. **Firewall** (Firewalls → Create): no inbound rules except **SSH (22) from your own IP address**, for the prototype only. All outbound allowed.
-3. **Server:** the smallest available type (ARM or x86: the file works on both), **Debian 13** (or 12 if 13 isn't offered), IPv4 and IPv6 (GitHub's API is IPv4 only), the firewall above. Too small later? Rescale it (CPU and RAM only, so it can scale back down).
-   - **SSH keys:** none of yours is needed. The agent's prototype key is in the setup file; emergencies go through Hetzner's web console or a rebuild.
-   - **Cloud config / user data:** paste `deploy/cloud-init.yaml` (with your own agent's public key if you reuse it).
-4. **Wait** a few minutes, until `/var/lib/cloud/feedbai-ready` exists. Then give the agent the server's address.
+- **Built from public files only.** Everything that sets it up is in this folder: anyone can read exactly what runs. The setup data (`cloud-init.yaml`) holds no secrets, because providers and the machine's metadata service can read it back; `check.sh` makes sure.
+- **No owner keys.** Your personal SSH or GPG keys never go on it. During the prototype one dedicated key, the agent's, logs into one unprivileged user; in production nobody keeps a login and the box updates itself.
+- **No project data at rest.** A run fetches feedback, triages it, files issues and forgets: only cursors (last-seen ids) and hashes of what was filed stay. Logs never hold message text and are kept 14 days at most.
+- **No project secrets.** Projects keep their own credentials (for example their model key, in their own GitHub Actions secrets); runs prove which project they are with short-lived [OIDC identities](../SECURITY.md) instead of stored tokens. What the box itself needs (the tunnel token, the bots' and App's keys) is added after boot, encrypted at rest with `systemd-creds`, readable only by the service that uses it.
+- **Nothing listening.** No inbound ports in production: the box reaches out to Cloudflare through a tunnel; the website and API reach it through that.
 
-## What's on it
+The honest limit: while a run processes a project's feedback, that text is in the box's memory. Whoever controls a running machine can read its memory, so the operator is trusted for the moment of the run, never for storage. Anyone who doesn't want that runs the same box themselves (below): the hosted tier is a convenience, not a requirement.
 
-- **Users:** `ops` (the agent's prototype login, key-only, sudo during the prototype only), `runner` (the service, no login shell; its jobs run in rootless containers). No root login, no passwords.
-- **Nothing reachable from the internet** except SSH from your address (prototype). The website and API will reach it through an outgoing Cloudflare Tunnel.
-- **Automatic security updates**, with a reboot at 04:00 when needed. Logs kept 14 days at most.
+## Create one
+
+You need: a machine that boots **Debian 12 or newer** with cloud-init, and the box's setup file with **your agent's public key** in it (replace the `feedbai-ops` key in `cloud-init.yaml`). One small CPU, 1 GB of memory and 20 GB of disk are enough to start. ARM or x86 both work.
+
+### Any cloud with "user data" (Hetzner, OVH, Scaleway, DigitalOcean, Vultr, AWS…)
+
+1. Turn on two-factor login for your provider account.
+2. Create a firewall: **no inbound traffic** except SSH (22) from your own address during the prototype; all outbound allowed. Keep IPv4: GitHub's API doesn't speak IPv6.
+3. Create the server with a **Debian** image, that firewall, and the contents of `cloud-init.yaml` as **user data** ("cloud config" on Hetzner, "user data" elsewhere).
+4. **SSH keys at the provider:** add the same agent public key there too. Some providers otherwise set a root password (and email it); with a key they don't. Root logins are refused either way.
+
+### A machine at home (a Raspberry Pi, a mini PC, a virtual machine)
+
+cloud-init reads its setup from a small disk labelled `cidata` (its "NoCloud" source), so the same file works offline:
+
+- **Virtual machine (Proxmox, libvirt, UTM…):** use Debian's *generic cloud* image (`debian-13-genericcloud-<arch>.qcow2` from [cloud.debian.org](https://cloud.debian.org/images/cloud/)) and attach a seed disk made from the file: `cloud-localds seed.iso deploy/cloud-init.yaml` (package `cloud-image-utils`). Proxmox also takes it as a "cicustom" user snippet.
+- **Raspberry Pi:** write Raspberry Pi OS (Debian 13 based, it uses cloud-init) or Debian's Raspberry Pi image to the card, then put `cloud-init.yaml` on its boot partition as `user-data`.
+- **Mini PC or any bare machine:** a normal Debian install with the `cloud-init` package, plus a USB stick labelled `CIDATA` holding `user-data` (the file) and an empty `meta-data`.
+
+At home, your router is the firewall: forward nothing to the box. It only makes outgoing connections.
+
+### Then
+
+Wait a few minutes for the first boot, and check it from your computer:
+
+```sh
+deploy/check.sh <address>
+```
+
+It logs in with the agent's key, changes nothing, and lists each promise above as `ok` or `FAIL`. Run it after every rebuild.
 
 ## Keys and secrets: the inventory
 
@@ -27,31 +53,29 @@ Every credential that touches the box, what it can do, and how to cut it off. No
 
 | Credential | Held by | Can | Revoke |
 | --- | --- | --- | --- |
-| Hetzner account (+2FA) | owner | everything about the server | owner only |
-| `feedbai-ops` SSH key (`~/.ssh/feedbai-ops_ed25519`, fingerprint `SHA256:+gAk/zXAZI5FJlzZIruYsaS2yvT9shblB9MJNry8ybo`) | the agent, on the owner's machine | log in as `ops` on this box only | remove it from `/home/ops/.ssh/authorized_keys`, or rebuild |
-| Cloudflare Tunnel token | the box (systemd credential, encrypted) | connect the box to our domain | delete the tunnel in Cloudflare, create a new one |
+| Provider account (+2FA) | owner | everything about the machine | owner only |
+| Agent's SSH key (`~/.ssh/feedbai-ops_ed25519`, fingerprint `SHA256:+gAk/zXAZI5FJlzZIruYsaS2yvT9shblB9MJNry8ybo`) | the agent, on the owner's computer | log in as `ops` on the box (prototype) | remove it from `/home/ops/.ssh/authorized_keys`, or rebuild |
+| Cloudflare Tunnel token | the box (encrypted credential) | connect the box to our domain | delete the tunnel in Cloudflare, create a new one |
 | GitHub App private key | the box (encrypted) | act as the feedbai App on installed repos | generate a new key in the App settings, delete the old one |
 | Matrix and Bluesky bot secrets | the box (encrypted) | act as the bots | `node hub/setup.js` (signs out old sessions), revoke the app password |
 | Stripe keys and webhook secret | the box (encrypted) | create checkouts, read payments | roll them in the Stripe dashboard |
 | Backup encryption key | the owner, **not on the box** | decrypt backups | make a new key, re-encrypt the next backup |
 
-Secrets are added once the box is up, as systemd credentials (`systemd-creds encrypt`), never pasted into the setup file or committed.
-
 ## Rebuild (any time)
 
-1. Create a new server from the same file (above).
+1. Create a new box from the same file, and run `deploy/check.sh` on it.
 2. Restore the latest backup, add the secrets again.
-3. Point the tunnel at the new box, then delete the old server.
+3. Point the tunnel at the new box, then delete the old one.
 
 ## If it's ever compromised
 
-1. **Delete the server** (Hetzner console). Its disk goes with it.
-2. **Rotate every secret** in the table above, starting with the GitHub App key, and revoke the `feedbai-ops` key (make a new one).
-3. **Rebuild** from the same file, restore the last backup made before the incident, and add the new secrets.
+1. **Delete the machine** (or wipe its disk). Don't try to clean it.
+2. **Rotate every secret** in the table above, starting with the GitHub App key, and replace the agent's SSH key.
+3. **Rebuild** from the same file, restore the last backup made before the incident, add the new secrets.
 4. **Find out what happened** (provider logs, Cloudflare logs, GitHub audit log), write it down, fix the cause, and tell the people affected.
 
 ## Before production
 
-- Remove `ops`'s sudo, then remove SSH entirely: the box updates itself from signed releases, and nobody, the agent included, keeps a standing login.
-- Close port 22 in the firewall.
+- Remove `ops`'s sudo, then SSH entirely: the box updates itself from signed releases and nobody, the agent included, keeps a standing login.
+- Close port 22.
 - Encrypted off-box backups, tested by restoring one.
