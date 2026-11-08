@@ -1,12 +1,15 @@
 # The project's agent in the loop (docs/architecture.md), every hour, in three jobs with different powers:
 #   read   — reads the channels; no model, can't write to GitHub
-#   triage — a model (GitHub Models), sees the messages; no secrets, can't write anything
+#   triage — a model, sees the messages; only the model's key, can't write anything
 #   act    — files issues and reacts ✅ from the checked plan (plain code); no model
 # Each job is a separate, throwaway machine: the one that reads strangers' messages with a model can't act,
 # and the ones that act never run a model.
 #
-# No secrets to create: GitHub gives the token (issues, GitHub Models), and read and act prove to the feedbai
-# hub which repository they are (OIDC, `id-token: write`), so its bot reads the room and ✅s for this repo.
+# No secrets for GitHub or Matrix: GitHub gives the token for issues, and read and act prove to the feedbai hub
+# which repository they are (OIDC, `id-token: write`), so its bot reads the room and ✅s for this repo.
+# The model: any OpenAI-compatible API (OpenRouter, a local model, a provider), from repository variables
+# FEEDBAI_TRIAGE_ENDPOINT and FEEDBAI_TRIAGE_MODEL and the secret FEEDBAI_TRIAGE_KEY. Without them, nothing
+# is filed (triage in an agent session instead: `feedbai`, then `feedbai file`).
 # The room's admins tie it to the repo by putting github.com/owner/name in the room topic.
 # Set `"filing": "agent"` in feedbai.config.json so the hub stops copying mentions into issues.
 # Copying it to your project: replace `node src/cli.js` with `npx -y @internet4000/feedbai`.
@@ -58,12 +61,13 @@ jobs:
   triage:
     needs: read
     runs-on: ubuntu-latest
-    # No secrets in this job. Its token can read the repo and call GitHub Models, nothing else.
+    # Only the model's key in this job, and a token that can read the repo, nothing else.
     permissions:
       contents: read
-      models: read
     env:
-      GITHUB_TOKEN: ${{ github.token }}
+      FEEDBAI_TRIAGE_ENDPOINT: ${{ vars.FEEDBAI_TRIAGE_ENDPOINT }}
+      FEEDBAI_TRIAGE_MODEL: ${{ vars.FEEDBAI_TRIAGE_MODEL }}
+      FEEDBAI_TRIAGE_KEY: ${{ secrets.FEEDBAI_TRIAGE_KEY }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

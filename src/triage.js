@@ -10,8 +10,8 @@ import { t } from './i18n.js'
  * Even a model fully steered by a message can then only propose filing or ✅-ing messages it was given,
  * with inert titles, a few per run.
  *
- * The model is one plug-in slot: any OpenAI-compatible endpoint (GitHub Models in GitHub Actions, with no
- * key; OpenRouter; a local model; a provider's own key), or none.
+ * The model is one plug-in slot: any OpenAI-compatible endpoint (OpenRouter, a local model, a provider's own
+ * key), or none: then nothing is filed and feedback is triaged in an agent session instead.
  */
 
 export const KINDS = ['bug', 'idea', 'question', 'praise', 'noise']
@@ -20,16 +20,9 @@ const MAX_TEXT = 2000 // characters of each message shown to the model
 const MAX_TITLE = 120
 const MAX_NOTE = 1500
 
-/** Where the model is: FEEDBAI_TRIAGE_* if set; GitHub Models inside GitHub Actions (no key needed); else none. */
-export const triageModel = (env = process.env) => {
-  if (env.FEEDBAI_TRIAGE_ENDPOINT) {
-    return { endpoint: env.FEEDBAI_TRIAGE_ENDPOINT, model: env.FEEDBAI_TRIAGE_MODEL, key: env.FEEDBAI_TRIAGE_KEY }
-  }
-  if (env.GITHUB_ACTIONS === 'true' && env.GITHUB_TOKEN) {
-    return { endpoint: 'https://models.github.ai/inference', model: env.FEEDBAI_TRIAGE_MODEL ?? 'openai/gpt-4.1-mini', key: env.GITHUB_TOKEN }
-  }
-  return null
-}
+/** Where the model is: FEEDBAI_TRIAGE_ENDPOINT/_MODEL/_KEY (any OpenAI-compatible API), or none. */
+export const triageModel = (env = process.env) =>
+  env.FEEDBAI_TRIAGE_ENDPOINT ? { endpoint: env.FEEDBAI_TRIAGE_ENDPOINT, model: env.FEEDBAI_TRIAGE_MODEL, key: env.FEEDBAI_TRIAGE_KEY } : null
 
 /** The project's guidelines (.feedbai/guidelines.md), written by its maintainers: trusted, unlike the feedback. */
 export const readGuidelines = (root) => {

@@ -9,9 +9,9 @@ const items = [
   { id: 'c', url: 'https://matrix.to/#/!r/%24c', author: { id: '@bot:x' }, role: 'agent', text: '🤖 status update', createdAt: '2026-11-08T03:00:00Z' },
 ]
 
-test('the model slot: explicit endpoint, else GitHub Models inside GitHub Actions (no key), else none', () => {
+test('the model slot: an OpenAI-compatible endpoint when configured, else none (GitHub Models was retired in 2026)', () => {
   assert.deepEqual(triageModel({ FEEDBAI_TRIAGE_ENDPOINT: 'https://openrouter.ai/api/v1', FEEDBAI_TRIAGE_MODEL: 'm', FEEDBAI_TRIAGE_KEY: 'k' }), { endpoint: 'https://openrouter.ai/api/v1', model: 'm', key: 'k' })
-  assert.deepEqual(triageModel({ GITHUB_ACTIONS: 'true', GITHUB_TOKEN: 'gh' }), { endpoint: 'https://models.github.ai/inference', model: 'openai/gpt-4.1-mini', key: 'gh' })
+  assert.equal(triageModel({ GITHUB_ACTIONS: 'true', GITHUB_TOKEN: 'gh' }), null)
   assert.equal(triageModel({}), null)
 })
 
