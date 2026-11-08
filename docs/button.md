@@ -1,13 +1,16 @@
 # Feedback button
 
-A feedback button for any website. People write what works and what doesn't, then send it, publicly and from their own account, to a place feedbai already listens to:
+A feedback button for any website. Clicking it opens a short dialog:
 
-- **a Bluesky post**, with your hashtag or handle and the page address;
-- **a GitHub issue** in your repo, labelled `feedback`;
-- **your Matrix room**, as a message that mentions the bot, so the [hub](../hub/README.md) (or your CI) files it as an issue;
-- **their own Bluesky account**, as a feedback record: they sign in (allowing only that), and you read it with the [AT Protocol records](channels/atproto.md) channel: `feedbai add atproto you/yourproject`.
+1. **What's on your mind?** One text box. The page's address is attached (removable).
+2. **How do you want to send it?** Each place says what it needs, the one used last time first:
+   - 💬 **Talk to the team**: your Matrix room (a Matrix account); the message is copied with a mention of the bot, so it becomes an issue.
+   - 🦋 **Post on Bluesky**: a public post with your hashtag and the page (a Bluesky account).
+   - 🐙 **Open an issue**: in your repo, labelled `feedback` (a GitHub account).
+   - **No account?** It points to the quickest one to create, and keeps the text meanwhile.
+3. **Almost done:** it opens there, written for them, to check and send from their own account. They'll get a reply there when it's done.
 
-It needs no login and sets no cookies, and nothing goes through or stays on our servers: each choice opens that place prefilled, for the person to review and send. Saving to their account is the only choice with a sign-in, on its own page (`auth.feedbai.internet4000.com`), and the record goes straight to their account. This site uses it: the **Feedback** button at the bottom right.
+No login, no cookies, nothing goes through or stays on our servers. It's a native dialog (keyboard and screen-reader friendly), a bottom sheet on phones, and follows light and dark mode. This site uses it: the **Feedback** button at the bottom right.
 
 ## Add it to your site
 
@@ -27,6 +30,7 @@ One line, anywhere in the page:
 | `data-bluesky` | optional | a hashtag or `@handle` added to Bluesky posts, so your [Bluesky source](channels/bluesky.md) finds them (e.g. `feedbai add bluesky search '#yourproject'`) |
 | `data-bot` | optional | the Matrix bot to mention, if you [run your own hub](../hub/README.md) (default `@feedbai:matrix.org`) |
 | `data-label` | optional | the button's text (default "Feedback") |
+| `data-records` | optional, experimental | also offer "Keep it in my Bluesky account": a feedback record in the person's own account, read with the [AT Protocol records](channels/atproto.md) channel |
 
 To place the button yourself instead of floating at the bottom right, load the script once (without `data-project`) and put the element where you want it:
 

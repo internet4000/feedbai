@@ -1,7 +1,6 @@
 ---
 /**
- * The home page. The pitch in one line ("hear your community, let your agents act on it"), the loop that
- * delivers it, four reasons, then how to start. One path, no tabs.
+ * The home page, kept short on purpose: the pitch in one line, the loop beside it, three steps, three questions.
  */
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro'
 
@@ -18,22 +17,10 @@ const loop = `<ol class="loop" aria-label="How it works">
   <li><span class="n">4</span><div><b>Everyone hears back</b><small>A reply where they spoke: it's fixed.</small></div></li>
 </ol>`
 
-const reasons = [
-  ['💬', 'Everywhere they talk', 'People keep using their chat, Bluesky, or your site. Nobody signs up for a feedback tool.'],
-  ['🤖', 'Made for AI agents', 'Every output says what to do next. Agents read it, file it, fix it, and reply, with you in charge.'],
-  ['↩️', 'Everyone hears back', 'Feedback is answered where it was given. That is what makes people give more.'],
-  ['🌱', 'Nothing to host, nothing kept', 'Open source and decentralized: feedback stays with the people who wrote it. Run it without us if you like.'],
-]
 const faq = [
   ['Does it cost anything?', 'No. feedbai is free and open source (GPL-3.0).'],
   ['Where does the feedback go? Do you keep it?', 'We keep nothing. People write from their own accounts, in public places they chose, and feedbai files it in your repository. <a href="/docs/privacy/">Privacy notes</a>.'],
   ['Do I need an AI agent?', 'No. Feedback becomes GitHub issues you can handle yourself. Agents make the loop faster: they triage, fix and reply.'],
-]
-const others = [
-  ['/docs/agents/', 'Agents', 'Claude Code, Codex: the triage workflow'],
-  ['/docs/on-your-own/', 'Without our servers', 'your bot accounts, your CI'],
-  ['/docs/hub/', 'Run your own hub', 'one bot for your team or community'],
-  ['/feedback/', 'Giving feedback?', 'how it works for you'],
 ]
 ---
 
@@ -44,7 +31,7 @@ const others = [
     template: 'splash',
     hero: {
       title: 'Hear your community.<br>Let your agents act on it.',
-      tagline: 'feedbai gathers feedback wherever people talk about your project (chat, Bluesky, a button on your site), turns it into work for you and your AI agents, and answers back.',
+      tagline: 'feedbai gathers what people say about your project, wherever they say it, and turns it into work for you and your AI agents. Then it answers them back.',
       image: { html: loop },
       actions: [
         { text: 'Get started', link: '#start', icon: 'right-arrow' },
@@ -54,40 +41,34 @@ const others = [
   }}
 >
   <div class="not-content home">
-    <ul class="reasons">
-      {reasons.map(([icon, title, text]) => <li><span class="icon" aria-hidden="true">{icon}</span><b>{title}</b><p>{text}</p></li>)}
-    </ul>
 
     <h2 id="start">Get started</h2>
-    <p class="sub">About two minutes. Step 1 sets up your project; then add the ways people reach you.</p>
+    <p class="sub">About two minutes.</p>
     <ol class="steps">
       <li>
         <p><b>Set up your project.</b> In its folder, run:</p>
         <div class="copy"><code>{INSTALL}</code><button type="button" data-copy={INSTALL}>Copy</button></div>
-        <p class="note">It finds your chat rooms and channels, says what to add, and writes <code>feedbai.config.json</code>: commit it. Your agent reads feedback the same way: <code>!feedbai</code> in Claude Code.</p>
+        <p class="note">It finds where your community talks and writes <code>feedbai.config.json</code>: commit it.</p>
       </li>
       <li>
-        <p><b>Listen to your chat.</b> Invite the bot to your Matrix room, and install the GitHub App: messages that mention the bot become issues.</p>
+        <p><b>Listen to your chat.</b> Invite the bot to your room, and install the GitHub App.</p>
         <div class="copy"><code>{BOT}</code><button type="button" data-copy={BOT}>Copy</button></div>
         <a class="btn ghost" href="https://github.com/apps/feedbai">Install the GitHub App</a>
       </li>
       <li>
-        <p><b>Let people give feedback on your site.</b> Add the Feedback button, with your repo and a hashtag:</p>
+        <p><b>Add a Feedback button</b> to your site:</p>
         <div class="copy"><code>{SNIPPET}</code><button type="button" data-copy={SNIPPET}>Copy</button></div>
-        <p class="note">Try it: bottom right of this page. Bluesky posts with your hashtag reach you through <code>feedbai add bluesky search '#yourproject'</code>. <a href="/docs/button/">Options</a></p>
+        <p class="note">Try it, bottom right. <a href="/docs/button/">Options</a></p>
       </li>
     </ol>
 
-    <h2>More ways</h2>
-    <ul class="others">
-      {others.map(([href, title, hint]) => <li><a href={href}><b>{title}</b><span>{hint}</span></a></li>)}
-    </ul>
+    <p class="sub other">Other setups: <a href="/docs/agents/">with your AI agent</a> · <a href="/docs/on-your-own/">without our servers</a> · <a href="/docs/hub/">your own hub</a>. Giving feedback on a project? <a href="/feedback/">Here's how</a>.</p>
 
     <h2>Questions</h2>
     <div class="faqs">
       {faq.map(([q, a]) => <details class="faq"><summary>{q}</summary><div set:html={a} /></details>)}
     </div>
-    <p class="more"><a href={REPO}>Source code</a> · <a href="/docs/">All docs</a> · <a href="/docs/vision/">Where it's going</a></p>
+    <p class="more"><a href={REPO}>Source code</a> · <a href="/docs/">Docs</a> · <a href="/docs/architecture/">Where it's going</a></p>
   </div>
 </StarlightPage>
 
@@ -124,6 +105,7 @@ const others = [
   .home { color: var(--sl-color-white); }
   h2 { font-size: var(--sl-text-2xl); margin: 3.5rem 0 0.25rem; scroll-margin-top: 5rem; }
   .sub { color: var(--sl-color-gray-3); margin: 0 0 1rem; }
+  .other { margin-top: 1.25rem; font-size: var(--sl-text-sm); }
   .reasons { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.75rem; }
   .reasons li { background: var(--sl-color-bg-nav); border: 1px solid var(--sl-color-hairline); border-radius: 0.9rem; padding: 1rem; }
   .reasons .icon { font-size: 1.4rem; display: block; margin-bottom: 0.35rem; }
