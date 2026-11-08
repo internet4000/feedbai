@@ -51,9 +51,13 @@ export const runHub = async ({ env = process.env, fetchImpl, log = console.log }
       const config = await repoConfig({ ...repo, fetchImpl })
       if (!config) continue
       const client = githubClient({ token: repo.token, repo: repo.fullName, fetchImpl })
-      const { urls, errors } = await fileIssues({ entries: selectSources(mergeConfigs(sanitize(config))), client, since: SINCE })
-      log(`${repo.fullName}: ${urls.length} filed${errors.length ? `, ${errors.length} source error(s)` : ''}`)
-      for (const e of errors) log(`  ${e.error}`)
+      // A project whose own agent triages ("filing": "agent") gets no raw copies of mentions from the hub (#70)
+      if (config.projects?.some((p) => p.filing === 'agent')) log(`${repo.fullName}: filing by its agent`)
+      else {
+        const { urls, errors } = await fileIssues({ entries: selectSources(mergeConfigs(sanitize(config))), client, since: SINCE })
+        log(`${repo.fullName}: ${urls.length} filed${errors.length ? `, ${errors.length} source error(s)` : ''}`)
+        for (const e of errors) log(`  ${e.error}`)
+      }
       // Close the loop: answer where the feedback was given, once its issue is fixed (closed by a PR or commit, or labelled fixed)
       if (!config.projects?.some((p) => p.replies === false)) {
         const sent = await sendReplies({ client, accounts: { matrix: providers.matrix.envAccount(env) }, fetchImpl }).catch((error) => {

@@ -26,6 +26,8 @@ const { values: opts, positionals } = parseArgs({
     account: { type: 'string' },
     title: { type: 'string' },
     note: { type: 'string' },
+    input: { type: 'string' },
+    apply: { type: 'string' },
     help: { type: 'boolean', short: 'h' },
   },
 })

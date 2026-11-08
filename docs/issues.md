@@ -44,3 +44,17 @@ When a `feedback` issue is **fixed** (closed by a pull request or commit, e.g. "
 > 🤖 This is fixed, thank you for telling us: https://github.com/you/repo/issues/42
 
 and notes the reply on the issue. Closing it any other way (answered, duplicate, not planned) sends nothing. It's the same short text every time, never written by a model or copied from anyone's message. Matrix for now (the hub's bot must be in the room, which it is if it filed the message); Bluesky and feedback records next. Only issues closed in the last week are answered, so turning it on never answers old ones in a burst. To turn it off, set `"replies": false` on the project in `feedbai.config.json`.
+
+## An agent in the loop: `feedbai triage`
+
+The hub's automatic filing copies every message that mentions its bot, with no judgment. With an agent in the loop ([architecture](architecture.md)), the project's own agent decides what becomes an issue:
+
+```sh
+feedbai triage > plan.json             # a model proposes: kinds, issues to file, ✅ to add
+feedbai triage --apply plan.json       # plain code acts: files the issues, reacts ✅
+```
+
+- **The model** is one slot, any OpenAI-compatible API: GitHub Models inside GitHub Actions (no key, the job needs `permissions: models: read`), OpenRouter, a local model, or a provider's key (`FEEDBAI_TRIAGE_ENDPOINT`, `FEEDBAI_TRIAGE_MODEL`, `FEEDBAI_TRIAGE_KEY`).
+- **It follows the project's guidelines,** `.feedbai/guidelines.md`, written by its maintainers ([ours](../.feedbai/guidelines.md)).
+- **It can't do anything but propose.** It sees numbered messages, never links. Its answer is checked: only messages it was given, no bots' messages, known kinds, plain-text titles, at most 5 issues per run. Anything else is dropped. Acting on the plan is plain code (`feedbai file`, `feedbai react`).
+- **In CI, the two steps run in separate jobs** with different powers: [`.github/workflows/feedbai-agent.yml`](../.github/workflows/feedbai-agent.yml) (read with the agent's token → triage with a model and no secrets → act with tokens and no model). Set `"filing": "agent"` on the project in `feedbai.config.json` so the hub stops copying mentions for that repo; it still posts the "This is fixed" replies.
