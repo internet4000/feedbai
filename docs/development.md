@@ -21,7 +21,6 @@ hub/                     the hosted hub (Cloudflare Worker): run.js, api.js, wor
 site/                    the website and docs (Astro + Starlight; its own dependencies)
 skills/feedbai/          the agent skill
 schemas/                 JSON schema for configs
-cms/                     Sveltia/Decap CMS collection
 docs/                    this documentation
 ```
 

@@ -32,7 +32,7 @@ New channels (GitHub Discussions, Fediverse, …) are added when a project needs
 
 Personal data, retention and removal requests: [PRIVACY.md](../PRIVACY.md). Security model: [SECURITY.md](../SECURITY.md).
 
-**Run your own** (free software): create a bot account and a GitHub App (Issues: read & write, Contents: read), then either enable [`.github/workflows/hub.yml`](../.github/workflows/hub.yml) in a fork (secrets `FEEDBAI_APP_ID`, `FEEDBAI_APP_PRIVATE_KEY`, `FEEDBAI_HUB_MATRIX_TOKEN`, `FEEDBAI_HUB_MATRIX_USER`; variable `FEEDBAI_HUB_ENABLED=true`), or run `node hub/run.js` from cron with the same values as `FEEDBAI_APP_ID`, `FEEDBAI_APP_PRIVATE_KEY`, `FEEDBAI_MATRIX_TOKEN`, `FEEDBAI_MATRIX_USER`. No database: GitHub issues and their hidden markers are the state.
+**Run your own** (free software): create a bot account and a GitHub App (Issues: read & write, Contents: read), then deploy the Cloudflare Worker (below), or run `node hub/run.js` from any cron with `FEEDBAI_APP_ID`, `FEEDBAI_APP_PRIVATE_KEY`, `FEEDBAI_MATRIX_TOKEN` and `FEEDBAI_MATRIX_USER` in its environment. No database: GitHub issues and their hidden markers are the state.
 
 **Cloudflare Workers** ([`worker.js`](worker.js), [`wrangler.jsonc`](../wrangler.jsonc) at the repo root; change the domain and `vars` for your own). From the repo root:
 
@@ -44,6 +44,6 @@ npx wrangler@4 tail   # watch the next scheduled run
 
 `wrangler deploy` first builds the website in `site/` (Node ≥ 22.23) and serves it from the same Worker. `hub/setup.js` serves a local page that creates the GitHub App (manifest flow) and logs the bot in; the App key and bot token go straight into the Worker's secrets, never to disk. Connecting the repo in Cloudflare (Workers Builds) deploys on push with the default commands.
 
-Run only one hub per bot (Worker or the Actions workflow), not both.
+Run only one hub per bot.
 
 **Other runtimes**: the hub is one function, `runHub({ env })` in `hub/run.js`, using only `fetch` and `node:crypto`. Call it from any scheduled handler (e.g. AWS Lambda + EventBridge).

@@ -58,7 +58,7 @@ Every source has:
 
 The other fields depend on the channel: [Matrix](channels/matrix.md), [Bluesky](channels/bluesky.md), [GitHub Discussions](channels/github.md).
 
-You can edit the file by hand, with `feedbai add` / `feedbai remove`, or with the [Sveltia/Decap CMS collection](../cms/config.yml) (accounts are left out on purpose).
+Edit the file by hand, or with `feedbai add` / `feedbai remove` (accounts never go in it).
 
 ## Global config and accounts
 
