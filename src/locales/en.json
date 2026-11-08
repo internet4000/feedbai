@@ -125,7 +125,7 @@
   "watch.pausedLogin": "watch: {source} stopped: its login was refused, and retrying would only get the account rate-limited. Fix the login, then restart watch.",
   "watch.pausedRate": "watch: {source} paused for {minutes} minutes: the platform is rate-limiting this account.",
   "triage.noModel": "No model for triage. In GitHub Actions it uses GitHub Models (no key: give the job `permissions: models: read`). Elsewhere set FEEDBAI_TRIAGE_ENDPOINT (any OpenAI-compatible API: OpenRouter, a local model…), FEEDBAI_TRIAGE_MODEL and FEEDBAI_TRIAGE_KEY. Or triage in your agent session: `feedbai`, then `feedbai file`.",
-  "triage.badAnswer": "The model's answer wasn't the expected JSON: nothing to do (no issue filed).",
+  "triage.badAnswer": "The model's answer wasn't the expected JSON: nothing to do (no issue filed). It began: {start}",
   "triage.summary": "triage: {items} message(s) → {issues} issue(s) to file, {dropped} suggestion(s) dropped by the checks ({model})",
   "error.noHubIdentity": "No identity for the hub: in GitHub Actions, give the job `permissions: id-token: write`; elsewhere log in an account of your own (`feedbai login matrix`)."
 }

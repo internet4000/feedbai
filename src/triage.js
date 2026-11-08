@@ -70,7 +70,13 @@ export const triageMessages = ({ items, guidelines = '' }) => [
 /** Ask the model. Returns its raw text. */
 export const askModel = async ({ model, messages, fetchImpl }) => {
   const url = `${model.endpoint.replace(/\/$/, '')}/chat/completions`
-  const data = await request(url, { method: 'POST', token: model.key, fetchImpl, body: { model: model.model, messages, temperature: 0, max_tokens: 2000 } })
+  const body = { model: model.model, messages, temperature: 0, max_tokens: 4000, response_format: { type: 'json_object' } }
+  // JSON mode where the endpoint has it; endpoints that don't know the option get the same request without it
+  const data = await request(url, { method: 'POST', token: model.key, fetchImpl, body }).catch((error) => {
+    if (error.status !== 400 && error.status !== 422) throw error
+    const { response_format, ...plain } = body
+    return request(url, { method: 'POST', token: model.key, fetchImpl, body: plain })
+  })
   return data.choices?.[0]?.message?.content ?? ''
 }
 
@@ -83,10 +89,11 @@ const oneLine = (text, max) => String(text ?? '').replace(/\s+/g, ' ').trim().sl
  */
 export const checkPlan = (raw, items) => {
   let plan
+  const text = String(raw).replace(/```(?:json)?/gi, '')
   try {
-    plan = JSON.parse(String(raw).slice(String(raw).indexOf('{'), String(raw).lastIndexOf('}') + 1))
+    plan = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1))
   } catch {
-    throw new Error(t('triage.badAnswer'))
+    throw new Error(t('triage.badAnswer', { start: oneLine(raw, 300) }))
   }
   const valid = (n) => Number.isInteger(n) && n >= 0 && n < items.length && items[n].role !== 'agent'
   let dropped = 0
