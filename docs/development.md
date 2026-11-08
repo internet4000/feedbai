@@ -54,4 +54,10 @@ See [hub/README.md](../hub/README.md). Pushing to `main` deploys it (Cloudflare 
 
 ## Release
 
-Publishing a GitHub release runs [`publish-to-npm-registry.yml`](../.github/workflows/publish-to-npm-registry.yml): tests, then `npm publish` with npm trusted publishing. Bump `version` in `package.json` first.
+Bump `version` in `package.json` and date the changelog (a pull request), then tag the merged commit:
+
+```sh
+git tag v0.4.0 && git push origin v0.4.0
+```
+
+The tag runs [`publish-to-npm-registry.yml`](../.github/workflows/publish-to-npm-registry.yml): checks the tag matches the version, tests, then `npm publish` with npm trusted publishing (provenance). A GitHub release with notes is optional.

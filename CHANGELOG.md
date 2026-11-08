@@ -4,6 +4,10 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
+## 0.4.0 — 2026-11-08
+
+An agent in the loop: each project's own agent triages its feedback, with no secrets to create.
+
 ### Changed
 - **The Feedback button is a guided dialog:** what's on your mind → how do you want to send it (each place says what account it needs, last time's first, and "no account?" helps) → done, you'll hear back there. Native dialog (focus, Escape, screen readers), bottom sheet on phones. "Keep it in my Bluesky account" is now opt-in (`data-records`).
 - **The home page is shorter:** the pitch, the loop, three steps, three questions.
