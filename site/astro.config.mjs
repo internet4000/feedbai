@@ -17,7 +17,7 @@ export default defineConfig({
     mermaid({ theme: 'neutral', autoTheme: true }),
     starlight({
       title: 'feedbai',
-      description: 'Hear your community, let your agents act on it: feedback from wherever people talk, as work for you and your AI agents, answered back.',
+      description: 'Hear your community, act on it: feedback from wherever people talk, gathered into your issues for you (and your agents), answered back.',
       logo: { src: './public/favicon.svg' },
       favicon: '/favicon.svg',
       social: [{ icon: 'github', label: 'GitHub', href: REPO }],

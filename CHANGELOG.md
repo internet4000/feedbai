@@ -4,6 +4,9 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
+### Changed
+- **Hear your community. Act on it.** The home page is plain and short: one card that says what feedbai does for everyone, the projects listening now, three steps to set one up. Agents are one way to act on feedback, not the pitch.
+
 ### Added
 - **The loop, live, on the home page:** projects that opt in (`"listed": true` in their public `feedbai.config.json`, with the GitHub App) show where they listen and how many feedback issues were filed and fixed in the last 30 days, with the hub's health. Numbers and links only, never what people wrote; nothing stored (`GET /v1/ecosystem`, read from GitHub, cached 10 minutes).
 
