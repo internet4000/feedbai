@@ -6,6 +6,8 @@
  */
 import { BrowserOAuthClient, type OAuthSession } from '@atproto/oauth-client-browser'
 import clientMetadata from '../../public/oauth/client-metadata.json'
+// Shared with the CLI: one parser for repo and page addresses (src/links.js)
+import { projectUri, pageAddress } from '../../../src/links.js'
 
 const COLLECTION = 'com.internet4000.feedbai.feedback'
 const SCOPE = clientMetadata.scope
@@ -19,18 +21,6 @@ const store = {
   drop: (key: string, where: Storage) => { try { where.removeItem(key) } catch {} },
 }
 
-const projectUri = (value = '') => {
-  const m = /^(?:https?:\/\/)?(?:www\.)?github\.com\/([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/i.exec(value.trim()) ?? /^([\w.-]+)\/([\w.-]+)$/.exec(value.trim())
-  return m ? `https://github.com/${m[1]}/${m[2]}` : null
-}
-const pageAddress = (href = '') => {
-  try {
-    const url = new URL(href)
-    return /^https?:$/.test(url.protocol) ? `${url.origin}${url.pathname}` : ''
-  } catch {
-    return ''
-  }
-}
 
 type Draft = { project: string; subject: string; text: string }
 const params = new URLSearchParams(location.search)

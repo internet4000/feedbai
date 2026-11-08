@@ -4,6 +4,11 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
+### Changed
+- One parser for GitHub repository and page addresses (`src/links.js`), shared by the CLI, the providers and the sign-in page; the Feedback button keeps its own copy (one self-hostable file), checked against it. The button now also accepts `www.github.com` links.
+- Removed the unused CMS collection (`cms/`) and the always-skipped hub Actions workflow (`hub.yml`): the hub runs as the Worker, or `node hub/run.js` from any cron.
+- CI runs on pull requests (forks too) and on Node 22, the oldest supported, as well as the current LTS.
+
 ### Fixed
 - `feedbai watch` stops polling a source whose login was refused, and pauses one that is rate-limited for 15 minutes, instead of retrying every minute (which got the account locked, for the hub too when it shares the account).
 

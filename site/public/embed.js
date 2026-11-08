@@ -27,10 +27,13 @@ export const pageAddress = (href) => {
   }
 }
 
-/** "owner/repo" from "https://github.com/owner/repo", "github.com/owner/repo" or "owner/repo"; null otherwise. */
+/** "owner/repo" for a GitHub repository (not a link to something in it); null otherwise. Same rules as src/links.js. */
 export const repoOf = (project = '') => {
-  const match = String(project).trim().match(/^(?:(?:https?:\/\/)?github\.com\/)?([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/i)
-  return match ? `${match[1]}/${match[2]}` : null
+  const text = String(project).trim()
+  const match = /^(?:https?:\/\/)?(?:www\.)?github\.com\/([\w-]+)\/([\w.-]+?)(?:\.git)?(\/.*|[?#].*)?$/i.exec(text)
+  if (match) return match[3] && match[3] !== '/' ? null : `${match[1]}/${match[2]}`
+  const short = /^([\w-]+)\/([\w.-]+?)(?:\.git)?\/?$/.exec(text)
+  return short ? `${short[1]}/${short[2]}` : null
 }
 
 const graphemes = (text) => (typeof Intl !== 'undefined' && Intl.Segmenter ? [...new Intl.Segmenter().segment(text)].map((s) => s.segment) : [...text])
