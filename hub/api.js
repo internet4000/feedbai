@@ -7,7 +7,7 @@
  */
 import matrix from '../src/providers/matrix.js'
 import bluesky from '../src/providers/bluesky.js'
-import { roomWorldReadable } from './matrix.js'
+import { roomWorldReadable, roomBoundTo } from './matrix.js'
 
 const MAX_LIMIT = 100
 const CACHE_SECONDS = 60
@@ -24,7 +24,7 @@ const readWindow = (params) => {
   return { since, limit: Math.min(Number(params.get('limit')) || 50, MAX_LIMIT) }
 }
 
-export const readMatrix = async ({ params, env, fetchImpl }) => {
+export const readMatrix = async ({ params, env, identity, fetchImpl }) => {
   const room = params.get('room')
   if (!room) return json(400, { error: 'missing ?room=#room:server' })
   const { since, limit, error } = readWindow(params)
@@ -34,9 +34,13 @@ export const readMatrix = async ({ params, env, fetchImpl }) => {
   const bot = env.FEEDBAI_MATRIX_USER
   const invite = `invite ${bot} to ${room}, or read it with your own account (feedbai login matrix)`
   try {
-    if (!(await roomWorldReadable({ homeserver, token: env.FEEDBAI_MATRIX_TOKEN, room, fetchImpl }))) {
+    // Anyone may read a room its admins made readable without joining; a repository proving who it is
+    // (a GitHub Actions run) may also read the rooms whose topic names it
+    const open = await roomWorldReadable({ homeserver, token: env.FEEDBAI_MATRIX_TOKEN, room, fetchImpl })
+    const bound = !open && identity && (await roomBoundTo({ homeserver, token: env.FEEDBAI_MATRIX_TOKEN, room, repo: identity.repository, fetchImpl })).bound
+    if (!open && !bound) {
       return json(403, {
-        error: `${room} is for its members to read (its history isn't visible to non-members), so the hub doesn't share it: read it with your own account (feedbai login matrix). Room admins can allow reading without joining: Room settings → Security & Privacy → "Who can read history?" → Anyone.`,
+        error: `${room} is for its members to read (its history isn't visible to non-members), so the hub doesn't share it: read it with your own account (feedbai login matrix). Room admins can allow reading without joining (Room settings → Security & Privacy → "Who can read history?" → Anyone), or let one repository read it from its GitHub Actions by putting github.com/owner/name in the room topic.`,
       })
     }
     const account = { id: 'hub', type: 'matrix', homeserver, user: bot, secrets: { token: 'FEEDBAI_MATRIX_TOKEN' } }
@@ -62,5 +66,27 @@ export const readBlueskySearch = async ({ params, env, fetchImpl }) => {
     return json(200, { query, items })
   } catch (error) {
     return json(502, { error: error.message })
+  }
+}
+
+/**
+ * POST /v1/matrix/react {"link": "<message link>"}: ✅ on a message, as the hub's bot, for a repository that
+ * proved who it is (a GitHub Actions run) in a room whose topic names it. A fixed reaction, nothing else: a
+ * project's agent can mark feedback as picked up without any secret of its own.
+ */
+export const reactMatrix = async ({ request: req, env, identity, fetchImpl }) => {
+  if (!identity) return json(401, { error: 'a GitHub Actions identity is required (permissions: id-token: write)' })
+  const body = await req.json().catch(() => ({}))
+  const where = typeof body.link === 'string' ? matrix.parseLink(body.link) : null
+  if (!where?.replyTo) return json(400, { error: 'missing {"link": "<matrix.to message link>"}' })
+  const homeserver = env.FEEDBAI_MATRIX_HOMESERVER ?? 'https://matrix.org'
+  try {
+    const { bound } = await roomBoundTo({ homeserver, token: env.FEEDBAI_MATRIX_TOKEN, room: where.room, repo: identity.repository, fetchImpl })
+    if (!bound) return json(403, { error: `the room's topic doesn't name github.com/${identity.repository}: its admins haven't tied it to this repository` })
+    const account = { id: 'hub', type: 'matrix', homeserver, user: env.FEEDBAI_MATRIX_USER, secrets: { token: 'FEEDBAI_MATRIX_TOKEN' } }
+    const reacted = await matrix.react({ account, room: where.room, replyTo: where.replyTo, key: '✅', fetchImpl })
+    return json(200, { reacted })
+  } catch (error) {
+    return json(error.status === 403 ? 403 : 502, { error: error.message })
   }
 }

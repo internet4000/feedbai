@@ -1,5 +1,5 @@
 import { request } from '../src/http.js'
-import { parseRoom } from '../src/providers/matrix.js'
+import { parseRoom, topicNamesRepo } from '../src/providers/matrix.js'
 
 /**
  * The hub's Matrix bot is shared by every project, so its token must be worth little if it leaks:
@@ -64,4 +64,15 @@ const resolve = async ({ homeserver, room, fetchImpl }) => {
   const alias = parseRoom(room)
   if (alias.startsWith('!')) return alias
   return (await request(api(homeserver, `/directory/room/${encodeURIComponent(alias)}`), { fetchImpl })).room_id
+}
+
+/**
+ * Has this room's admins tied it to `repo`? Its topic names the repository (github.com/owner/name): the same
+ * consent rule as private rooms. A repository proving who it is (hub/identity.js) is not enough on its own:
+ * anyone can list any room in their config.
+ */
+export const roomBoundTo = async ({ homeserver, token, room, repo, fetchImpl }) => {
+  const roomId = await resolve({ homeserver, room, fetchImpl })
+  const { topic = '' } = await state(homeserver, roomId, 'm.room.topic', { token, fetchImpl })
+  return { roomId, bound: topicNamesRepo(topic, repo) }
 }

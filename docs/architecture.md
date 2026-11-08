@@ -24,6 +24,15 @@ One program, the **feedbai runner** (the hub, grown up), runs for every enrolled
 
 Whoever writes a message can only influence the triage model, which can't do anything but produce JSON. The stages that act are plain code. Tokens are injected by the runner (at best, added to outgoing requests by a proxy, so no stage ever sees them), short-lived where the platform allows (GitHub App tokens last an hour), and each stage may only reach the hosts it needs.
 
+## No secrets to create
+
+Copying tokens into settings is a chore and a risk. Projects get identities that platforms already provide:
+
+- **GitHub:** the workflow's own token (issues) and GitHub Models (the triage model), automatic.
+- **Matrix and Bluesky:** the runner's bots act for a project that **proves which repository it is**, a short-lived token signed by its CI (GitHub Actions OIDC), in rooms whose admins tied them to it (the repository in the room topic). Nothing is created, copied or stored.
+
+Only people running everything themselves create accounts, with one guided command (`feedbai agent setup`, to come), never by copying tokens.
+
 ## Enrolling projects: one click, not one setup per repository
 
 - **Install the feedbai App** on your account or organisation and choose all repositories, or a selection. The runner works on exactly what the App was given. Uninstalling stops everything.

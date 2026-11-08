@@ -7,6 +7,8 @@
 import { runHub } from './run.js'
 import { readMatrix, readBlueskySearch } from './api.js'
 import { readStatus } from './status.js'
+import { reactMatrix } from './api.js'
+import { requestIdentity } from './identity.js'
 
 /** The read API's cache key: `since` rounded down to the minute, `limit` up to 10, 25, 50 or 100, nothing else. */
 export const cacheKey = (url) => {
@@ -60,12 +62,28 @@ export default {
     // The hub's domain is its Bluesky bot's handle (AT Protocol handle verification over HTTPS)
     if (url.pathname === '/.well-known/atproto-did' && env.FEEDBAI_BLUESKY_DID) return new Response(env.FEEDBAI_BLUESKY_DID, { headers: { 'content-type': 'text/plain' } })
     const read = { '/v1/matrix': readMatrix, '/v1/bluesky/search': readBlueskySearch, '/v1/status': readStatus }[url.pathname]
-    if (!read) return env.ASSETS ? site(request, env, url) : notFound(request, env)
-    if (request.method !== 'GET') return notFound(request, env)
+    const act = { '/v1/matrix/react': reactMatrix }[url.pathname]
+    if (!read && !act) return env.ASSETS ? site(request, env, url) : notFound(request, env)
+    if (request.method !== (act ? 'POST' : 'GET')) return notFound(request, env)
     // Per client: the API reads with the hub's own accounts, so nobody gets to spend them freely (#31)
     if (env.READ_LIMITER) {
       const { success } = await env.READ_LIMITER.limit({ key: request.headers.get('cf-connecting-ip') ?? 'unknown' })
       if (!success) return new Response(JSON.stringify({ error: 'too many requests: try again in a minute, or read with your own account' }), { status: 429, headers: { 'content-type': 'application/json', 'retry-after': '60' } })
+    }
+    // A repository proving who it is (GitHub Actions OIDC): no secrets for projects (hub/identity.js)
+    let identity = null
+    try {
+      identity = await requestIdentity(request, { audience: url.origin })
+    } catch (error) {
+      return new Response(JSON.stringify({ error: error.message }), { status: error.status ?? 401, headers: { 'content-type': 'application/json' } })
+    }
+    if (act) return act({ request, env, identity })
+    // Read on a repository's behalf: never cached or shared
+    if (identity) {
+      const response = await read({ params: url.searchParams, env, identity })
+      const private_ = new Response(response.body, response)
+      private_.headers.set('cache-control', 'private, no-store')
+      return private_
     }
     // Cached briefly (a busy room costs one Matrix read per minute). The key is normalized, so varying
     // `since` or `limit` can't skip the cache.

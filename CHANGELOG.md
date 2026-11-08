@@ -5,6 +5,7 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 ## Unreleased
 
 ### Added
+- **No secrets for a project's agent in GitHub Actions:** the read and act jobs prove to the hub which repository they are (OIDC, `id-token: write`), and the hub's bot reads the room and adds ✅ for them, in rooms whose topic names the repository. `.github/workflows/feedbai-agent.yml` needs no secrets anymore.
 - `feedbai triage`: a model proposes what to file and ✅ (no tools, no secrets, checked plan), plain code acts (`--apply`). Any OpenAI-compatible model; GitHub Models in GitHub Actions needs no key. Follows the project's `.feedbai/guidelines.md` (#63).
 - `.github/workflows/feedbai-agent.yml`: the agent in the loop every hour, in three jobs with different powers (read / triage / act).
 - `"filing": "agent"` in a project's config: the hub stops copying mentions into issues, the project's agent triages (#70).

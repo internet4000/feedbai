@@ -24,7 +24,7 @@ New channels (GitHub Discussions, Fediverse, …) are added when a project needs
 **Rules** (any repo can install the App, so its config is untrusted):
 - the hub always reads with its own bot account; `accounts` and `join` in a repo's config are ignored
 - the bot joins **public rooms only**: it declines invites to others and leaves rooms that stop being public, so its shared token can't expose private conversations. Private rooms: your own bot ([on your own](../docs/on-your-own.md)); with it, a private room is filed only if its topic names the repo (`github.com/owner/repo`)
-- the read API is rate-limited per client (30 a minute) and only serves rooms readable without joining
+- the read API is rate-limited per client (30 a minute) and only serves rooms readable without joining, or, to a GitHub Actions run proving its repository (OIDC), the rooms whose topic names that repository; `POST /v1/matrix/react` adds ✅ for it there (a project's agent, with no secrets: [an agent in the loop](../docs/issues.md#an-agent-in-the-loop-feedbai-triage))
 - `GET /v1/status` says whether each hub secret still works; the hourly check opens an issue when one is rejected. Rotation: [SECURITY.md](../SECURITY.md#rotation)
 - the bot joins rooms only when invited; kick it to stop
 - GitHub access is the App's installation token: issues write + contents read, per repo

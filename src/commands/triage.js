@@ -6,6 +6,7 @@ import { githubRepo, githubToken } from '../gh.js'
 import { loadConfig } from '../config.js'
 import { detectProject } from '../project.js'
 import { providers } from '../providers/index.js'
+import { reactViaHub } from '../hub.js'
 import { triageModel, readGuidelines, triageMessages, askModel, checkPlan, itemsOf } from '../triage.js'
 import { t } from '../i18n.js'
 import { entries, out } from './shared.js'
@@ -57,8 +58,10 @@ const apply = async (opts) => {
     const provider = Object.values(providers).find((p) => p.react && p.parseLink?.(link))
     // In CI the agent's account comes from the environment (FEEDBAI_MATRIX_TOKEN…), only in the act job
     const account = provider && (config.accounts.find((a) => a.type === provider.type) ?? provider.envAccount?.(process.env))
-    if (!provider || !account) continue
-    await provider.react({ account, ...provider.parseLink(link) }).catch((error) => process.stderr.write(`${link}: ${error.message}\n`))
+    if (!provider) continue
+    // No account of its own (e.g. a GitHub Actions run with no secrets): the hub's bot ✅s for this repository
+    const react = account ? provider.react({ account, ...provider.parseLink(link) }) : provider.type === 'matrix' ? reactViaHub({ link }) : null
+    await react?.catch((error) => process.stderr.write(`${link}: ${error.message}\n`))
   }
   out(urls.length ? urls.join('\n') : t('issues.none'))
 }
