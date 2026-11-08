@@ -32,8 +32,13 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
-      # New feedback of the last 70 minutes (runs overlap; filing is idempotent)
-      - run: node src/cli.js fetch --format json --since 70m > feedback.json
+      # New feedback of the last 70 minutes (runs overlap; filing is idempotent). Exit code 2 means some
+      # sources failed (listed in the log and in feedback.json): the others still go on to triage.
+      - run: |
+          set +e
+          node src/cli.js fetch --format json --since 70m > feedback.json
+          code=$?
+          [ "$code" -le 2 ] || exit "$code"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: feedback
