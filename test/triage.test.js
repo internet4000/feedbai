@@ -9,9 +9,9 @@ const items = [
   { id: 'c', url: 'https://matrix.to/#/!r/%24c', author: { id: '@bot:x' }, role: 'agent', text: '🤖 status update', createdAt: '2026-11-08T03:00:00Z' },
 ]
 
-test('the model slot: explicit endpoint, else GitHub Models inside GitHub Actions (no key), else none', () => {
+test('the model slot: an OpenAI-compatible endpoint when configured, else none (GitHub Models was retired in 2026)', () => {
   assert.deepEqual(triageModel({ FEEDBAI_TRIAGE_ENDPOINT: 'https://openrouter.ai/api/v1', FEEDBAI_TRIAGE_MODEL: 'm', FEEDBAI_TRIAGE_KEY: 'k' }), { endpoint: 'https://openrouter.ai/api/v1', model: 'm', key: 'k' })
-  assert.deepEqual(triageModel({ GITHUB_ACTIONS: 'true', GITHUB_TOKEN: 'gh' }), { endpoint: 'https://models.github.ai/inference', model: 'openai/gpt-4.1-mini', key: 'gh' })
+  assert.equal(triageModel({ GITHUB_ACTIONS: 'true', GITHUB_TOKEN: 'gh' }), null)
   assert.equal(triageModel({}), null)
 })
 
@@ -24,6 +24,11 @@ test('the model sees numbered messages and the guidelines, never links or ids it
   assert.equal(await askModel({ model: { endpoint: 'https://m.example/', model: 'x', key: 'k' }, messages: [system, user], fetchImpl }), '{"items":[]}')
   assert.equal(fetchImpl.calls[0].init.headers.authorization, 'Bearer k')
   assert.equal(JSON.parse(fetchImpl.calls[0].init.body).temperature, 0)
+  assert.deepEqual(JSON.parse(fetchImpl.calls[0].init.body).response_format, { type: 'json_object' })
+  // An endpoint without JSON mode: the same request, without the option
+  const strict = fakeFetch([[(u, i) => JSON.parse(i.body).response_format, { error: 'unknown parameter' }, 400], [() => true, { choices: [{ message: { content: '{}' } }] }]])
+  assert.equal(await askModel({ model: { endpoint: 'https://m.example', model: 'x' }, messages: [system, user], fetchImpl: strict }), '{}')
+  assert.equal(strict.calls.length, 2)
 })
 
 test('the plan is checked: only given messages, no agents, known kinds, plain titles, a few issues at most', () => {
@@ -42,7 +47,8 @@ test('the plan is checked: only given messages, no agents, known kinds, plain ti
   assert.equal(plan.file.length, MAX_ISSUES)
   assert.deepEqual(plan.react, [items[0].url, items[1].url])
   assert.ok(plan.dropped >= 4)
-  assert.throws(() => checkPlan('no json here', items), /expected JSON/)
+  assert.throws(() => checkPlan('no json here', items), /expected JSON.*began: no json here/)
+  assert.equal(checkPlan('```json\n{"items":[{"n":0,"kind":"bug"}]}\n```', items).kinds.length, 1, 'JSON in a code block')
 })
 
 test('items from feedbai fetch --format json: deduplicated, oldest first', () => {

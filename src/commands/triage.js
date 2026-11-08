@@ -22,7 +22,11 @@ export default async ({ opts }) => {
   if (opts.apply) return apply(opts)
 
   const model = triageModel()
-  if (!model) throw new Error(t('triage.noModel'))
+  if (!model) {
+    // No model: an empty plan (nothing is filed), and how to triage instead. Not an error: a project may have no key
+    process.stderr.write(t('triage.noModel') + '\n')
+    return out(JSON.stringify({ kinds: [], file: [], react: [], dropped: 0, model: null }, null, 2))
+  }
   const result = opts.input ? JSON.parse(readFileSync(opts.input, 'utf8')) : await collect(entries(opts), { since: opts.since ?? '1d', limit: opts.limit })
   const items = itemsOf(result)
   if (!items.length) return out(JSON.stringify({ kinds: [], file: [], react: [], dropped: 0 }, null, 2))

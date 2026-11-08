@@ -28,7 +28,8 @@ Whoever writes a message can only influence the triage model, which can't do any
 
 Copying tokens into settings is a chore and a risk. Projects get identities that platforms already provide:
 
-- **GitHub:** the workflow's own token (issues) and GitHub Models (the triage model), automatic.
+- **GitHub:** the workflow's own token (issues), automatic.
+- **The triage model:** the one thing that may need a key (OpenRouter, a provider), unless you triage in your own agent session or run a local model. There is no free model inside GitHub Actions anymore (GitHub Models was retired in July 2026).
 - **Matrix and Bluesky:** the runner's bots act for a project that **proves which repository it is**, a short-lived token signed by its CI (GitHub Actions OIDC), in rooms whose admins tied them to it (the repository in the room topic). Nothing is created, copied or stored.
 
 Only people running everything themselves create accounts, with one guided command (`feedbai agent setup`, to come), never by copying tokens.

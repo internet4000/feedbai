@@ -10,8 +10,8 @@ import { t } from './i18n.js'
  * Even a model fully steered by a message can then only propose filing or ✅-ing messages it was given,
  * with inert titles, a few per run.
  *
- * The model is one plug-in slot: any OpenAI-compatible endpoint (GitHub Models in GitHub Actions, with no
- * key; OpenRouter; a local model; a provider's own key), or none.
+ * The model is one plug-in slot: any OpenAI-compatible endpoint (OpenRouter, a local model, a provider's own
+ * key), or none: then nothing is filed and feedback is triaged in an agent session instead.
  */
 
 export const KINDS = ['bug', 'idea', 'question', 'praise', 'noise']
@@ -20,16 +20,9 @@ const MAX_TEXT = 2000 // characters of each message shown to the model
 const MAX_TITLE = 120
 const MAX_NOTE = 1500
 
-/** Where the model is: FEEDBAI_TRIAGE_* if set; GitHub Models inside GitHub Actions (no key needed); else none. */
-export const triageModel = (env = process.env) => {
-  if (env.FEEDBAI_TRIAGE_ENDPOINT) {
-    return { endpoint: env.FEEDBAI_TRIAGE_ENDPOINT, model: env.FEEDBAI_TRIAGE_MODEL, key: env.FEEDBAI_TRIAGE_KEY }
-  }
-  if (env.GITHUB_ACTIONS === 'true' && env.GITHUB_TOKEN) {
-    return { endpoint: 'https://models.github.ai/inference', model: env.FEEDBAI_TRIAGE_MODEL ?? 'openai/gpt-4.1-mini', key: env.GITHUB_TOKEN }
-  }
-  return null
-}
+/** Where the model is: FEEDBAI_TRIAGE_ENDPOINT/_MODEL/_KEY (any OpenAI-compatible API), or none. */
+export const triageModel = (env = process.env) =>
+  env.FEEDBAI_TRIAGE_ENDPOINT ? { endpoint: env.FEEDBAI_TRIAGE_ENDPOINT, model: env.FEEDBAI_TRIAGE_MODEL, key: env.FEEDBAI_TRIAGE_KEY } : null
 
 /** The project's guidelines (.feedbai/guidelines.md), written by its maintainers: trusted, unlike the feedback. */
 export const readGuidelines = (root) => {
@@ -70,8 +63,19 @@ export const triageMessages = ({ items, guidelines = '' }) => [
 /** Ask the model. Returns its raw text. */
 export const askModel = async ({ model, messages, fetchImpl }) => {
   const url = `${model.endpoint.replace(/\/$/, '')}/chat/completions`
-  const data = await request(url, { method: 'POST', token: model.key, fetchImpl, body: { model: model.model, messages, temperature: 0, max_tokens: 2000 } })
-  return data.choices?.[0]?.message?.content ?? ''
+  const body = { model: model.model, messages, temperature: 0, max_tokens: 4000, response_format: { type: 'json_object' } }
+  // JSON mode where the endpoint has it; endpoints that don't know the option get the same request without it
+  const data = await request(url, { method: 'POST', token: model.key, fetchImpl, body }).catch((error) => {
+    if (error.status !== 400 && error.status !== 422) throw error
+    const { response_format, ...plain } = body
+    return request(url, { method: 'POST', token: model.key, fetchImpl, body: plain })
+  })
+  const choice = data.choices?.[0]
+  const content = choice?.message?.content
+  if (typeof content === 'string' && content.trim()) return content
+  // No text: say why (the model's stop reason, a refusal, an error in the body), never a silent nothing
+  const why = JSON.stringify({ finish_reason: choice?.finish_reason, refusal: choice?.message?.refusal, error: data.error, keys: Object.keys(data) }).slice(0, 400)
+  throw new Error(`the model returned no text: ${why}`)
 }
 
 const oneLine = (text, max) => String(text ?? '').replace(/\s+/g, ' ').trim().slice(0, max)
@@ -83,10 +87,11 @@ const oneLine = (text, max) => String(text ?? '').replace(/\s+/g, ' ').trim().sl
  */
 export const checkPlan = (raw, items) => {
   let plan
+  const text = String(raw).replace(/```(?:json)?/gi, '')
   try {
-    plan = JSON.parse(String(raw).slice(String(raw).indexOf('{'), String(raw).lastIndexOf('}') + 1))
+    plan = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1))
   } catch {
-    throw new Error(t('triage.badAnswer'))
+    throw new Error(t('triage.badAnswer', { start: oneLine(raw, 300) }))
   }
   const valid = (n) => Number.isInteger(n) && n >= 0 && n < items.length && items[n].role !== 'agent'
   let dropped = 0
