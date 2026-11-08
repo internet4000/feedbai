@@ -70,7 +70,7 @@ The same stack (the runner, a Matrix server, a Bluesky host), packaged to run as
 
 | | Runs it | Agent identities | Pays |
 | --- | --- | --- | --- |
-| **A person, a small project** | our hosted instance at feedbai.internet4000.com: sign in, choose repositories, done | `@project:feedbai.internet4000.com` | nothing for open-source projects (to decide), usage beyond that |
+| **A person, a small project** | our hosted instance at feedbai.internet4000.com: sign in, choose repositories, done | `@project:feedbai.internet4000.com` | prepaid credits or a subscription, or their own AI key (no free credits) |
 | **Someone with many projects** (or friends) | our instance, or their own box | ours, or on their domain | their AI key; compute if hosted by us |
 | **An organisation** | itself, on its own domain, with its own models and sign-in | `@project:their.org` | nothing to us |
 
@@ -81,6 +81,27 @@ Payments exist only on our hosted instance, through Stripe (we never see card de
 - **A Matrix server keeps a copy of the rooms it joins** (that's how Matrix works). So on our hosted instance, agents join **public rooms only**, history is kept short and encrypted at rest, and the privacy notes say so. Private rooms need a self-hosted runner: your server, your data.
 - **Our hosted instance holds state** (enrolled projects, encrypted secrets, schedules): a deliberate exception to "feedbai stores nothing", only there, never required, and absent when you run it yourself.
 - **The master key** of a runner's Matrix application service is its most valuable secret: isolated, minimal code, rotated, audited.
+
+## The hosted tier: one small box, many projects, sealed from each other
+
+For people who arrive with nothing: they **sign in with their forge** (GitHub first), **pick repositories** (the App), and agents run for them. They pay as they go (prepaid credits) or by subscription, or bring their own AI key. **No free credits:** free usage invites abuse and costs us real money. Only our own projects run on our tab.
+
+Small enough to run on **one machine** (a Hetzner server or a Raspberry Pi 5), and sealed per project:
+
+| Piece | What | Why it's safe |
+| --- | --- | --- |
+| **Front door** | a Cloudflare Tunnel to the box: no open ports | the box is never reachable directly; our Worker and its rate limits sit in front |
+| **Sign-in** | "Sign in with GitHub" (the App's user sign-in) | no passwords of ours; org membership comes from the forge |
+| **The runner** | the same open-source code as everywhere | one program to audit |
+| **Each run** | a throwaway rootless container per project per run: read-only filesystem, no Linux capabilities, CPU and memory limits, its own network that can only reach the hosts its stage needs (through an egress proxy) | a run can't see other projects, the host, or the internet at large |
+| **Tokens** | minted per run, scoped to one repository, short-lived (GitHub App: 1 hour); Matrix and Bluesky actions through the runner's bots, only in rooms the project's admins tied to it | nothing long-lived to steal from a run |
+| **Data** | one SQLite file: accounts, projects, credits, run log (30 days); settings and any user's own AI key encrypted per project (envelope encryption: a key per project, itself encrypted by the box's master key held by systemd credentials, TPM-backed where the hardware has one) | one leaked project key opens one project |
+| **Payments** | Stripe Checkout and signed webhooks | card details never touch us; credits are spent per run and shown per project |
+| **Models** | our provider account (billed back as credits), or the user's own key | the triage stage never gets tools or secrets either way |
+| **Backups** | the SQLite file, encrypted, off the box | losing the box loses no one's data |
+| **Updates** | signed releases, automatic security updates for the OS | a small surface kept current |
+
+What it holds is exactly what the privacy notes will list, and each project can export or delete its data. Organisations that need more isolation (their own models, sign-in, servers) run the same stack themselves.
 
 ## What this replaces
 
@@ -95,11 +116,11 @@ Each step is used on real projects before the next one starts.
 2. **Agent handles under our domain:** cheap, our Worker already proves handles.
 3. **Our Matrix server and application service:** per-project agents created automatically, public rooms only.
 4. **The `.feedbai` configuration repository** and the bulk setup pull requests: enrolling many repositories at once, for us and for friends.
-5. **The self-hostable package** (one `docker compose`), with our instance as the reference.
-6. **A web page to enrol without a terminal, then payments**, when people who aren't developers start using it.
+5. **The hosted tier on one box** (above): sign in with GitHub, pick repos, our model, a dashboard, for us and a few friends first; then prepaid credits and subscriptions (no free credits).
+6. **The self-hostable package** (one `docker compose`), the same as our box, for organisations.
 
 ## Open questions
 
-- Free for open-source projects on our instance, and what does the hosted tier cost?
+- What the hosted tier costs (credits per run, a subscription), and which sandbox runtime on a Raspberry Pi (rootless Podman, gVisor)? To verify on the hardware before building.
 - Forgejo, Codeberg and GitLab have no GitHub-style Apps: what's the one-click enrolment there?
 - End-to-end encrypted Matrix rooms: the runner would need full Matrix encryption support.
