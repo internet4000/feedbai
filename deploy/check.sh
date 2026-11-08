@@ -31,7 +31,6 @@ check "root: no keys, password locked" "sudo test ! -s /root/.ssh/authorized_key
 check "runner: no login, has its own id range" "getent passwd runner | grep -q nologin && grep -q '^runner:' /etc/subuid"
 check "runner's services run without a login" "test -f /var/lib/systemd/linger/runner"
 check "rootless containers work for runner" "sudo -u runner -H sh -c 'cd /tmp && XDG_RUNTIME_DIR=/run/user/\$(id -u) podman info --format {{.Host.Security.Rootless}}' | grep -qx true"
-check "Cloudflare Tunnel client installed" "command -v cloudflared"
 check "no secrets in the setup data" "! sudo grep -qE 'PRIVATE KEY|ghp_|github_pat_|ghs_|syt_|sk-[A-Za-z0-9]|eyJ[A-Za-z0-9_-]{20,}' /var/lib/cloud/instance/user-data.txt"
 exit $f
 ON_BOX

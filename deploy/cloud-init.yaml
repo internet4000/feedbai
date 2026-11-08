@@ -1,115 +1,54 @@
 #cloud-config
-# feedbai hosted box: first-boot setup for a fresh Debian server (Debian 13, or 12). No secrets in here:
-# a provider's "user data" can be read back from its console and the server's metadata service.
-# Secrets (tunnel token, App key, bot tokens…) are added after boot, encrypted at rest (deploy/README.md).
-#
-# What it does:
-# - an unprivileged `ops` user that only the agent's prototype key can log in as (key-only, no root, no
-#   passwords), with sudo for the prototype phase only: remove it before anything real runs here
-# - an unprivileged `runner` user for the service, whose jobs run in rootless Podman containers
-# - automatic security updates (and a reboot at 04:00 when one needs it)
-# - short logs, a few kernel hardening switches, the Cloudflare Tunnel client (outgoing only)
-# Nothing listens for the internet: the provider's firewall drops all incoming traffic except SSH from the
-# owner's address during the prototype; the website reaches the box through the tunnel, from the inside.
-#
-# Replace the public key below with your own agent's key when reusing this file.
+# feedbai box: first boot of a fresh Debian (12 or newer), on any provider or machine. Holds no secrets:
+# user data can be read back. Checked by deploy/check.sh. Reusing it? Put your own agent's key below.
 
 users:
-  - name: ops
-    gecos: feedbai ops (agent, prototype)
+  - name: ops # the agent's login: key-only. Prototype only: sudo (remove it, then SSH, before production)
     shell: /bin/bash
-    lock_passwd: true
-    # Prototype only. Delete this line (and rebuild) before production: then nobody needs SSH at all.
     sudo: "ALL=(ALL) NOPASSWD:ALL"
     ssh_authorized_keys:
       - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMVeWZudlObKFVaK6S649KTdPnoNqJLWIq2Cy26TH5SF feedbai-ops (agent, prototype box only) 2026-11-08
-  - name: runner
-    gecos: feedbai runner
-    # A regular (not "system") user: rootless containers keep their images in its home directory
+  - name: runner # runs the jobs, in rootless containers; no login
     homedir: /var/lib/feedbai
     shell: /usr/sbin/nologin
-    lock_passwd: true
-
-disable_root: true
-ssh_pwauth: false
 
 package_update: true
 package_upgrade: true
-packages:
-  - podman
-  - uidmap
-  - passt
-  - slirp4netns
-  - unattended-upgrades
-  - apt-listchanges
-  - ca-certificates
-  - curl
-  - sqlite3
+packages: [podman, uidmap, passt, slirp4netns, unattended-upgrades]
 
 write_files:
   - path: /etc/ssh/sshd_config.d/10-feedbai.conf
-    permissions: "0644"
     content: |
-      # Key-only, one user, nothing forwarded
       PermitRootLogin no
       PasswordAuthentication no
       KbdInteractiveAuthentication no
-      AuthenticationMethods publickey
       AllowUsers ops
-      X11Forwarding no
-      AllowAgentForwarding no
       AllowTcpForwarding no
-      PermitTunnel no
-      MaxAuthTries 3
-      LoginGraceTime 20
-  - path: /etc/apt/apt.conf.d/20auto-upgrades
-    permissions: "0644"
+      AllowAgentForwarding no
+      X11Forwarding no
+  - path: /etc/apt/apt.conf.d/52feedbai
     content: |
       APT::Periodic::Update-Package-Lists "1";
       APT::Periodic::Unattended-Upgrade "1";
-  - path: /etc/apt/apt.conf.d/52feedbai-upgrades
-    permissions: "0644"
-    content: |
       Unattended-Upgrade::Automatic-Reboot "true";
       Unattended-Upgrade::Automatic-Reboot-Time "04:00";
-      Unattended-Upgrade::Remove-Unused-Dependencies "true";
   - path: /etc/systemd/journald.conf.d/10-feedbai.conf
-    permissions: "0644"
-    content: |
-      # Short logs: enough to debug, not an archive of anyone's activity
+    content: | # short logs: enough to debug, not an archive of anyone's activity
       [Journal]
       SystemMaxUse=200M
       MaxRetentionSec=14day
   - path: /etc/sysctl.d/90-feedbai.conf
-    permissions: "0644"
-    content: |
+    content: | # containers can't read kernel addresses or logs, nor load BPF
       kernel.kptr_restrict = 2
       kernel.dmesg_restrict = 1
       kernel.unprivileged_bpf_disabled = 1
       net.core.bpf_jit_harden = 2
-      fs.protected_symlinks = 1
-      fs.protected_hardlinks = 1
-      net.ipv4.conf.all.rp_filter = 1
-      net.ipv4.conf.all.accept_redirects = 0
-      net.ipv6.conf.all.accept_redirects = 0
-      net.ipv4.conf.all.send_redirects = 0
 
 runcmd:
-  # Root has no way in: no keys (a provider may have added one), no password (some providers set one)
-  - rm -f /root/.ssh/authorized_keys
-  - passwd -l root
-  - sysctl --system
+  - rm -f /root/.ssh/authorized_keys # root has no way in: no keys (a provider may add one),
+  - passwd -l root # and no password (some providers set one)
   - systemctl restart ssh
-  # Rootless Podman for the runner: its own user namespace range, and its user services run without a login
-  - grep -q '^runner:' /etc/subuid || usermod --add-subuids 100000-165535 --add-subgids 100000-165535 runner
-  - loginctl enable-linger runner
-  - systemctl enable --now unattended-upgrades
-  # Cloudflare Tunnel client from Cloudflare's apt repository (verify the key path against Cloudflare's current
-  # docs when reusing). The tunnel's token is a secret: added after boot, never here (deploy/README.md).
-  - mkdir -p --mode=0755 /usr/share/keyrings
-  - curl -fsSL https://pkg.cloudflare.com/cloudflare-public-v2.gpg -o /usr/share/keyrings/cloudflare-public-v2.gpg
-  - echo 'deb [signed-by=/usr/share/keyrings/cloudflare-public-v2.gpg] https://pkg.cloudflare.com/cloudflared any main' > /etc/apt/sources.list.d/cloudflared.list
-  - apt-get update && apt-get install -y cloudflared
+  - sysctl --system
+  - systemctl restart systemd-journald
+  - loginctl enable-linger runner # its services run without anyone logged in
   - touch /var/lib/cloud/feedbai-ready
-
-final_message: "feedbai box ready after $UPTIME seconds (deploy/README.md: next steps)"
