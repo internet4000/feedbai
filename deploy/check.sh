@@ -27,6 +27,7 @@ check "only ssh listens on the network (TCP)" "test -z \"\$(sudo ss -Htln | awk 
 check "automatic security updates on" "systemctl is-enabled unattended-upgrades && apt-config dump | grep -q 'APT::Periodic::Unattended-Upgrade \"1\"'"
 check "logs capped" "test -f /etc/systemd/journald.conf.d/10-feedbai.conf"
 check "kernel hardening applied" "test \$(sysctl -n kernel.kptr_restrict) = 2 && test \$(sysctl -n kernel.dmesg_restrict) = 1"
+check "root: no keys, password locked" "sudo test ! -s /root/.ssh/authorized_keys && sudo passwd -S root | grep -qE '^root (L|LK) '"
 check "runner: no login, has its own id range" "getent passwd runner | grep -q nologin && grep -q '^runner:' /etc/subuid"
 check "runner's services run without a login" "test -f /var/lib/systemd/linger/runner"
 check "rootless containers work for runner" "sudo -u runner -H sh -c 'cd /tmp && XDG_RUNTIME_DIR=/run/user/\$(id -u) podman info --format {{.Host.Security.Rootless}}' | grep -qx true"

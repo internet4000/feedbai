@@ -25,7 +25,7 @@ You need: a machine that boots **Debian 12 or newer** with cloud-init, and the b
 1. Turn on two-factor login for your provider account.
 2. Create a firewall: **no inbound traffic** except SSH (22) from your own address during the prototype; all outbound allowed. Keep IPv4: GitHub's API doesn't speak IPv6.
 3. Create the server with a **Debian** image, that firewall, and the contents of `cloud-init.yaml` as **user data** ("cloud config" on Hetzner, "user data" elsewhere).
-4. **SSH keys at the provider:** add the same agent public key there too. Some providers otherwise set a root password (and email it); with a key they don't. Root logins are refused either way.
+4. **SSH keys at the provider:** add the same agent public key there too. Some providers otherwise set a root password (and email it); with a key they don't. Either way, first boot removes root's keys and locks its password: nobody logs in as root, the agent included.
 
 ### A machine at home (a Raspberry Pi, a mini PC, a virtual machine)
 

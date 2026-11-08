@@ -95,6 +95,9 @@ write_files:
       net.ipv4.conf.all.send_redirects = 0
 
 runcmd:
+  # Root has no way in: no keys (a provider may have added one), no password (some providers set one)
+  - rm -f /root/.ssh/authorized_keys
+  - passwd -l root
   - sysctl --system
   - systemctl restart ssh
   # Rootless Podman for the runner: its own user namespace range, and its user services run without a login
