@@ -118,6 +118,11 @@
             "type": "string"
           }
         },
+        "listed": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show this project on feedbai's home page (its name, channel kinds, and how many feedback issues were filed and fixed in the last 30 days; never what people wrote). Needs a public repository with the GitHub App installed."
+        },
         "replies": {
           "type": "boolean",
           "default": true,

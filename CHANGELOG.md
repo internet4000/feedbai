@@ -4,6 +4,9 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
+### Added
+- **The loop, live, on the home page:** projects that opt in (`"listed": true` in their public `feedbai.config.json`, with the GitHub App) show where they listen and how many feedback issues were filed and fixed in the last 30 days, with the hub's health. Numbers and links only, never what people wrote; nothing stored (`GET /v1/ecosystem`, read from GitHub, cached 10 minutes).
+
 ## 0.4.0 — 2026-11-08
 
 An agent in the loop: each project's own agent triages its feedback, with no secrets to create.

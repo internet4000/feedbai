@@ -4,6 +4,7 @@
     {
       "id": "feedbai",
       "repository": "https://github.com/internet4000/feedbai",
+      "listed": true,
       "maintainers": [
         "@ugp:matrix.org",
         "@4www:hwww.org",

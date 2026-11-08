@@ -42,6 +42,21 @@ const faq = [
 >
   <div class="not-content home">
 
+    <section class="live" aria-labelledby="live-title">
+      <div class="live-head">
+        <h2 id="live-title">The loop, live <small>last 30 days</small></h2>
+        <a class="hub" href="/v1/status" data-hub><span class="dot" aria-hidden="true"></span><span data-hub-text>Hub</span></a>
+      </div>
+      <dl class="totals">
+        <div><dt>Projects listening</dt><dd data-total="projects">–</dd></div>
+        <div><dt>Issues filed</dt><dd data-total="filed">–</dd></div>
+        <div><dt>Fixed</dt><dd data-total="fixed">–</dd></div>
+        <div><dt>Open now</dt><dd data-total="open">–</dd></div>
+      </dl>
+      <ul class="projects" data-projects aria-live="polite"></ul>
+      <p class="note">Numbers and links only: what people wrote stays where they wrote it. Your project here? Add <code>"listed": true</code> to its <code>feedbai.config.json</code>.</p>
+    </section>
+
     <h2 id="start">Get started</h2>
     <p class="sub">About two minutes.</p>
     <ol class="steps">
@@ -73,6 +88,55 @@ const faq = [
 </StarlightPage>
 
 <script>
+  // The live loop: /v1/ecosystem (listed projects, counts) and /v1/status (the hub's own accounts). Built with
+  // textContent only: project names come from other people's configs.
+  const CHANNELS: Record<string, string> = { matrix: 'Matrix', bluesky: 'Bluesky', atproto: 'Feedback records', github: 'GitHub Discussions' }
+  type Project = { id: string; repository: string; channels: string[]; filed: number; fixed: number; open: number }
+  const el = (tag: string, text = '', className = '') => Object.assign(document.createElement(tag), { textContent: text, className })
+
+  const showProjects = (all: Project[]) => {
+    const list = document.querySelector('[data-projects]')
+    if (!list) return
+    const projects = all.filter((p) => /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+$/.test(p.repository))
+    const sum = (k: 'filed' | 'fixed' | 'open') => projects.reduce((n, p) => n + p[k], 0)
+    const totals: Record<string, number> = { projects: projects.length, filed: sum('filed'), fixed: sum('fixed'), open: sum('open') }
+    for (const [key, value] of Object.entries(totals)) {
+      const dd = document.querySelector(`[data-total="${key}"]`)
+      if (dd) dd.textContent = String(value)
+    }
+    list.replaceChildren(
+      ...projects.map((p) => {
+        const li = el('li')
+        const name = el('a', p.id, 'name') as HTMLAnchorElement
+        name.href = p.repository
+        const where = el('span', p.channels.map((c) => CHANNELS[c] ?? c).join(' · ') || 'no channels yet', 'where')
+        const counts = el('a', `${p.filed} filed · ${p.fixed} fixed · ${p.open} open`, 'counts') as HTMLAnchorElement
+        counts.href = `${p.repository}/issues?q=label%3Afeedback`
+        li.append(name, where, counts)
+        return li
+      }),
+    )
+  }
+
+  const showHub = (ok: boolean | null) => {
+    const link = document.querySelector('[data-hub]')
+    const text = document.querySelector('[data-hub-text]')
+    link?.setAttribute('data-state', ok === null ? 'unknown' : ok ? 'ok' : 'down')
+    if (text) text.textContent = ok === null ? 'Hub: unreachable' : ok ? 'Hub: all channels ok' : 'Hub: a channel is down'
+  }
+
+  fetch('/v1/ecosystem')
+    .then((r) => (r.ok ? r.json() : Promise.reject()))
+    .then((data) => showProjects(data.projects ?? []))
+    .catch(() => {
+      const list = document.querySelector('[data-projects]')
+      list?.replaceChildren(el('li', 'Live numbers are unavailable right now.', 'empty'))
+    })
+  fetch('/v1/status')
+    .then((r) => r.json())
+    .then((data) => showHub(Boolean(data.ok)))
+    .catch(() => showHub(null))
+
   document.addEventListener('click', async (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-copy]')
     if (!b) return
@@ -135,6 +199,26 @@ const faq = [
   .faq[open] summary::after { content: '−'; }
   .faq > div { padding: 0 1rem 0.9rem; color: var(--sl-color-gray-2); }
   .more { margin-top: 2rem; padding-bottom: 4rem; color: var(--sl-color-gray-3); }
+  .live { margin-top: 2rem; padding: 1.25rem; border: 1px solid var(--sl-color-hairline); border-radius: 1.1rem; background: var(--sl-color-bg-nav); }
+  .live-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1rem; }
+  .live h2 { margin: 0; font-size: var(--sl-text-xl); }
+  .live h2 small { font-size: var(--sl-text-sm); font-weight: 400; color: var(--sl-color-gray-3); margin-left: 0.4rem; }
+  .hub { display: inline-flex; align-items: center; gap: 0.45rem; font-size: var(--sl-text-sm); color: var(--sl-color-gray-3) !important; text-decoration: none; min-height: 2.75rem; }
+  .hub .dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--sl-color-gray-4); }
+  .hub[data-state='ok'] .dot { background: #2fbf71; box-shadow: 0 0 0 3px rgb(47 191 113 / 0.2); }
+  .hub[data-state='down'] .dot { background: #e5484d; }
+  .totals { margin: 1rem 0 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+  .totals div { padding: 0.75rem 0.9rem; border-radius: 0.8rem; background: var(--sl-color-bg); border: 1px solid var(--sl-color-hairline); }
+  .totals dt { font-size: var(--sl-text-sm); color: var(--sl-color-gray-3); }
+  .totals dd { margin: 0.1rem 0 0; font-size: var(--sl-text-3xl); font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .projects { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.4rem; }
+  .projects :global(li) { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1rem; padding: 0.7rem 0.9rem; border-radius: 0.8rem; background: var(--sl-color-bg); border: 1px solid var(--sl-color-hairline); }
+  .projects :global(.name) { font-weight: 700; color: var(--sl-color-white) !important; }
+  .projects :global(.where) { color: var(--sl-color-gray-3); font-size: var(--sl-text-sm); flex: 1; min-width: 10rem; }
+  .projects :global(.counts) { font-size: var(--sl-text-sm); font-variant-numeric: tabular-nums; color: var(--sl-color-text-accent); }
+  .projects :global(.empty) { color: var(--sl-color-gray-3); }
+  .live .note { margin: 0.9rem 0 0; }
+  @media (min-width: 40rem) { .totals { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
   @media (min-width: 40rem) { .reasons, .others { grid-template-columns: 1fr 1fr; } }
   @media (min-width: 50rem) {
     .reasons { grid-template-columns: repeat(4, minmax(0, 1fr)); }
