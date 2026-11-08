@@ -4,6 +4,9 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
+### Added
+- **Style the Feedback button to match your site:** its colours are CSS variables you set on the element (`--accent`, `--bg`, `--ink`…, light and dark), it can use your page's font, and its parts are named for `::part()` (`button`, `dialog`, `card`, `textarea`, `primary`, `place`). Docs: Feedback button → Make it yours.
+
 ## 0.4.0 — 2026-11-08
 
 An agent in the loop: each project's own agent triages its feedback, with no secrets to create.
