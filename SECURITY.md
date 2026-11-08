@@ -41,6 +41,7 @@ One bot (`@feedbai:matrix.org`) serves every project that uses the hub, so its t
 - **Fixed texts only.** It never chats: it files issues and posts one fixed reply, "🤖 This is fixed…", with no model- or user-written text.
 - **The read API respects the room's choice.** It serves a room only when its admins made it readable without joining (history visibility "world_readable", "Anyone" in Element). Other public rooms are read by joining them, visibly, with your own account. Rate-limited per client (30 requests a minute) and cached for 60 seconds.
 - **Kick it to stop it.** Room admins remove the bot; maintainers uninstall the App.
+- **For a repository's agent, without secrets.** A GitHub Actions run can prove which repository it is (an OIDC token signed by GitHub, valid for minutes, for this hub only: `hub/identity.js` checks issuer, audience, expiry and signature). With it, the hub reads a room for that repository and reacts ✅ (a fixed reaction, nothing else) only when the room's **topic names the repository**: proving who you are isn't enough, the room's admins must have tied it to you. Those reads are never cached or shared.
 
 Real isolation is your own bot: one per project, its token on your machine or in your CI. That is also the right identity for a project's agent that talks in the room (e.g. `@yourproject-agent:matrix.org`): never the shared hub bot.
 
