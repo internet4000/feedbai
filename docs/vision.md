@@ -1,5 +1,7 @@
 # Vision: open feedback for anything, and projects that steer themselves
 
+> **Architecture, decided 2026-11-08:** one runner, the same for everyone, an agent per project, security first: [architecture](architecture.md).
+
 *Draft, 2026-11-06. Direction for feedbai over the next releases. Discuss in [#feedbai:matrix.org](https://matrix.to/#/#feedbai:matrix.org) or on the PR / issues that implement each step.*
 
 ## The goal

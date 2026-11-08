@@ -1,6 +1,7 @@
 # feedbai documentation
 
 **Where it's going**
+- [Architecture](architecture.md): one runner, the same for everyone; security first; agents per project; build order
 - [Vision](vision.md): open feedback on anything over the AT Protocol, no infrastructure required, projects on auto-pilot; where we are and the steps
 
 **Use it**
