@@ -10,9 +10,10 @@
  * Or place <feedbai-button project="…"></feedbai-button> where the button should be (load the script once).
  * Attributes: project (GitHub repo), matrix (room alias), bluesky (a hashtag or @handle added to posts so the
  * project's Bluesky source finds them), bot (the Matrix bot to mention, default @feedbai:matrix.org),
- * label (button text), inline (show the form itself, no button). Docs: https://feedbai.internet4000.com/docs/button/
+ * label (button text), inline (show the form itself, no button), records (also offer "keep it in my Bluesky
+ * account", experimental). Docs: https://feedbai.internet4000.com/docs/button/
  */
-export const VERSION = '0.1.0'
+export const VERSION = '0.2.0'
 const DEFAULT_BOT = '@feedbai:matrix.org'
 const BLUESKY_LIMIT = 300 // graphemes in a Bluesky post
 const AUTH = 'https://auth.feedbai.internet4000.com' // sign-in page, on its own origin
@@ -74,119 +75,209 @@ export const routes = ({ text, page = '', project, matrix, bluesky, bot = DEFAUL
   return out
 }
 
+/** What each place is, for someone deciding where to send it: plain words, and what it needs. */
+const PLACES = {
+  matrix: { icon: '💬', title: 'Talk to the team', hint: 'In their chat room · a Matrix account' },
+  bluesky: { icon: '🦋', title: 'Post on Bluesky', hint: 'A public post · a Bluesky account' },
+  github: { icon: '🐙', title: 'Open an issue', hint: 'For developers · a GitHub account' },
+  account: { icon: '🔒', title: 'Keep it in my Bluesky account', hint: 'A record only the project reads · a Bluesky account' },
+}
+const ORDER = ['matrix', 'bluesky', 'github', 'account']
+const LAST = 'feedbai-last-place'
+const remember = (id) => { try { localStorage.setItem(LAST, id) } catch {} }
+const last = () => { try { return localStorage.getItem(LAST) } catch { return null } }
+
 const CSS = `
-:host{--accent:#1f9d5c;--accent-ink:#fff;--bg:#fff;--ink:#10201a;--muted:#5b6b63;--line:#dfe7e2;--soft:#eef2ef;all:initial;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink)}
-@media (prefers-color-scheme:dark){:host{--accent:#3ddc84;--accent-ink:#0b2a1a;--bg:#13201a;--ink:#e8f1ec;--muted:#9bb0a5;--line:#2a3d33;--soft:#1b2b23}}
+:host{--accent:#1f9d5c;--accent-ink:#fff;--bg:#fff;--ink:#10201a;--muted:#5b6b63;--line:#dfe7e2;--soft:#f1f5f2;all:initial;font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink)}
+@media (prefers-color-scheme:dark){:host{--accent:#3ddc84;--accent-ink:#0b2a1a;--bg:#15211b;--ink:#e8f1ec;--muted:#9bb0a5;--line:#2a3d33;--soft:#1d2c24}}
 *{box-sizing:border-box}
-.trigger{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;border:0;background:var(--accent);color:var(--accent-ink);font:600 15px/1 inherit;font-family:inherit;cursor:pointer;box-shadow:0 4px 16px rgb(0 0 0/.18)}
-.trigger:focus-visible,button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-:host([floating]) .trigger{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:2147483646}
+button,a,textarea{font:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.trigger{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgb(0 0 0/.18)}
 .trigger .ico{font-size:17px;line-height:1}
+:host([floating]) .trigger{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:2147483646}
 @media (max-width:480px){:host([floating]) .trigger{width:52px;height:52px;padding:0;justify-content:center}:host([floating]) .trigger .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}}
-.panel{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:16px;width:min(380px,calc(100vw - 32px));box-shadow:0 12px 40px rgb(0 0 0/.22)}
-.panel[hidden]{display:none}
-:host(:not([inline])) .panel{position:fixed;right:16px;bottom:72px;z-index:2147483647;max-height:calc(100vh - 96px);overflow:auto}
-:host([inline]) .panel{width:100%;box-shadow:none}
-:host([inline]) header{display:none}
-@media (max-width:480px){:host(:not([inline])) .panel{left:0;right:0;bottom:0;width:100%;border-radius:16px 16px 0 0;max-height:85vh}}
-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-h2{font:700 17px/1.3 inherit;font-family:inherit;margin:0}
-.close{border:0;background:none;color:var(--muted);font-size:24px;line-height:1;width:40px;height:40px;cursor:pointer;border-radius:8px}
-label{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
-textarea{display:block;width:100%;min-height:110px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--soft);color:var(--ink);font:inherit}
-.page{display:flex;align-items:center;gap:6px;margin:8px 0 0;font-size:13px;color:var(--muted);min-width:0}
-.page span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-.page button{border:0;background:none;color:var(--muted);text-decoration:underline;font:inherit;cursor:pointer;padding:4px}
-.to{font-weight:600;font-size:14px;margin:14px 0 8px}
-.routes{display:grid;gap:8px}
-.routes a{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--soft);color:var(--ink);text-decoration:none;font-weight:600;font-size:15px}
-.routes a.first{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.routes[aria-disabled="true"] a{opacity:.45;pointer-events:none}
-.note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+dialog{border:0;padding:0;background:transparent;max-width:none;max-height:none;color:inherit}
+dialog::backdrop{background:rgb(0 0 0/.35)}
+.card{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:18px;padding:20px;width:min(420px,calc(100vw - 32px));box-shadow:0 16px 48px rgb(0 0 0/.25)}
+dialog[open]{position:fixed;inset:auto 16px 16px auto;margin:0}
+@media (max-width:480px){dialog[open]{inset:auto 0 0 0}.card{width:100vw;border-radius:18px 18px 0 0;max-height:90vh;overflow:auto;padding-bottom:max(20px,env(safe-area-inset-bottom))}}
+:host([inline]) .card{width:100%;box-shadow:none}
+header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+h2{font-size:18px;line-height:1.3;margin:0;flex:1}
+.icon-btn{border:0;background:none;color:var(--muted);font-size:22px;line-height:1;width:40px;height:40px;border-radius:10px;cursor:pointer}
+.icon-btn:hover{background:var(--soft)}
+textarea{display:block;width:100%;min-height:120px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--soft);color:var(--ink)}
+.chip{display:inline-flex;align-items:center;gap:6px;max-width:100%;margin-top:10px;padding:4px 6px 4px 10px;border-radius:999px;background:var(--soft);color:var(--muted);font-size:13px}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip button{border:0;background:none;color:inherit;cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;border-radius:999px}
+.primary{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;margin-top:16px;border:0;border-radius:12px;background:var(--accent);color:var(--accent-ink);font-weight:600;cursor:pointer;text-decoration:none}
+.primary[aria-disabled=true]{opacity:.5;cursor:not-allowed}
+.hint{min-height:1.2em;margin:8px 0 0;font-size:13px;color:var(--muted)}
+.places{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.place{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);text-decoration:none;text-align:left}
+.place:hover{border-color:var(--accent);background:var(--soft)}
+.place .i{font-size:22px;line-height:1;flex:none}
+.place b{display:block;font-size:15px}
+.place small{display:block;color:var(--muted);font-size:13px;margin-top:1px}
+.place.last b::after{content:"  ·  last time";font-weight:400;color:var(--muted);font-size:12px}
+.link{display:inline-block;margin-top:14px;border:0;background:none;padding:4px 0;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:14px}
+.note{font-size:13px;color:var(--muted);margin:14px 0 0}
 .note a{color:inherit}
-.done{font-size:14px;margin:8px 0 0;color:var(--ink)}
+.done{text-align:center;padding:8px 0}
+.done .big{font-size:40px;line-height:1;margin:4px 0 10px}
+.done p{margin:0 0 6px}
 `
 
 const BaseElement = typeof HTMLElement === 'undefined' ? class {} : HTMLElement
+const h = (html) => {
+  const t = document.createElement('template')
+  t.innerHTML = html
+  return t.content
+}
 
+/**
+ * The button, then a dialog in three short steps: what's on your mind → how to send it (each place says what it
+ * needs, the one used last time first; "no account?" helps) → done, you'll hear back there.
+ * Native <dialog>: focus stays inside, Escape closes, screen readers know it's a dialog. Bottom sheet on phones.
+ */
 export class FeedbaiButton extends BaseElement {
   connectedCallback() {
     if (this.shadowRoot) return
-    const root = this.attachShadow({ mode: 'open' })
-    const inline = this.hasAttribute('inline')
-    const id = `fb-${Math.random().toString(36).slice(2, 8)}`
-    root.innerHTML = `<style>${CSS}</style>
-${inline ? '' : `<button class="trigger" type="button" aria-expanded="false" aria-controls="${id}"></button>`}
-<section class="panel" id="${id}" role="${inline ? 'region' : 'dialog'}" aria-labelledby="${id}-t" ${inline ? '' : 'hidden'}>
-  <header><h2 id="${id}-t">Send feedback</h2>${inline ? '' : '<button class="close" type="button" aria-label="Close">×</button>'}</header>
-  <label for="${id}-x">What works, what doesn't?</label>
-  <textarea id="${id}-x" maxlength="4000" placeholder="The play button does nothing on Safari…"></textarea>
-  <p class="page"></p>
-  <p class="to">Send it, publicly, with:</p>
-  <div class="routes" aria-disabled="true"></div>
-  <p class="done" role="status" aria-live="polite"></p>
-  <p class="note">Opens there prefilled: you review it and send it from your account. These places are public. <a href="https://feedbai.internet4000.com/docs/button/" target="_blank" rel="noopener">About feedbai</a></p>
-</section>`
-    const $ = (s) => root.querySelector(s)
-    const panel = $('.panel')
-    const trigger = $('.trigger')
-    const textarea = $('textarea')
-    const routesEl = $('.routes')
-    const pageEl = $('.page')
-    const done = $('.done')
-    let page = this.getAttribute('page') ?? pageAddress(location.href)
+    this.root = this.attachShadow({ mode: 'open' })
+    this.inline = this.hasAttribute('inline')
+    this.text = ''
+    this.page = this.getAttribute('page') ?? pageAddress(location.href)
+    this.root.append(h(`<style>${CSS}</style>`))
+    if (this.inline) {
+      this.card = document.createElement('div')
+      this.card.className = 'card'
+      this.root.append(this.card)
+      this.step('write')
+      return
+    }
+    const trigger = document.createElement('button')
+    trigger.className = 'trigger'
+    trigger.type = 'button'
+    trigger.setAttribute('aria-haspopup', 'dialog')
+    trigger.append(h('<span class="ico" aria-hidden="true">💬</span><span class="lbl"></span>'))
+    trigger.querySelector('.lbl').textContent = this.getAttribute('label') || 'Feedback'
+    this.dialog = document.createElement('dialog')
+    this.dialog.setAttribute('aria-labelledby', 'fb-title')
+    this.card = document.createElement('div')
+    this.card.className = 'card'
+    this.dialog.append(this.card)
+    this.dialog.addEventListener('click', (e) => e.target === this.dialog && this.dialog.close())
+    this.dialog.addEventListener('close', () => trigger.focus())
+    trigger.onclick = () => {
+      this.step('write')
+      this.dialog.showModal()
+    }
+    this.root.append(trigger, this.dialog)
+  }
 
-    const renderPage = () => {
-      pageEl.innerHTML = page ? '<span></span><button type="button">don\'t include</button>' : ''
-      if (page) {
-        pageEl.querySelector('span').textContent = `About: ${page}`
-        pageEl.querySelector('button').onclick = () => { page = ''; renderPage(); render() }
+  places() {
+    const list = routes({ text: this.text, page: this.page, project: this.getAttribute('project'), matrix: this.getAttribute('matrix'), bluesky: this.getAttribute('bluesky'), bot: this.getAttribute('bot') || undefined })
+      .filter((r) => r.id !== 'account' || this.hasAttribute('records'))
+      .sort((a, b) => ORDER.indexOf(a.id) - ORDER.indexOf(b.id))
+    const previous = last()
+    return previous ? [...list.filter((r) => r.id === previous), ...list.filter((r) => r.id !== previous)] : list
+  }
+
+  header(title, back) {
+    return `<header>${back ? '<button type="button" class="icon-btn back" aria-label="Back">‹</button>' : ''}<h2 id="fb-title">${title}</h2>${this.inline ? '' : '<button type="button" class="icon-btn close" aria-label="Close">×</button>'}</header>`
+  }
+
+  step(name, data) {
+    const card = this.card
+    card.replaceChildren()
+    if (name === 'write') {
+      card.append(h(`${this.header("What's on your mind?")}
+        <label for="fb-text" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Your feedback</label>
+        <textarea id="fb-text" maxlength="4000" placeholder="What works, what doesn't, what you'd like…"></textarea>
+        <div class="page"></div>
+        <button type="button" class="primary next" aria-disabled="true">Next</button>
+        <p class="hint" role="status" aria-live="polite"></p>`))
+      const textarea = card.querySelector('textarea')
+      const next = card.querySelector('.next')
+      textarea.value = this.text
+      const update = () => next.setAttribute('aria-disabled', String(!textarea.value.trim()))
+      textarea.oninput = () => {
+        this.text = textarea.value
+        card.querySelector('.hint').textContent = ''
+        update()
       }
+      update()
+      const page = card.querySelector('.page')
+      if (this.page) {
+        page.append(h('<span class="chip"><span></span><button type="button" aria-label="Don\'t include the page address">×</button></span>'))
+        page.querySelector('span span').textContent = `About ${this.page.replace(/^https?:\/\//, '')}`
+        page.querySelector('button').onclick = () => {
+          this.page = ''
+          page.replaceChildren()
+        }
+      }
+      next.onclick = () => (textarea.value.trim() ? this.step('choose') : (card.querySelector('.hint').textContent = 'Write something first.'))
+      setTimeout(() => textarea.focus())
+    } else if (name === 'choose') {
+      card.append(h(`${this.header('How do you want to send it?', true)}<ul class="places"></ul>
+        <button type="button" class="link none">I don't have any of these accounts</button>
+        <p class="note">It opens there, written for you: you check it and send it yourself. These places are public.</p>`))
+      const previous = last()
+      for (const r of this.places()) {
+        const place = PLACES[r.id]
+        const li = document.createElement('li')
+        const a = document.createElement('a')
+        a.className = `place${r.id === previous ? ' last' : ''}`
+        a.href = r.href
+        a.target = '_blank'
+        a.rel = 'noopener noreferrer'
+        a.append(h('<span class="i" aria-hidden="true"></span><span><b></b><small></small></span>'))
+        a.querySelector('.i').textContent = place.icon
+        a.querySelector('b').textContent = place.title
+        a.querySelector('small').textContent = place.hint
+        a.onclick = async () => {
+          remember(r.id)
+          let copied = false
+          if (r.copy) copied = await navigator.clipboard?.writeText(r.copy).then(() => true, () => false)
+          this.step('done', { place: r, copied })
+        }
+        li.append(a)
+        card.querySelector('.places').append(li)
+      }
+      card.querySelector('.back').onclick = () => this.step('write')
+      card.querySelector('.none').onclick = () => this.step('none')
+      setTimeout(() => card.querySelector('.place')?.focus())
+    } else if (name === 'none') {
+      card.append(h(`${this.header('No account? Easy.', true)}
+        <p>The quickest: a free <b>Bluesky</b> account, about two minutes. Then come back and choose "Post on Bluesky".</p>
+        <a class="primary" href="https://bsky.app/" target="_blank" rel="noopener noreferrer">Create a Bluesky account</a>
+        <p class="note">Your feedback stays here while you do it.</p>`))
+      card.querySelector('.back').onclick = () => this.step('choose')
+    } else if (name === 'done') {
+      const { place, copied } = data
+      const where = PLACES[place.id].title.toLowerCase()
+      const text = place.copy
+        ? copied
+          ? "It's copied: paste it in the room that just opened, and send."
+          : 'Copy this into the room that just opened, and send:'
+        : `Finish in the tab that just opened (${where}): check it, and send.`
+      card.append(h(`${this.header('Almost done')}<div class="done"><div class="big" aria-hidden="true">🙌</div><p class="what"></p><p class="note">You'll get a reply there when it's done. Thank you!</p></div><button type="button" class="primary finish">Close</button>`))
+      card.querySelector('.what').textContent = text
+      if (place.copy && !copied) {
+        const pre = document.createElement('textarea')
+        pre.readOnly = true
+        pre.value = place.copy
+        card.querySelector('.done').append(pre)
+      }
+      card.querySelector('.finish').onclick = () => {
+        this.text = ''
+        if (this.inline) this.step('write')
+        else this.dialog.close()
+      }
+      if (this.inline) card.querySelector('.finish').textContent = 'Send another'
     }
-    const render = () => {
-      const text = textarea.value
-      routesEl.setAttribute('aria-disabled', String(!text.trim()))
-      routesEl.replaceChildren(
-        ...routes({ text, page, project: this.getAttribute('project'), matrix: this.getAttribute('matrix'), bluesky: this.getAttribute('bluesky'), bot: this.getAttribute('bot') || undefined }).map((r, i) => {
-          const a = document.createElement('a')
-          a.href = r.href
-          a.target = '_blank'
-          a.rel = 'noopener noreferrer'
-          a.textContent = r.label
-          if (i === 0) a.className = 'first'
-          a.onclick = async (e) => {
-            if (!textarea.value.trim()) return e.preventDefault()
-            if (r.copy) {
-              try { await navigator.clipboard.writeText(r.copy); done.textContent = 'Copied: paste it in the room that opens.' } catch { done.textContent = `Copy this into the room: ${r.copy}` }
-            } else done.textContent = 'Opened in a new tab: send it there. Thank you!'
-          }
-          return a
-        }),
-      )
-    }
-    const open = (show) => {
-      if (inline) return
-      panel.hidden = !show
-      trigger.setAttribute('aria-expanded', String(show))
-      if (show) textarea.focus()
-      else trigger.focus()
-    }
-    if (trigger) {
-      const ico = document.createElement('span')
-      ico.className = 'ico'
-      ico.setAttribute('aria-hidden', 'true')
-      ico.textContent = '💬'
-      const lbl = document.createElement('span')
-      lbl.className = 'lbl'
-      lbl.textContent = this.getAttribute('label') || 'Feedback'
-      trigger.replaceChildren(ico, lbl)
-      trigger.onclick = () => open(panel.hidden)
-      $('.close').onclick = () => open(false)
-      root.addEventListener('keydown', (e) => e.key === 'Escape' && !panel.hidden && open(false))
-    }
-    textarea.addEventListener('input', render)
-    renderPage()
-    render()
+    card.querySelector('.close')?.addEventListener('click', () => this.dialog.close())
   }
 }
 

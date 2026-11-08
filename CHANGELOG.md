@@ -4,6 +4,10 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
+### Changed
+- **The Feedback button is a guided dialog:** what's on your mind → how do you want to send it (each place says what account it needs, last time's first, and "no account?" helps) → done, you'll hear back there. Native dialog (focus, Escape, screen readers), bottom sheet on phones. "Keep it in my Bluesky account" is now opt-in (`data-records`).
+- **The home page is shorter:** the pitch, the loop, three steps, three questions.
+
 ### Added
 - **No secrets for a project's agent in GitHub Actions:** the read and act jobs prove to the hub which repository they are (OIDC, `id-token: write`), and the hub's bot reads the room and adds ✅ for them, in rooms whose topic names the repository. `.github/workflows/feedbai-agent.yml` needs no secrets anymore.
 - `feedbai triage`: a model proposes what to file and ✅ (no tools, no secrets, checked plan), plain code acts (`--apply`). Any OpenAI-compatible model (OpenRouter, local, a provider); without one, nothing is filed. Follows the project's `.feedbai/guidelines.md` (#63).
