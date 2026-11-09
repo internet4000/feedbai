@@ -13,7 +13,7 @@
  * label (button text), inline (show the form itself, no button), records (also offer "keep it in my Bluesky
  * account", experimental). Docs: https://feedbai.internet4000.com/docs/button/
  */
-export const VERSION = '0.2.0'
+export const VERSION = '0.3.0'
 const DEFAULT_BOT = '@feedbai:matrix.org'
 const BLUESKY_LIMIT = 300 // graphemes in a Bluesky post
 const AUTH = 'https://auth.feedbai.internet4000.com' // sign-in page, on its own origin
@@ -152,20 +152,24 @@ export class FeedbaiButton extends BaseElement {
     if (this.inline) {
       this.card = document.createElement('div')
       this.card.className = 'card'
+      this.card.part = 'card'
       this.root.append(this.card)
       this.step('write')
       return
     }
     const trigger = document.createElement('button')
     trigger.className = 'trigger'
+    trigger.part = 'button'
     trigger.type = 'button'
     trigger.setAttribute('aria-haspopup', 'dialog')
     trigger.append(h('<span class="ico" aria-hidden="true">💬</span><span class="lbl"></span>'))
     trigger.querySelector('.lbl').textContent = this.getAttribute('label') || 'Feedback'
     this.dialog = document.createElement('dialog')
+    this.dialog.part = 'dialog'
     this.dialog.setAttribute('aria-labelledby', 'fb-title')
     this.card = document.createElement('div')
     this.card.className = 'card'
+    this.card.part = 'card'
     this.dialog.append(this.card)
     this.dialog.addEventListener('click', (e) => e.target === this.dialog && this.dialog.close())
     this.dialog.addEventListener('close', () => trigger.focus())
@@ -194,9 +198,9 @@ export class FeedbaiButton extends BaseElement {
     if (name === 'write') {
       card.append(h(`${this.header("What's on your mind?")}
         <label for="fb-text" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Your feedback</label>
-        <textarea id="fb-text" maxlength="4000" placeholder="What works, what doesn't, what you'd like…"></textarea>
+        <textarea part="textarea" id="fb-text" maxlength="4000" placeholder="What works, what doesn't, what you'd like…"></textarea>
         <div class="page"></div>
-        <button type="button" class="primary next" aria-disabled="true">Next</button>
+        <button type="button" part="primary" class="primary next" aria-disabled="true">Next</button>
         <p class="hint" role="status" aria-live="polite"></p>`))
       const textarea = card.querySelector('textarea')
       const next = card.querySelector('.next')
@@ -229,6 +233,7 @@ export class FeedbaiButton extends BaseElement {
         const li = document.createElement('li')
         const a = document.createElement('a')
         a.className = `place${r.id === previous ? ' last' : ''}`
+        a.part = 'place'
         a.href = r.href
         a.target = '_blank'
         a.rel = 'noopener noreferrer'
@@ -251,7 +256,7 @@ export class FeedbaiButton extends BaseElement {
     } else if (name === 'none') {
       card.append(h(`${this.header('No account? Easy.', true)}
         <p>The quickest: a free <b>Bluesky</b> account, about two minutes. Then come back and choose "Post on Bluesky".</p>
-        <a class="primary" href="https://bsky.app/" target="_blank" rel="noopener noreferrer">Create a Bluesky account</a>
+        <a part="primary" class="primary" href="https://bsky.app/" target="_blank" rel="noopener noreferrer">Create a Bluesky account</a>
         <p class="note">Your feedback stays here while you do it.</p>`))
       card.querySelector('.back').onclick = () => this.step('choose')
     } else if (name === 'done') {
@@ -262,7 +267,7 @@ export class FeedbaiButton extends BaseElement {
           ? "It's copied: paste it in the room that just opened, and send."
           : 'Copy this into the room that just opened, and send:'
         : `Finish in the tab that just opened (${where}): check it, and send.`
-      card.append(h(`${this.header('Almost done')}<div class="done"><div class="big" aria-hidden="true">🙌</div><p class="what"></p><p class="note">You'll get a reply there when it's done. Thank you!</p></div><button type="button" class="primary finish">Close</button>`))
+      card.append(h(`${this.header('Almost done')}<div class="done"><div class="big" aria-hidden="true">🙌</div><p class="what"></p><p class="note">You'll get a reply there when it's done. Thank you!</p></div><button type="button" part="primary" class="primary finish">Close</button>`))
       card.querySelector('.what').textContent = text
       if (place.copy && !copied) {
         const pre = document.createElement('textarea')

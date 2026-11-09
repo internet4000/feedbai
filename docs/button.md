@@ -64,6 +64,39 @@ curl -s https://cdn.jsdelivr.net/npm/@internet4000/feedbai@0.5.0/site/public/emb
   data-project="https://github.com/you/yourproject"></script>
 ```
 
+## Make it yours
+
+The button keeps its own styles apart from your page, so your CSS can't break it by accident. To match your site, set its colours on the element (they apply in light and dark mode, unless you set them per mode yourself):
+
+```css
+feedbai-button {
+  --accent: #6b4eff;    /* the button and the main action */
+  --accent-ink: #fff;   /* text on the accent */
+  --bg: #fff;           /* the dialog */
+  --ink: #1a1a1a;       /* text */
+  --muted: #666;        /* secondary text */
+  --line: #e5e5e5;      /* borders */
+  --soft: #f5f5f5;      /* the text box, hovers */
+  font-family: inherit; /* use your page's font */
+}
+```
+
+For more, style its named parts with `::part()`:
+
+| part | |
+| --- | --- |
+| `button` | the Feedback button |
+| `dialog` | the dialog |
+| `card` | the dialog's content (or the form, with `inline`) |
+| `textarea` | the text box |
+| `primary` | the main action of each step (Next, Close…) |
+| `place` | each way to send it (Matrix, Bluesky, GitHub) |
+
+```css
+feedbai-button::part(button) { border-radius: 4px; box-shadow: none; }
+feedbai-button::part(primary) { border-radius: 4px; }
+```
+
 ## Without a script
 
 Link to the same form on our site, for READMEs, emails, or sites that can't add scripts:
