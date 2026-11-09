@@ -51,6 +51,13 @@ const site = async (request, env, url) => {
   }
   const response = await env.ASSETS.fetch(request)
   if (response.status === 404) return notFound(request, env)
+  // The Feedback button is loaded by other sites as a module script: browsers need CORS for that
+  if (!onAuth && url.pathname === '/embed.js') {
+    const shared = new Response(response.body, response)
+    shared.headers.set('access-control-allow-origin', '*')
+    shared.headers.set('cross-origin-resource-policy', 'cross-origin')
+    return shared
+  }
   if (!onAuth) return response
   const secured = new Response(response.body, response)
   for (const [name, value] of Object.entries(AUTH_HEADERS)) secured.headers.set(name, value)

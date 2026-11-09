@@ -7,7 +7,12 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 ### Changed
 - **Hear your community. Act on it.** The home page is plain and short: one card that says what feedbai does for everyone, the projects listening now, three steps to set one up. Agents are one way to act on feedback, not the pitch.
 
+### Fixed
+- **The Feedback button loads on other sites:** `embed.js` is now sent with CORS headers; browsers refused it as a module script from another origin, so it only worked on our own site.
+
 ### Added
+- **Load the button from jsDelivr or unpkg**, a fixed version with its hash (`integrity`): `embed.js` is in the npm package.
+- **Style the Feedback button to match your site:** its colours are CSS variables you set on the element (`--accent`, `--bg`, `--ink`…, light and dark), it can use your page's font, and its parts are named for `::part()` (`button`, `dialog`, `card`, `textarea`, `primary`, `place`). Docs: Feedback button → Make it yours.
 - **The loop, live, on the home page:** projects that opt in (`"listed": true` in their public `feedbai.config.json`, with the GitHub App) show where they listen and how many feedback issues were filed and fixed in the last 30 days, with the hub's health. Numbers and links only, never what people wrote; nothing stored (`GET /v1/ecosystem`, read from GitHub, cached 10 minutes).
 
 ## 0.4.0 — 2026-11-08

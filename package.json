@@ -26,7 +26,8 @@
     "schemas",
     "skills",
     "lexicons",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "site/public/embed.js"
   ],
   "scripts": {
     "test": "node --test"
