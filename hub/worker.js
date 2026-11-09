@@ -87,7 +87,7 @@ export default {
       return new Response(JSON.stringify({ error: error.message }), { status: error.status ?? 401, headers: { 'content-type': 'application/json' } })
     }
     // An invite-only hub (FEEDBAI_PROJECTS, hub/allow.js) answers only its listed repositories
-    if (identity && !allows(env, identity.repository)) return new Response(JSON.stringify({ error: INVITE_ONLY }), { status: 403, headers: { 'content-type': 'application/json' } })
+    if (identity && !allows(env, identity.repository)) return new Response(JSON.stringify({ error: `${identity.repository} is not listed on this hub (FEEDBAI_PROJECTS). ${INVITE_ONLY}` }), { status: 403, headers: { 'content-type': 'application/json' } })
     if (act) return act({ request, env, identity })
     // Read on a repository's behalf: never cached or shared
     if (identity) {

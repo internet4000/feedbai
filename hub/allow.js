@@ -9,6 +9,21 @@ import { topicNamesRepo } from '../src/providers/matrix.js'
 export const INVITE_ONLY =
   'This feedbai hub is invite-only for now. Read with your own account (feedbai login …), or run your own hub: https://feedbai.internet4000.com/docs/hub/'
 
+/**
+ * Why the bot declined (or left) a public room on an invite-only hub, said in the room itself: which room,
+ * the topic it read, the projects it accepts, and the one fix. Room admins should not have to ask.
+ */
+export const notListedReason = (env, { room, topic = '' }) => {
+  const repos = (listed(env) ?? []).map((repo) => `github.com/${repo}`)
+  const seen = topic.trim() ? `"${topic.trim().slice(0, 200)}"` : 'empty'
+  return [
+    `feedbai hub: invite-only. It joins ${room} only if the room topic names a listed project (${repos.join(', ') || 'none listed'}).`,
+    `Topic now: ${seen}.`,
+    `Fix: add your project's github.com/owner/name to the room topic, then invite again.`,
+    `Project not listed? Ask in #feedbai:matrix.org, read with your own account (feedbai login matrix), or run your own hub: https://feedbai.internet4000.com/docs/hub/`,
+  ].join(' ')
+}
+
 /** The listed repositories (lowercase), or null when the hub is open to all. */
 export const listed = (env = {}) =>
   typeof env.FEEDBAI_PROJECTS === 'string'

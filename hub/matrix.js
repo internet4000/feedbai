@@ -1,6 +1,6 @@
 import { request } from '../src/http.js'
 import { parseRoom, topicNamesRepo } from '../src/providers/matrix.js'
-import { INVITE_ONLY } from './allow.js'
+import { notListedReason } from './allow.js'
 
 /**
  * The hub's Matrix bot is shared by every project, so its token must be worth little if it leaks:
@@ -18,39 +18,53 @@ const state = (homeserver, roomId, type, auth) =>
 
 /** From the invite's stripped state (no need to join to read it). */
 /** Shown by Matrix clients in the room ("feedbai rejected the invite: …"), so a decline is never silent. */
-export const DECLINE_REASON =
-  'The shared feedbai bot only joins public rooms, so its shared token never sees private conversations. Make the room public (Room settings → Security & Privacy → Public), then invite it again; or use your own bot: https://feedbai.internet4000.com/docs/on-your-own/'
-const LEAVE_REASON = 'This room is no longer public; the shared feedbai bot only stays in public rooms. Use your own bot for private rooms: https://feedbai.internet4000.com/docs/on-your-own/'
+export const declineReason = (room, rule) =>
+  `feedbai hub: the shared bot only joins public rooms, so its shared token never sees private conversations; ${room} is "${rule || 'unknown'}". Fix: make the room public (Room settings → Security & Privacy → Public), then invite it again; or use your own bot: https://feedbai.internet4000.com/docs/on-your-own/`
+const leaveReason = (room, rule) =>
+  `feedbai hub: ${room} is no longer public ("${rule || 'unknown'}"); the shared bot only stays in public rooms. Make it public and invite it again, or use your own bot for private rooms: https://feedbai.internet4000.com/docs/on-your-own/`
 
 const stripped = (invite, type) => invite?.invite_state?.events?.find((e) => e.type === type)?.content ?? {}
-const invitedPublic = (invite) => stripped(invite, 'm.room.join_rules').join_rule === 'public'
+/** How to name the room to its admins: its alias when it has one. */
+const roomName = (roomId, alias) => alias || roomId
 
 /**
  * Join the public rooms the bot was invited to; decline the others, and leave joined rooms that are no
  * longer public. With `topicOk` (an invite-only hub, hub/allow.js), also only rooms whose topic it accepts.
- * Returns { joined, declined, left } room ids.
+ * `env` (with FEEDBAI_PROJECTS) words the invite-only reasons. Returns { joined, declined, left } room ids, and
+ * `why`: one line per declined or left room, for the hub's log.
  */
-export const acceptInvites = async ({ homeserver, token, fetchImpl, topicOk = null }) => {
+export const acceptInvites = async ({ homeserver, token, fetchImpl, topicOk = null, env = {} }) => {
   const auth = { token, fetchImpl }
   const filter = JSON.stringify({ room: { timeline: { limit: 0 }, state: { lazy_load_members: true } }, presence: { types: [] } })
   const sync = await request(api(homeserver, `/sync?timeout=0&filter=${encodeURIComponent(filter)}`), auth)
   const joined = []
   const declined = []
+  const why = []
   for (const [roomId, invite] of Object.entries(sync.rooms?.invite ?? {})) {
     const room = encodeURIComponent(roomId)
-    const isPublic = invitedPublic(invite)
-    const ok = isPublic && (!topicOk || topicOk(stripped(invite, 'm.room.topic').topic ?? ''))
-    await request(api(homeserver, ok ? `/join/${room}` : `/rooms/${room}/leave`), { method: 'POST', body: ok ? {} : { reason: isPublic ? INVITE_ONLY : DECLINE_REASON }, ...auth })
+    const name = roomName(roomId, stripped(invite, 'm.room.canonical_alias').alias)
+    const rule = stripped(invite, 'm.room.join_rules').join_rule
+    const topic = stripped(invite, 'm.room.topic').topic ?? ''
+    const isPublic = rule === 'public'
+    const ok = isPublic && (!topicOk || topicOk(topic))
+    const reason = ok ? null : isPublic ? notListedReason(env, { room: name, topic }) : declineReason(name, rule)
+    await request(api(homeserver, ok ? `/join/${room}` : `/rooms/${room}/leave`), { method: 'POST', body: ok ? {} : { reason }, ...auth })
     ;(ok ? joined : declined).push(roomId)
+    if (reason) why.push(`declined ${name === roomId ? name : `${name} (${roomId})`}: ${reason}`)
   }
   const left = []
   for (const roomId of Object.keys(sync.rooms?.join ?? {})) {
-    const isPublic = (await state(homeserver, roomId, 'm.room.join_rules', auth)).join_rule === 'public'
-    if (isPublic && (!topicOk || topicOk((await state(homeserver, roomId, 'm.room.topic', auth)).topic ?? ''))) continue
-    await request(api(homeserver, `/rooms/${encodeURIComponent(roomId)}/leave`), { method: 'POST', body: { reason: isPublic ? INVITE_ONLY : LEAVE_REASON }, ...auth })
+    const rule = (await state(homeserver, roomId, 'm.room.join_rules', auth)).join_rule
+    const isPublic = rule === 'public'
+    const topic = isPublic && topicOk ? ((await state(homeserver, roomId, 'm.room.topic', auth)).topic ?? '') : ''
+    if (isPublic && (!topicOk || topicOk(topic))) continue
+    const name = roomName(roomId, (await state(homeserver, roomId, 'm.room.canonical_alias', auth)).alias)
+    const reason = isPublic ? notListedReason(env, { room: name, topic }) : leaveReason(name, rule)
+    await request(api(homeserver, `/rooms/${encodeURIComponent(roomId)}/leave`), { method: 'POST', body: { reason }, ...auth })
     left.push(roomId)
+    why.push(`left ${name === roomId ? name : `${name} (${roomId})`}: ${reason}`)
   }
-  return { joined, declined, left }
+  return { joined, declined, left, why }
 }
 
 /**
