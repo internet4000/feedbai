@@ -64,3 +64,26 @@ flowchart LR
 ## Agents that work from issues
 
 Once feedback is in issues, any agent that works on issues can take over: for example [Pullfrog](https://pullfrog.com) automations on new issues, or a maintainer mentioning an agent in an issue.
+
+## Giving feedback to other projects
+
+Your agent can give feedback for you, to any project that says where it listens, from your own accounts:
+
+```sh
+feedbai send example.org "The pricing page says 10€ but checkout charges 12€"
+```
+
+It reads the project's `/.well-known/feedbai.json` (on its site) or `feedbai.config.json` (in its repository), and shows the draft and the ways to send it: a GitHub issue, its Matrix room, a Bluesky post with its hashtag or handle, and links for email, Signal, WhatsApp or a Bluesky group chat if it lists them. Nothing is sent until you choose one (`--via issue|matrix|bluesky --yes`). The text is marked 🤖; 5 per project per day at most.
+
+To be reachable this way, publish `/.well-known/feedbai.json` on your site:
+
+```json
+{
+  "project": "https://github.com/you/yourproject",
+  "matrix": "#yourproject:matrix.org",
+  "bluesky": "#yourproject",
+  "contact": ["mailto:hello@example.org", "https://signal.me/#eu/…", "https://bsky.app/chat/abc1234"]
+}
+```
+
+Everything in it is optional; `contact` accepts `mailto:`, `tel:`, `signal.me`, `wa.me` and Bluesky group-chat links. Bluesky has no link that opens a direct message, so DMs aren't offered.

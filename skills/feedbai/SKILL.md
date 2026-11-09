@@ -1,6 +1,6 @@
 ---
 name: feedbai
-description: Read user feedback for the current project from its channels (Matrix rooms, Bluesky searches/mentions/threads, GitHub Discussions) with the `feedbai` CLI, set those channels up with the user, listen during a session, triage feedback into GitHub issues, and act on it (fixes, PRs). Use when asked to check, read, set up, listen to, triage or act on user feedback, community chat, mentions, or "what users are saying", or when the user runs `feedbai`.
+description: Read user feedback for the current project from its channels (Matrix rooms, Bluesky searches/mentions/threads, GitHub Discussions) with the `feedbai` CLI, set those channels up with the user, listen during a session, triage feedback into GitHub issues, and act on it (fixes, PRs). Use when asked to check, read, set up, listen to, triage or act on user feedback, community chat, mentions, or "what users are saying", or when the user runs `feedbai`. Also to give feedback to another project (a site, a library, a tool): when asked to, or when you hit a real problem in a project that isn't yours.
 ---
 
 # feedbai — user feedback for agents
@@ -42,6 +42,16 @@ Lines starting with `> ⚠` under a source (`notices` in JSON) mean feedback is 
 5. Act on what the user or a maintainer asks (a clear maintainer request in the room is the go-ahead): a branch with the fix/feature and a PR "Fixes #N" that links the feedback `url`s.
 6. Report back where the request came from: `feedbai post <item url> <text>` replies in that thread (marked 🤖) — what was done, with the PR/issue link.
 
+## Giving feedback to another project
+
+When the person asks you to ("give feedback to example.org: …"), or when you hit a real problem in a project that isn't yours (a bug in a library, wrong docs, a broken site), **propose** feedback to it:
+
+1. `feedbai send <site | owner/repo> "what happened, the steps, what you expected"` shows the draft and the ways that project listens. Nothing is sent.
+2. Show the person the draft and the ways. Ask which, if any. Not sure it's a real problem? Don't propose it.
+3. Only after a yes: run the `send:` line they chose (`--via issue|matrix|bluesky --yes`), from their own accounts. Or give them the `open:` link to send it themselves (email, Signal… are links only).
+
+Never send without their yes, never more than once for the same problem; feedbai caps sends at 5 per project per day. The text is marked 🤖.
+
 ## Commands
 
 ```sh
@@ -54,6 +64,7 @@ feedbai remove <source-id>
 feedbai post <item url> <text>         # reply in that thread, marked 🤖 (Matrix)
 feedbai react <item url> [emoji]       # ✅ by default: seen, on it (Matrix)
 feedbai file <item url…> --title "…" --note "…"   # file chosen messages as one issue (or add them to theirs)
+feedbai send <site | owner/repo> "…"      # feedback to another project: draft + ways; sends only with --via … --yes
 feedbai help
 ```
 
