@@ -1,145 +1,196 @@
 ---
 /**
- * The home page, kept short on purpose: the pitch in one line, the loop beside it, three steps, three questions.
+ * The home page: one card that says what feedbai does for everyone, the projects listening (live), three
+ * steps to set one up. Plain and quiet on purpose (like 4000.radio, joblist.today); the docs stay in Starlight.
  */
-import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro'
-
 const REPO = 'https://github.com/internet4000/feedbai'
 const BOT = '@feedbai:matrix.org'
-const SNIPPET = '<script type="module" src="https://feedbai.internet4000.com/embed.js" data-project="https://github.com/you/repo" data-bluesky="#yourproject"></script>'
 const INSTALL = 'npm i -g @internet4000/feedbai && feedbai'
-
-// The loop, shown beside the headline
-const loop = `<ol class="loop" aria-label="How it works">
-  <li><span class="n">1</span><div><b>Your community speaks</b><small>In your chat, on Bluesky, with the Feedback button on your site.</small></div></li>
-  <li><span class="n">2</span><div><b>feedbai gathers it</b><small>One stream, from everywhere, as GitHub issues and in your terminal.</small></div></li>
-  <li><span class="n">3</span><div><b>Your agents act on it</b><small>Claude Code, Codex…: triage, fix, open the pull request.</small></div></li>
-  <li><span class="n">4</span><div><b>Everyone hears back</b><small>A reply where they spoke: it's fixed.</small></div></li>
-</ol>`
-
-const faq = [
-  ['Does it cost anything?', 'No. feedbai is free and open source (GPL-3.0).'],
-  ['Where does the feedback go? Do you keep it?', 'We keep nothing. People write from their own accounts, in public places they chose, and feedbai files it in your repository. <a href="/docs/privacy/">Privacy notes</a>.'],
-  ['Do I need an AI agent?', 'No. Feedback becomes GitHub issues you can handle yourself. Agents make the loop faster: they triage, fix and reply.'],
-]
+const SNIPPET = '<script type="module" src="https://feedbai.internet4000.com/embed.js" data-project="https://github.com/you/repo"></script>'
+const title = 'feedbai: hear your community, act on it'
+const description = 'feedbai gathers what people say about your project, in your chat, on Bluesky and on your site, into your issues, so you can act on it, and answers them back. Free, open source, nothing stored.'
 ---
 
-<StarlightPage
-  frontmatter={{
-    title: 'Hear your community. Let your agents act on it.',
-    description: 'feedbai gathers feedback wherever people talk about your project, turns it into work for you and your AI agents, and answers back. Open, decentralized, nothing stored.',
-    template: 'splash',
-    hero: {
-      title: 'Hear your community.<br>Let your agents act on it.',
-      tagline: 'feedbai gathers what people say about your project, wherever they say it, and turns it into work for you and your AI agents. Then it answers them back.',
-      image: { html: loop },
-      actions: [
-        { text: 'Get started', link: '#start', icon: 'right-arrow' },
-        { text: 'Read the docs', link: '/docs/', variant: 'minimal' },
-      ],
-    },
-  }}
->
-  <div class="not-content home">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href="https://feedbai.internet4000.com/" />
+    <script type="module" src="/embed.js" data-project={REPO} data-matrix="#feedbai:matrix.org" data-bluesky="#feedbai"></script>
+  </head>
+  <body>
+    <header class="bar">
+      <a class="brand" href="/">feedbai</a>
+      <nav>
+        <a href="/docs/">Docs</a>
+        <a href={REPO}>Source</a>
+      </nav>
+    </header>
 
-    <h2 id="start">Get started</h2>
-    <p class="sub">About two minutes.</p>
-    <ol class="steps">
-      <li>
-        <p><b>Set up your project.</b> In its folder, run:</p>
-        <div class="copy"><code>{INSTALL}</code><button type="button" data-copy={INSTALL}>Copy</button></div>
-        <p class="note">It finds where your community talks and writes <code>feedbai.config.json</code>: commit it.</p>
-      </li>
-      <li>
-        <p><b>Listen to your chat.</b> Invite the bot to your room, and install the GitHub App.</p>
-        <div class="copy"><code>{BOT}</code><button type="button" data-copy={BOT}>Copy</button></div>
-        <a class="btn ghost" href="https://github.com/apps/feedbai">Install the GitHub App</a>
-      </li>
-      <li>
-        <p><b>Add a Feedback button</b> to your site:</p>
-        <div class="copy"><code>{SNIPPET}</code><button type="button" data-copy={SNIPPET}>Copy</button></div>
-        <p class="note">Try it, bottom right. <a href="/docs/button/">Options</a></p>
-      </li>
-    </ol>
+    <main>
+      <section class="card intro">
+        <h1>Hear your community. Act on it.</h1>
+        <ul>
+          <li>People say what they think where they already are: your chat, Bluesky, a button on your site.</li>
+          <li>feedbai gathers it into your issues, so you (and your agents, if you use them) fix what matters.</li>
+          <li>Everyone hears back where they spoke, when it's fixed.</li>
+        </ul>
+        <p class="small">Free and open source. No account with us; we keep nothing.</p>
+        <p class="actions"><a href="#start"><b>Set up your project</b></a> <a href="/feedback/">Give feedback to a project</a></p>
+      </section>
 
-    <p class="sub other">Other setups: <a href="/docs/agents/">with your AI agent</a> · <a href="/docs/on-your-own/">without our servers</a> · <a href="/docs/hub/">your own hub</a>. Giving feedback on a project? <a href="/feedback/">Here's how</a>.</p>
+      <section aria-labelledby="live-title">
+        <div class="head">
+          <h2 id="live-title">Listening now <small>last 30 days</small></h2>
+          <a class="hub" href="/v1/status" data-hub><span class="dot" aria-hidden="true"></span><span data-hub-text>Hub</span></a>
+        </div>
+        <ul class="rows" data-projects aria-live="polite">
+          <li class="row muted">Loading…</li>
+        </ul>
+        <p class="small">Numbers and links only: what people wrote stays where they wrote it. Your project here? Add <code>"listed": true</code> to its <code>feedbai.config.json</code>.</p>
+      </section>
 
-    <h2>Questions</h2>
-    <div class="faqs">
-      {faq.map(([q, a]) => <details class="faq"><summary>{q}</summary><div set:html={a} /></details>)}
-    </div>
-    <p class="more"><a href={REPO}>Source code</a> · <a href="/docs/">Docs</a> · <a href="/docs/architecture/">Where it's going</a></p>
-  </div>
-</StarlightPage>
+      <section aria-labelledby="start">
+        <div class="head"><h2 id="start">Set up your project</h2><a href="/docs/getting-started/">Guide</a></div>
+        <ol class="rows steps">
+          <li class="row">
+            <span class="n">1</span>
+            <div><b>Find where your community talks.</b> In your project's folder: <span class="copy"><code>{INSTALL}</code><button type="button" data-copy={INSTALL}>Copy</button></span></div>
+          </li>
+          <li class="row">
+            <span class="n">2</span>
+            <div><b>Let it listen.</b> Invite the bot to your chat room, and <a href="https://github.com/apps/feedbai">install the GitHub App</a>. <span class="copy"><code>{BOT}</code><button type="button" data-copy={BOT}>Copy</button></span></div>
+          </li>
+          <li class="row">
+            <span class="n">3</span>
+            <div><b>Add a Feedback button</b> to your site, like the one at the bottom right. <a href="/docs/button/">Options</a> <span class="copy"><code>{SNIPPET}</code><button type="button" data-copy={SNIPPET}>Copy</button></span></div>
+          </li>
+        </ol>
+        <p class="small">Other ways: <a href="/docs/agents/">with your AI agent</a> · <a href="/docs/on-your-own/">without our servers</a> · <a href="/docs/hub/">your own hub</a></p>
+      </section>
+    </main>
 
-<script>
-  document.addEventListener('click', async (e) => {
-    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-copy]')
-    if (!b) return
-    try {
-      await navigator.clipboard.writeText(b.dataset.copy ?? '')
-      b.textContent = 'Copied'
-      setTimeout(() => (b.textContent = 'Copy'), 1500)
-    } catch {}
-  })
-</script>
+    <footer class="bar">
+      <span>feedbai, by <a href="https://github.com/internet4000">internet4000</a></span>
+      <nav>
+        <a href="/docs/privacy/">Privacy</a>
+        <a href="/docs/architecture/">Where it's going</a>
+      </nav>
+    </footer>
 
-<style is:global>
-  [data-has-hero] { --sl-content-width: 68rem; }
-  [data-has-hero] .hero { padding-block: 1.5rem 0.5rem; }
-  [data-has-hero] .hero h1 { font-size: clamp(2.1rem, 4.2vw, 3rem); line-height: 1.05; letter-spacing: -0.025em; }
-  [data-has-hero] .hero .tagline { font-size: clamp(1.05rem, 2vw, 1.25rem); }
-  [data-has-hero] .hero > .hero-html { order: 2; width: 100%; max-width: 30rem; }
-  .loop { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; width: 100%; text-align: start; position: relative; }
-  .loop li { position: relative; display: flex; gap: 0.85rem; align-items: flex-start; padding: 0 0 1.1rem; color: var(--sl-color-white); font-size: var(--sl-text-base); }
-  .loop li:not(:last-child)::after { content: ''; position: absolute; left: 0.95rem; top: 2.1rem; bottom: 0.25rem; width: 2px; background: var(--sl-color-hairline); }
-  .loop li:last-child { padding-bottom: 0; }
-  .loop .n { flex: none; display: inline-grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: var(--sl-color-accent); color: var(--sl-color-black); font-weight: 700; font-size: var(--sl-text-sm); }
-  .loop li:last-child .n { background: var(--sl-color-accent-high); color: var(--sl-color-black); }
-  .loop b { display: block; line-height: 1.35; }
-  .loop small { display: block; color: var(--sl-color-gray-3); font-size: var(--sl-text-sm); margin-top: 0.15rem; }
-  @media (min-width: 50rem) { [data-has-hero] .hero { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 3rem; } }
-</style>
+    <script>
+      // Listening now: /v1/ecosystem (projects that chose to be listed) and /v1/status (the hub). Built with
+      // textContent only: project names come from other people's configs.
+      const CHANNELS: Record<string, string> = { matrix: 'Matrix', bluesky: 'Bluesky', atproto: 'Feedback records', github: 'GitHub Discussions' }
+      type Project = { id: string; repository: string; channels: string[]; filed: number; fixed: number; open: number }
+      const el = (tag: string, text = '', className = '') => Object.assign(document.createElement(tag), { textContent: text, className })
+      const list = document.querySelector('[data-projects]')
 
-<style>
-  .home { color: var(--sl-color-white); }
-  h2 { font-size: var(--sl-text-2xl); margin: 3.5rem 0 0.25rem; scroll-margin-top: 5rem; }
-  .sub { color: var(--sl-color-gray-3); margin: 0 0 1rem; }
-  .other { margin-top: 1.25rem; font-size: var(--sl-text-sm); }
-  .reasons { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.75rem; }
-  .reasons li { background: var(--sl-color-bg-nav); border: 1px solid var(--sl-color-hairline); border-radius: 0.9rem; padding: 1rem; }
-  .reasons .icon { font-size: 1.4rem; display: block; margin-bottom: 0.35rem; }
-  .reasons b { display: block; margin-bottom: 0.2rem; }
-  .reasons p { margin: 0; color: var(--sl-color-gray-3); font-size: var(--sl-text-sm); }
-  .steps { list-style: none; margin: 0; padding: 0; counter-reset: s; display: grid; gap: 0.75rem; }
-  .steps li { min-width: 0; counter-increment: s; background: var(--sl-color-bg-nav); border: 1px solid var(--sl-color-hairline); border-radius: 0.9rem; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
-  .steps li::before { content: counter(s); display: inline-grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--sl-color-accent); color: var(--sl-color-black); font-weight: 700; font-size: var(--sl-text-sm); }
-  .steps p { margin: 0; }
-  .home :global(code) { background: var(--sl-color-gray-6); padding: 0.05rem 0.3rem; border-radius: 0.3rem; font-size: 0.9em; }
-  .home a:not(.btn) { color: var(--sl-color-text-accent); }
-  .note { font-size: var(--sl-text-sm); color: var(--sl-color-gray-3); }
-  .btn.ghost { background: transparent; color: var(--sl-color-white); border: 1px solid var(--sl-color-gray-5); }
-  .btn { margin-top: auto; display: flex; align-items: center; justify-content: center; min-height: 3rem; border-radius: 0.75rem; background: var(--sl-color-accent); color: var(--sl-color-black); font-weight: 600; text-decoration: none; }
-  .copy { min-width: 0; display: flex; align-items: center; gap: 0.5rem; background: var(--sl-color-gray-6); border-radius: 0.75rem; padding: 0.35rem 0.35rem 0.35rem 0.85rem; min-height: 3rem; }
-  .copy code { flex: 1; overflow-x: auto; white-space: nowrap; font-family: var(--__sl-font-mono); font-size: var(--sl-text-sm); background: none; padding: 0; }
-  .copy button { flex: none; min-height: 2.25rem; padding: 0 0.75rem; border-radius: 0.5rem; border: 1px solid var(--sl-color-hairline); background: var(--sl-color-bg-nav); color: var(--sl-color-white); font: inherit; font-size: var(--sl-text-sm); font-weight: 600; cursor: pointer; }
-  .others { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.5rem; }
-  .others a { display: flex; flex-direction: column; gap: 0.1rem; padding: 0.8rem 1rem; border: 1px solid var(--sl-color-hairline); border-radius: 0.9rem; background: var(--sl-color-bg-nav); text-decoration: none; min-height: 3rem; }
-  .others b { color: var(--sl-color-white); }
-  .others span { color: var(--sl-color-gray-3); font-size: var(--sl-text-sm); }
-  .faqs { margin-top: 1rem; display: grid; gap: 0.5rem; align-items: start; }
-  .faq { background: var(--sl-color-bg-nav); border: 1px solid var(--sl-color-hairline); border-radius: 0.9rem; }
-  .faq summary { cursor: pointer; padding: 0.85rem 1rem; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 0.75rem; min-height: 3rem; align-items: center; }
-  .faq summary::-webkit-details-marker { display: none; }
-  .faq summary::after { content: '+'; color: var(--sl-color-gray-3); font-weight: 400; font-size: 1.4rem; line-height: 1; }
-  .faq[open] summary::after { content: '−'; }
-  .faq > div { padding: 0 1rem 0.9rem; color: var(--sl-color-gray-2); }
-  .more { margin-top: 2rem; padding-bottom: 4rem; color: var(--sl-color-gray-3); }
-  @media (min-width: 40rem) { .reasons, .others { grid-template-columns: 1fr 1fr; } }
-  @media (min-width: 50rem) {
-    .reasons { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .others { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .faqs { grid-template-columns: repeat(3, 1fr); }
-  }
-</style>
+      const showProjects = (all: Project[]) => {
+        const projects = all.filter((p) => /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+$/.test(p.repository))
+        if (!projects.length) return list?.replaceChildren(el('li', 'No project listed yet.', 'row muted'))
+        list?.replaceChildren(
+          ...projects.map((p) => {
+            const li = el('li', '', 'row')
+            const name = el('a', p.id, 'name') as HTMLAnchorElement
+            name.href = p.repository
+            const where = el('span', p.channels.map((c) => CHANNELS[c] ?? c).join(' · '), 'where')
+            const counts = el('a', `${p.filed} filed · ${p.fixed} fixed`, 'counts') as HTMLAnchorElement
+            counts.href = `${p.repository}/issues?q=label%3Afeedback`
+            const text = el('div')
+            text.append(name, where)
+            li.append(text, counts)
+            return li
+          }),
+        )
+      }
+
+      fetch('/v1/ecosystem')
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then((data) => showProjects(data.projects ?? []))
+        .catch(() => list?.replaceChildren(el('li', 'Unavailable right now.', 'row muted')))
+
+      fetch('/v1/status')
+        .then((r) => r.json())
+        .then((data) => data.ok)
+        .catch(() => null)
+        .then((ok) => {
+          document.querySelector('[data-hub]')?.setAttribute('data-state', ok === null ? 'unknown' : ok ? 'ok' : 'down')
+          const text = document.querySelector('[data-hub-text]')
+          if (text) text.textContent = ok === null ? 'Hub unreachable' : ok ? 'All channels ok' : 'A channel is down'
+        })
+
+      document.addEventListener('click', async (e) => {
+        const b = (e.target as HTMLElement).closest<HTMLElement>('[data-copy]')
+        if (!b) return
+        try {
+          await navigator.clipboard.writeText(b.dataset.copy ?? '')
+          b.textContent = 'Copied'
+          setTimeout(() => (b.textContent = 'Copy'), 1500)
+        } catch {}
+      })
+    </script>
+
+    <style is:global>
+      :root {
+        color-scheme: light dark;
+        --bg: #fbf8f4;
+        --card: #f4efe8;
+        --line: #e6ded3;
+        --ink: #1c1a17;
+        --muted: #6b645b;
+        --accent: #1a8a50;
+        --ok: #2fbf71;
+        --down: #e5484d;
+        --radius: 0.6rem;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root { --bg: #151412; --card: #1e1c19; --line: #2e2b27; --ink: #ece7df; --muted: #a39b90; --accent: #4fd08a; }
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.55 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      a { color: inherit; text-underline-offset: 0.18em; }
+      code { font: 0.86em ui-monospace, SFMono-Regular, Menlo, monospace; }
+      main { max-width: 46rem; margin: 0 auto; padding: 0 1rem 3rem; display: grid; gap: 2.25rem; }
+      .bar { max-width: 46rem; margin: 0 auto; padding: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+      .bar nav { display: flex; gap: 1.25rem; }
+      .bar a { min-height: 2.75rem; display: inline-flex; align-items: center; }
+      .brand { font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em; text-decoration: none; }
+      footer.bar { color: var(--muted); font-size: 0.9rem; padding-bottom: 5rem; flex-wrap: wrap; }
+      .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.25rem 1.25rem 1rem; }
+      h1 { font-size: 1.45rem; line-height: 1.25; margin: 0 0 0.6rem; letter-spacing: -0.01em; }
+      h2 { font-size: 1.05rem; margin: 0; }
+      h2 small { font-weight: 400; color: var(--muted); font-size: 0.85rem; margin-left: 0.35rem; }
+      .intro ul { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.3rem; }
+      .small { color: var(--muted); font-size: 0.88rem; margin: 0.75rem 0 0; }
+      .actions { display: flex; flex-wrap: wrap; gap: 0 1.5rem; margin: 0.6rem 0 0; }
+      .actions a { min-height: 2.75rem; display: inline-flex; align-items: center; }
+      .head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.4rem; }
+      .head > a { font-size: 0.9rem; color: var(--muted); min-height: 2.75rem; display: inline-flex; align-items: center; }
+      .hub { gap: 0.45rem; text-decoration: none; }
+      .hub .dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--muted); }
+      .hub[data-state='ok'] .dot { background: var(--ok); }
+      .hub[data-state='down'] .dot { background: var(--down); }
+      .rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+      .row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.7rem 0.9rem; min-width: 0; }
+      .row.muted { color: var(--muted); }
+      .row .name { font-weight: 700; text-decoration: none; margin-right: 0.6rem; }
+      .row .where { color: var(--muted); font-size: 0.9rem; }
+      .row .counts { flex: none; font-size: 0.9rem; font-variant-numeric: tabular-nums; color: var(--muted); }
+      .steps .row { align-items: flex-start; justify-content: flex-start; }
+      .steps .row > div { min-width: 0; flex: 1; }
+      .n { flex: none; width: 1.6rem; height: 1.6rem; border-radius: 50%; display: inline-grid; place-items: center; background: var(--ink); color: var(--bg); font-size: 0.8rem; font-weight: 700; margin-top: 0.1rem; }
+      .copy { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.45rem; background: var(--bg); border: 1px solid var(--line); border-radius: 0.45rem; padding: 0.25rem 0.25rem 0.25rem 0.65rem; min-width: 0; }
+      .copy code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; }
+      .copy button { flex: none; min-height: 2.25rem; padding: 0 0.7rem; border-radius: 0.35rem; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: inherit; font-size: 0.85rem; cursor: pointer; }
+      a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      @media (max-width: 30rem) { .row { flex-wrap: wrap; } }
+    </style>
+  </body>
+</html>
