@@ -32,7 +32,7 @@
     "FEEDBAI_AUTH_HOST": "auth.feedbai.internet4000.com",
     // Invite-only for now: the projects that may use this hub's bots and accounts, comma-separated
     // (hub/allow.js). Adding one is a reviewed change to this line. Remove it to open the hub to all.
-    "FEEDBAI_PROJECTS": "internet4000/feedbai"
+    "FEEDBAI_PROJECTS": "internet4000/feedbai,internet4000/enform"
   },
   // Preview builds (wrangler preview, per branch): no cron, no secrets, so the page
   // renders and the API answers with a clear error. Public values only.
@@ -43,7 +43,7 @@
     // served at /.well-known/atproto-did: makes the hub's domain the bot's Bluesky handle
     "FEEDBAI_BLUESKY_DID": "did:plc:kwx5rsbzzksolfdxfjnu3lx4",
       "FEEDBAI_APP_URL": "https://github.com/apps/feedbai",
-      "FEEDBAI_PROJECTS": "internet4000/feedbai"
+      "FEEDBAI_PROJECTS": "internet4000/feedbai,internet4000/enform"
     }
   },
   "observability": { "enabled": true }
