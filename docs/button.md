@@ -41,6 +41,62 @@ To place the button yourself instead of floating at the bottom right, load the s
 
 Add `inline` to show the form itself instead of a button.
 
+## Where to load it from
+
+The same file, from where you prefer:
+
+| from | `src` | |
+| --- | --- | --- |
+| our site | `https://feedbai.internet4000.com/embed.js` | always the latest version |
+| jsDelivr | `https://cdn.jsdelivr.net/npm/@internet4000/feedbai@0.5.0/site/public/embed.js` | a fixed version, from the npm package (published with provenance) |
+| unpkg | `https://unpkg.com/@internet4000/feedbai@0.5.0/site/public/embed.js` | the same |
+| your site | your own copy of [`site/public/embed.js`](../site/public/embed.js) | nothing loaded from anyone else |
+
+With a fixed version, add its hash so the browser refuses any other content (jsDelivr shows it on the file's page, or compute it):
+
+```sh
+curl -s https://cdn.jsdelivr.net/npm/@internet4000/feedbai@0.5.0/site/public/embed.js | openssl dgst -sha384 -binary | openssl base64 -A
+```
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/@internet4000/feedbai@0.5.0/site/public/embed.js"
+  integrity="sha384-…" crossorigin="anonymous"
+  data-project="https://github.com/you/yourproject"></script>
+```
+
+## Make it yours
+
+The button keeps its own styles apart from your page, so your CSS can't break it by accident. To match your site, set its colours on the element (they apply in light and dark mode, unless you set them per mode yourself):
+
+```css
+feedbai-button {
+  --accent: #6b4eff;    /* the button and the main action */
+  --accent-ink: #fff;   /* text on the accent */
+  --bg: #fff;           /* the dialog */
+  --ink: #1a1a1a;       /* text */
+  --muted: #666;        /* secondary text */
+  --line: #e5e5e5;      /* borders */
+  --soft: #f5f5f5;      /* the text box, hovers */
+  font-family: inherit; /* use your page's font */
+}
+```
+
+For more, style its named parts with `::part()`:
+
+| part | |
+| --- | --- |
+| `button` | the Feedback button |
+| `dialog` | the dialog |
+| `card` | the dialog's content (or the form, with `inline`) |
+| `textarea` | the text box |
+| `primary` | the main action of each step (Next, Close…) |
+| `place` | each way to send it (Matrix, Bluesky, GitHub) |
+
+```css
+feedbai-button::part(button) { border-radius: 4px; box-shadow: none; }
+feedbai-button::part(primary) { border-radius: 4px; }
+```
+
 ## Without a script
 
 Link to the same form on our site, for READMEs, emails, or sites that can't add scripts:
@@ -55,7 +111,7 @@ Only the page's address is attached (origin and path: query strings and `#fragme
 
 ## Self-hosting
 
-`embed.js` is one file with no dependencies ([`site/public/embed.js`](../site/public/embed.js)): serve your own copy to pin a version or to avoid loading a script from our domain.
+`embed.js` is one file with no dependencies ([`site/public/embed.js`](../site/public/embed.js)): serve your own copy to avoid loading a script from anyone else (see [Where to load it from](#where-to-load-it-from)).
 
 ## Next
 

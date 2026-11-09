@@ -6,6 +6,7 @@
  */
 import { runHub } from './run.js'
 import { readMatrix, readBlueskySearch } from './api.js'
+import { readEcosystem } from './ecosystem.js'
 import { readStatus } from './status.js'
 import { reactMatrix } from './api.js'
 import { requestIdentity } from './identity.js'
@@ -50,6 +51,13 @@ const site = async (request, env, url) => {
   }
   const response = await env.ASSETS.fetch(request)
   if (response.status === 404) return notFound(request, env)
+  // The Feedback button is loaded by other sites as a module script: browsers need CORS for that
+  if (!onAuth && url.pathname === '/embed.js') {
+    const shared = new Response(response.body, response)
+    shared.headers.set('access-control-allow-origin', '*')
+    shared.headers.set('cross-origin-resource-policy', 'cross-origin')
+    return shared
+  }
   if (!onAuth) return response
   const secured = new Response(response.body, response)
   for (const [name, value] of Object.entries(AUTH_HEADERS)) secured.headers.set(name, value)
@@ -61,7 +69,7 @@ export default {
     const url = new URL(request.url)
     // The hub's domain is its Bluesky bot's handle (AT Protocol handle verification over HTTPS)
     if (url.pathname === '/.well-known/atproto-did' && env.FEEDBAI_BLUESKY_DID) return new Response(env.FEEDBAI_BLUESKY_DID, { headers: { 'content-type': 'text/plain' } })
-    const read = { '/v1/matrix': readMatrix, '/v1/bluesky/search': readBlueskySearch, '/v1/status': readStatus }[url.pathname]
+    const read = { '/v1/matrix': readMatrix, '/v1/bluesky/search': readBlueskySearch, '/v1/status': readStatus, '/v1/ecosystem': readEcosystem }[url.pathname]
     const act = { '/v1/matrix/react': reactMatrix }[url.pathname]
     if (!read && !act) return env.ASSETS ? site(request, env, url) : notFound(request, env)
     if (request.method !== (act ? 'POST' : 'GET')) return notFound(request, env)

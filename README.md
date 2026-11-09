@@ -1,6 +1,6 @@
 # <img src="assets/logo.svg" alt="" width="40" height="40" align="top"> feedbai
 
-**Hear your community. Let your agents act on it.**
+**Hear your community. Act on it.**
 
 feedbai gathers feedback wherever people talk about your project (chat, Bluesky, a button on your site), turns it into work for you and your AI agents (Claude Code, Codex, …), and answers back. Open, decentralized, nothing stored by us.
 

@@ -24,7 +24,7 @@ export const installedRepos = async ({ appId, privateKey, fetchImpl }) => {
   for (const installation of installations) {
     const { token } = await gh(`/app/installations/${installation.id}/access_tokens`, jwt, { method: 'POST', fetchImpl })
     const { repositories } = await gh('/installation/repositories?per_page=100', token, { fetchImpl })
-    for (const repo of repositories) repos.push({ fullName: repo.full_name, token })
+    for (const repo of repositories) repos.push({ fullName: repo.full_name, private: repo.private, token })
   }
   return repos
 }
