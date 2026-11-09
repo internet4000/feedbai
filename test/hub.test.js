@@ -297,3 +297,21 @@ test('/v1/status says which hub secret stopped working, without details', async 
   assert.equal(body.checks.matrix, 'rejected')
   assert.doesNotMatch(JSON.stringify(body), /M_UNKNOWN_TOKEN/)
 })
+
+test('GitHub App: an invite-only hub mints no token for installations owning no listed repo; it reads only feedbai.config.json', async () => {
+  const { installedRepos, repoConfig } = await import('../hub/github.js')
+  const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 })
+  const key = privateKey.export({ type: 'pkcs1', format: 'pem' })
+  const fetchImpl = fakeFetch([
+    [(u) => u.endsWith('/app/installations?per_page=100'), [{ id: 1, account: { login: 'Internet4000' } }, { id: 2, account: { login: 'stranger' } }]],
+    [(u) => u.includes('/app/installations/1/access_tokens'), { token: 'tok1' }],
+    [(u) => u.includes('/installation/repositories'), { repositories: [{ full_name: 'internet4000/enform', private: false }] }],
+  ])
+  const repos = await installedRepos({ appId: 1, privateKey: key, fetchImpl, only: ['internet4000/enform'] })
+  assert.deepEqual(repos, [{ fullName: 'internet4000/enform', private: false, token: 'tok1' }])
+  assert.ok(!fetchImpl.calls.some((c) => c.url.includes('/installations/2/')))
+
+  // Without "Single file: read" on feedbai.config.json, the log says exactly what to grant
+  const denied = fakeFetch([[(u) => u.includes('/contents/feedbai.config.json'), { message: 'Resource not accessible by integration' }, 403]])
+  await assert.rejects(repoConfig({ fullName: 'o/r', token: 't', fetchImpl: denied }), /Single file: read.*feedbai\.config\.json/)
+})

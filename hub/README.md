@@ -30,12 +30,12 @@ New channels (GitHub Discussions, Fediverse, …) are added when a project needs
 - the read API is rate-limited per client (30 a minute) and only serves rooms readable without joining, or, to a GitHub Actions run proving its repository (OIDC), the rooms whose topic names that repository; `POST /v1/matrix/react` adds ✅ for it there (a project's agent, with no secrets: [an agent in the loop](../docs/issues.md#an-agent-in-the-loop-feedbai-triage))
 - `GET /v1/status` says whether each hub secret still works; the hourly check opens an issue when one is rejected. Rotation: [SECURITY.md](../SECURITY.md#rotation)
 - the bot joins rooms only when invited; kick it to stop
-- GitHub access is the App's installation token: issues write + contents read, per repo
+- GitHub access is the App's installation token (one hour, minted each run, never stored): **Issues: write** and **Single file: read** on `feedbai.config.json`. It never reads your code, public or private; you choose which repos it covers when installing, and uninstalling cuts it off
 - when a feedback issue is fixed (closed by a pull request or commit, or labelled `fixed`), the bot replies "🤖 This is fixed" with its link, once, in the thread it came from ([closing the loop](../docs/issues.md#closing-the-loop); `"replies": false` in the config stops it)
 
 Personal data, retention and removal requests: [PRIVACY.md](../PRIVACY.md). Security model: [SECURITY.md](../SECURITY.md).
 
-**Run your own** (free software): create a bot account and a GitHub App (Issues: read & write, Contents: read), then deploy the Cloudflare Worker (below), or run `node hub/run.js` from any cron with `FEEDBAI_APP_ID`, `FEEDBAI_APP_PRIVATE_KEY`, `FEEDBAI_MATRIX_TOKEN` and `FEEDBAI_MATRIX_USER` in its environment. No database: GitHub issues and their hidden markers are the state.
+**Run your own** (free software): create a bot account and a GitHub App (Issues: read & write, Single file: read on `feedbai.config.json`), then deploy the Cloudflare Worker (below), or run `node hub/run.js` from any cron with `FEEDBAI_APP_ID`, `FEEDBAI_APP_PRIVATE_KEY`, `FEEDBAI_MATRIX_TOKEN` and `FEEDBAI_MATRIX_USER` in its environment. No database: GitHub issues and their hidden markers are the state.
 
 **Cloudflare Workers** ([`worker.js`](worker.js), [`wrangler.jsonc`](../wrangler.jsonc) at the repo root; change the domain and `vars` for your own). From the repo root:
 
