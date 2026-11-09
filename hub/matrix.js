@@ -1,5 +1,6 @@
 import { request } from '../src/http.js'
 import { parseRoom, topicNamesRepo } from '../src/providers/matrix.js'
+import { INVITE_ONLY } from './allow.js'
 
 /**
  * The hub's Matrix bot is shared by every project, so its token must be worth little if it leaks:
@@ -21,13 +22,15 @@ export const DECLINE_REASON =
   'The shared feedbai bot only joins public rooms, so its shared token never sees private conversations. Make the room public (Room settings → Security & Privacy → Public), then invite it again; or use your own bot: https://feedbai.internet4000.com/docs/on-your-own/'
 const LEAVE_REASON = 'This room is no longer public; the shared feedbai bot only stays in public rooms. Use your own bot for private rooms: https://feedbai.internet4000.com/docs/on-your-own/'
 
-const invitedPublic = (invite) => invite?.invite_state?.events?.find((e) => e.type === 'm.room.join_rules')?.content?.join_rule === 'public'
+const stripped = (invite, type) => invite?.invite_state?.events?.find((e) => e.type === type)?.content ?? {}
+const invitedPublic = (invite) => stripped(invite, 'm.room.join_rules').join_rule === 'public'
 
 /**
  * Join the public rooms the bot was invited to; decline the others, and leave joined rooms that are no
- * longer public. Returns { joined, declined, left } room ids.
+ * longer public. With `topicOk` (an invite-only hub, hub/allow.js), also only rooms whose topic it accepts.
+ * Returns { joined, declined, left } room ids.
  */
-export const acceptInvites = async ({ homeserver, token, fetchImpl }) => {
+export const acceptInvites = async ({ homeserver, token, fetchImpl, topicOk = null }) => {
   const auth = { token, fetchImpl }
   const filter = JSON.stringify({ room: { timeline: { limit: 0 }, state: { lazy_load_members: true } }, presence: { types: [] } })
   const sync = await request(api(homeserver, `/sync?timeout=0&filter=${encodeURIComponent(filter)}`), auth)
@@ -36,13 +39,15 @@ export const acceptInvites = async ({ homeserver, token, fetchImpl }) => {
   for (const [roomId, invite] of Object.entries(sync.rooms?.invite ?? {})) {
     const room = encodeURIComponent(roomId)
     const isPublic = invitedPublic(invite)
-    await request(api(homeserver, isPublic ? `/join/${room}` : `/rooms/${room}/leave`), { method: 'POST', body: isPublic ? {} : { reason: DECLINE_REASON }, ...auth })
-    ;(isPublic ? joined : declined).push(roomId)
+    const ok = isPublic && (!topicOk || topicOk(stripped(invite, 'm.room.topic').topic ?? ''))
+    await request(api(homeserver, ok ? `/join/${room}` : `/rooms/${room}/leave`), { method: 'POST', body: ok ? {} : { reason: isPublic ? INVITE_ONLY : DECLINE_REASON }, ...auth })
+    ;(ok ? joined : declined).push(roomId)
   }
   const left = []
   for (const roomId of Object.keys(sync.rooms?.join ?? {})) {
-    if ((await state(homeserver, roomId, 'm.room.join_rules', auth)).join_rule === 'public') continue
-    await request(api(homeserver, `/rooms/${encodeURIComponent(roomId)}/leave`), { method: 'POST', body: { reason: LEAVE_REASON }, ...auth })
+    const isPublic = (await state(homeserver, roomId, 'm.room.join_rules', auth)).join_rule === 'public'
+    if (isPublic && (!topicOk || topicOk((await state(homeserver, roomId, 'm.room.topic', auth)).topic ?? ''))) continue
+    await request(api(homeserver, `/rooms/${encodeURIComponent(roomId)}/leave`), { method: 'POST', body: { reason: isPublic ? INVITE_ONLY : LEAVE_REASON }, ...auth })
     left.push(roomId)
   }
   return { joined, declined, left }
@@ -71,6 +76,12 @@ const resolve = async ({ homeserver, room, fetchImpl }) => {
  * consent rule as private rooms. A repository proving who it is (hub/identity.js) is not enough on its own:
  * anyone can list any room in their config.
  */
+/** The room's topic (resolving an alias first). */
+export const roomTopic = async ({ homeserver, token, room, fetchImpl }) => {
+  const roomId = await resolve({ homeserver, room, fetchImpl })
+  return (await state(homeserver, roomId, 'm.room.topic', { token, fetchImpl })).topic ?? ''
+}
+
 export const roomBoundTo = async ({ homeserver, token, room, repo, fetchImpl }) => {
   const roomId = await resolve({ homeserver, room, fetchImpl })
   const { topic = '' } = await state(homeserver, roomId, 'm.room.topic', { token, fetchImpl })

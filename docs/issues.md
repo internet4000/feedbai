@@ -24,7 +24,7 @@ Every quoted message carries a hidden marker (`<!-- feedbai:item=… -->`). Befo
 
 ## Ways to run it
 
-**The hosted hub** (nothing to run): install the [feedbai GitHub App](https://github.com/apps/feedbai) on the repo, and commit `feedbai.config.json`. Every 10 minutes the hub files from the channels it can read (public Matrix rooms its bot is in, Bluesky threads), using its own accounts. See [the hub](../hub/README.md).
+**The hosted hub** (nothing to run; invite-only for now, ask in [#feedbai](https://matrix.to/#/#feedbai:matrix.org)): install the [feedbai GitHub App](https://github.com/apps/feedbai) on the repo, and commit `feedbai.config.json`. Every 10 minutes the hub files from the channels it can read (public Matrix rooms its bot is in, Bluesky threads), using its own accounts. See [the hub](../hub/README.md).
 
 **By hand or from an agent**:
 

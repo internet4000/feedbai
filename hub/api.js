@@ -7,7 +7,8 @@
  */
 import matrix from '../src/providers/matrix.js'
 import bluesky from '../src/providers/bluesky.js'
-import { roomWorldReadable, roomBoundTo } from './matrix.js'
+import { roomWorldReadable, roomBoundTo, roomTopic } from './matrix.js'
+import { listed, topicAllowed, INVITE_ONLY } from './allow.js'
 
 const MAX_LIMIT = 100
 const CACHE_SECONDS = 60
@@ -36,6 +37,8 @@ export const readMatrix = async ({ params, env, identity, fetchImpl }) => {
   try {
     // Anyone may read a room its admins made readable without joining; a repository proving who it is
     // (a GitHub Actions run) may also read the rooms whose topic names it
+    // An invite-only hub reads only rooms tied to its listed projects (their topic names one)
+    if (listed(env) && !topicAllowed(env, await roomTopic({ homeserver, token: env.FEEDBAI_MATRIX_TOKEN, room, fetchImpl }))) return json(403, { error: INVITE_ONLY })
     const open = await roomWorldReadable({ homeserver, token: env.FEEDBAI_MATRIX_TOKEN, room, fetchImpl })
     const bound = !open && identity && (await roomBoundTo({ homeserver, token: env.FEEDBAI_MATRIX_TOKEN, room, repo: identity.repository, fetchImpl })).bound
     if (!open && !bound) {
@@ -54,9 +57,11 @@ export const readMatrix = async ({ params, env, identity, fetchImpl }) => {
   }
 }
 
-export const readBlueskySearch = async ({ params, env, fetchImpl }) => {
+export const readBlueskySearch = async ({ params, env, identity, fetchImpl }) => {
   const query = params.get('query')
   if (!query) return json(400, { error: 'missing ?query=' })
+  // Any query, with the hub's account: on an invite-only hub, only for a listed repository's GitHub Actions
+  if (listed(env) && !identity) return json(403, { error: INVITE_ONLY })
   const { since, limit, error } = readWindow(params)
   if (error) return error
   if (!env.FEEDBAI_BLUESKY_PASSWORD) return json(503, { error: 'this hub has no Bluesky account' })

@@ -6,6 +6,7 @@
  */
 import { request } from '../src/http.js'
 import { installedRepos, repoConfig } from './github.js'
+import { allows } from './allow.js'
 import { LABEL } from '../src/issues.js'
 import { projectUri } from '../src/links.js'
 
@@ -38,7 +39,7 @@ export const loopCounts = async ({ fullName, token, now = Date.now(), fetchImpl 
 export const ecosystem = async ({ env, now, fetchImpl }) => {
   const repos = await installedRepos({ appId: env.FEEDBAI_APP_ID, privateKey: env.FEEDBAI_APP_PRIVATE_KEY, fetchImpl })
   const projects = []
-  for (const repo of repos.filter((r) => !r.private)) {
+  for (const repo of repos.filter((r) => !r.private && allows(env, r.fullName))) {
     const config = await repoConfig({ ...repo, fetchImpl }).catch(() => null)
     const uri = projectUri(repo.fullName)
     const same = (value) => projectUri(value ?? '')?.toLowerCase() === uri.toLowerCase()

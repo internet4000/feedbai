@@ -65,7 +65,7 @@ Run it in the background in your agent session: [agents](agents.md).
 
 ## 6. Turn feedback into issues (optional)
 
-- **Hosted hub**: install the [feedbai GitHub App](https://github.com/apps/feedbai) on the repo. Messages that mention the bot become `feedback` issues within about 10 minutes.
+- **Hosted hub** (invite-only for now: ask in [#feedbai](https://matrix.to/#/#feedbai:matrix.org)): install the [feedbai GitHub App](https://github.com/apps/feedbai) on the repo. Messages that mention the bot become `feedback` issues within about 10 minutes.
 - **Yourself**: `feedbai issues --dry-run`, then `feedbai issues`. See [feedback → issues](issues.md).
 - **From your CI, with your own bot**: no hub, no App. See [on your own](on-your-own.md).
 

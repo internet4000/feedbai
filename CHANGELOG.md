@@ -5,6 +5,7 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 ## Unreleased
 
 ### Changed
+- **The hosted hub is invite-only for now:** it serves only the projects listed in `FEEDBAI_PROJECTS` (today, feedbai itself). Its bot joins and stays only in public rooms whose topic names a listed repository, its read API and Bluesky search serve only those, and its scheduled runs skip other repos. Unset on your own hub, it stays open to all. The CLI, the Feedback button and `feedbai send` are unchanged.
 - **Hear your community. Act on it.** The home page is plain and short: one card that says what feedbai does for everyone, the projects listening now, three steps to set one up. Agents are one way to act on feedback, not the pitch.
 
 ### Fixed
