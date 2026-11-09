@@ -10,6 +10,7 @@ import { readEcosystem } from './ecosystem.js'
 import { readStatus } from './status.js'
 import { reactMatrix } from './api.js'
 import { requestIdentity } from './identity.js'
+import { allows, INVITE_ONLY } from './allow.js'
 
 /** The read API's cache key: `since` rounded down to the minute, `limit` up to 10, 25, 50 or 100, nothing else. */
 export const cacheKey = (url) => {
@@ -85,6 +86,8 @@ export default {
     } catch (error) {
       return new Response(JSON.stringify({ error: error.message }), { status: error.status ?? 401, headers: { 'content-type': 'application/json' } })
     }
+    // An invite-only hub (FEEDBAI_PROJECTS, hub/allow.js) answers only its listed repositories
+    if (identity && !allows(env, identity.repository)) return new Response(JSON.stringify({ error: INVITE_ONLY }), { status: 403, headers: { 'content-type': 'application/json' } })
     if (act) return act({ request, env, identity })
     // Read on a repository's behalf: never cached or shared
     if (identity) {
