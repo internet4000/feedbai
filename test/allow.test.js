@@ -29,16 +29,21 @@ test('invite-only: the bot joins only public rooms of listed projects, leaves th
     invite_state: { events: [{ type: 'm.room.join_rules', content: { join_rule: rule } }, ...(topic ? [{ type: 'm.room.topic', content: { topic } }] : [])] },
   })
   const fetchImpl = fakeFetch([
-    [(u) => u.includes('/sync'), { rooms: { invite: { '!ours:x': invite('public', 'github.com/internet4000/feedbai'), '!theirs:x': invite('public', 'github.com/someone/else'), '!none:x': invite('public') }, join: { '!kept:x': {}, '!stranger:x': {} } } }],
+    [(u) => u.includes('/sync'), { rooms: { invite: { '!ours:x': invite('public', 'github.com/internet4000/feedbai'), '!theirs:x': { invite_state: { events: [...invite('public', 'github.com/someone/else').invite_state.events, { type: 'm.room.canonical_alias', content: { alias: '#theirs:x' } }] } }, '!none:x': invite('public') }, join: { '!kept:x': {}, '!stranger:x': {} } } }],
     [(u) => u.includes('/state/m.room.join_rules'), { join_rule: 'public' }],
     [(u) => u.includes('!kept%3Ax/state/m.room.topic'), { topic: 'https://github.com/internet4000/feedbai' }],
     [(u) => u.includes('!stranger%3Ax/state/m.room.topic'), { topic: 'a room about something else' }],
     [(u, i) => i?.method === 'POST', {}],
   ])
-  const result = await acceptInvites({ homeserver: 'https://x', token: 't', fetchImpl, topicOk: (topic) => topicAllowed(locked, topic) })
+  const { why, ...result } = await acceptInvites({ homeserver: 'https://x', token: 't', fetchImpl, topicOk: (topic) => topicAllowed(locked, topic), env: locked })
   assert.deepEqual(result, { joined: ['!ours:x'], declined: ['!theirs:x', '!none:x'], left: ['!stranger:x'] })
+  // The reason, shown in the room, says which room, what topic it read, what it accepts, and the fix
   const reason = JSON.parse(fetchImpl.calls.find((c) => c.url.includes('!theirs%3Ax/leave')).init.body).reason
-  assert.match(reason, /invite-only.*your own hub/s)
+  assert.match(reason, /invite-only.*#theirs:x.*github\.com\/internet4000\/feedbai, github\.com\/other\/repo.*Topic now: "github\.com\/someone\/else".*add your project's github\.com\/owner\/name to the room topic.*your own hub/s)
+  assert.match(JSON.parse(fetchImpl.calls.find((c) => c.url.includes('!none%3Ax/leave')).init.body).reason, /Topic now: empty/)
+  // …and the hub's log, one line per room
+  assert.deepEqual(why.map((line) => line.split(':')[0]), ['declined #theirs', 'declined !none', 'left !stranger'])
+  assert.match(why[0], /^declined #theirs:x \(!theirs:x\): /)
 })
 
 test('invite-only: the read API serves only rooms of listed projects, and Bluesky search only to their GitHub Actions', async () => {
