@@ -43,7 +43,7 @@ Messages live in `src/locales/<lang>.json`. feedbai picks the language from `FEE
 https://feedbai.internet4000.com is [`site/`](../site/): Astro + Starlight, with its own `package.json` (the CLI keeps zero dependencies). The home page is an Astro page (`site/src/components/Home.astro`), the Feedback button one file (`site/public/embed.js`); the docs are the Markdown in this repo, copied into Starlight at build time by `site/scripts/sync-docs.mjs`, so they are written once and read the same on GitHub and on the site. A new doc goes in `DOCS` (`site/docs.mjs`); `test/site.test.js` fails until it's there, and the site build fails on any broken link or `#anchor` between pages.
 
 ```sh
-cd site && npm install && npm run dev   # http://localhost:4321 (Node ≥ 22.23, see site/.nvmrc)
+cd site && npm install && npm run dev   # http://localhost:4321 (Node ≥ 22.23.4, see site/.nvmrc)
 ```
 
 The hub Worker serves the built site (`assets` in `wrangler.jsonc`; `wrangler deploy` builds it first).
