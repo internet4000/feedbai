@@ -45,7 +45,7 @@ node hub/setup.js --url https://your-hub.example --owner <github org>
 npx wrangler@4 tail   # watch the next scheduled run
 ```
 
-`wrangler deploy` first builds the website in `site/` (Node ≥ 22.23) and serves it from the same Worker. `hub/setup.js` serves a local page that creates the GitHub App (manifest flow) and logs the bot in; the App key and bot token go straight into the Worker's secrets, never to disk. Connecting the repo in Cloudflare (Workers Builds) deploys on push with the default commands.
+`wrangler deploy` first builds the website in `site/` (Node ≥ 22.23) and serves it from the same Worker. `hub/setup.js` serves a local page that creates the GitHub App (manifest flow) and logs the bot in; the App key and bot token go straight into the Worker's secrets, never to disk. Connecting the repo in Cloudflare (Workers Builds: the Worker → Settings → Builds) deploys every push to `main`: empty build command, deploy command `npx wrangler deploy`, and the build variable `NODE_VERSION=22.23.0` (the site needs Node ≥ 22.23).
 
 Run only one hub per bot.
 
