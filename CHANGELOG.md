@@ -4,6 +4,12 @@ What changed in the `feedbai` CLI (the npm package), and in the hub and website 
 
 ## Unreleased
 
+### Fixed
+- **The Feedback button loads on other sites:** `embed.js` is now sent with CORS headers; browsers refused it as a module script from another origin, so it only worked on our own site.
+
+### Added
+- **Load the button from jsDelivr or unpkg**, a fixed version with its hash (`integrity`): `embed.js` is in the npm package.
+
 ## 0.4.0 — 2026-11-08
 
 An agent in the loop: each project's own agent triages its feedback, with no secrets to create.
