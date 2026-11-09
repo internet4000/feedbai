@@ -41,7 +41,8 @@ const manifest = {
   public: true,
   redirect_url: `${local}/github/callback`,
   hook_attributes: { url: `${args.url}/github/webhook`, active: false },
-  default_permissions: { issues: 'write', contents: 'read', metadata: 'read' },
+  // Not "contents": the hub reads one file. A manifest can't set the single-file path, so step 1 says to add it
+  default_permissions: { issues: 'write', metadata: 'read' },
   default_events: [],
 }
 const newAppUrl = args.owner
@@ -56,8 +57,9 @@ const home = () => html(`
 <h2>1. GitHub App</h2>
 <form action="${escape(newAppUrl)}" method="post">
 <input type="hidden" name="manifest" value="${escape(JSON.stringify(manifest))}">
-<p>Creates the <b>${escape(args.name)}</b> App${args.owner ? ` under <b>${escape(args.owner)}</b>` : ''} (Issues: write, Contents: read, no webhook).</p>
+<p>Creates the <b>${escape(args.name)}</b> App${args.owner ? ` under <b>${escape(args.owner)}</b>` : ''} (Issues: write, no webhook).</p>
 <button>Create GitHub App</button></form>
+<p>Then, in the new App's settings → Permissions &amp; events → Repository permissions, set <b>Single file: Read-only</b> with the path <code>feedbai.config.json</code>. The hub reads only that file, never the repository's code.</p>
 <h2>2. Matrix bot</h2>
 <form action="/matrix" method="post"><input type="hidden" name="state" value="${state}">
 <p>Paste an access token for the bot, or log it in once with its password (only a new token, device "feedbai", is stored).</p>

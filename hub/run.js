@@ -46,7 +46,7 @@ export const runHub = async ({ env = process.env, fetchImpl, log = console.log }
   if (rooms?.left.length) log(`left ${rooms.left.length} room(s) that are no longer public${listed(env) ? ' or no longer name a listed project' : ''}`)
   for (const line of rooms?.why ?? []) log(line)
 
-  const installed = await installedRepos({ appId: env.FEEDBAI_APP_ID, privateKey: env.FEEDBAI_APP_PRIVATE_KEY, fetchImpl })
+  const installed = await installedRepos({ appId: env.FEEDBAI_APP_ID, privateKey: env.FEEDBAI_APP_PRIVATE_KEY, fetchImpl, only: listed(env) })
   // An invite-only hub (FEEDBAI_PROJECTS) works only for its listed projects, whoever installs the App
   const repos = installed.filter((repo) => allows(env, repo.fullName))
   if (repos.length < installed.length) log(`${installed.length - repos.length} repo(s) with the GitHub App skipped: not listed in FEEDBAI_PROJECTS`)
