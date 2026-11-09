@@ -4,7 +4,7 @@ Runs feedbai for every project that installed the feedbai GitHub App, so project
 
 Hosted at **https://feedbai.internet4000.com** (Cloudflare Worker, every 10 minutes).
 
-**Invite-only for now.** The hosted hub serves only the projects listed in `FEEDBAI_PROJECTS` ([`wrangler.jsonc`](../wrangler.jsonc)): today, feedbai itself. Want yours added? Ask in [#feedbai](https://matrix.to/#/#feedbai:matrix.org). Everything else stays open to everyone: the CLI with your own accounts, the Feedback button, `feedbai send`, and running your own hub.
+**Invite-only for now.** The hosted hub serves only the projects listed in `FEEDBAI_PROJECTS` ([`wrangler.jsonc`](../wrangler.jsonc)): today feedbai and enform. Want yours added? Ask in [#feedbai](https://matrix.to/#/#feedbai:matrix.org). Everything else stays open to everyone: the CLI with your own accounts, the Feedback button, `feedbai send`, and running your own hub.
 
 The hub is a convenience, not a requirement: it keeps no data that matters, anyone can run one (or do without: [on your own](../docs/on-your-own.md)), and when it's down the CLI says so and shows how to read with your own account (`feedbai login …`), or file from your CI ([feedback → issues](../docs/issues.md)). An hourly check in [`.github/workflows/hub-health.yml`](../.github/workflows/hub-health.yml) opens an issue "feedbai hub is down" when it stops answering, and closes it when it's back.
 
