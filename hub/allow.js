@@ -19,7 +19,7 @@ export const notListedReason = (env, { room, topic = '' }) => {
   return [
     `feedbai hub: invite-only. It joins ${room} only if the room topic names a listed project (${repos.join(', ') || 'none listed'}).`,
     `Topic now: ${seen}.`,
-    `Fix: add your project's github.com/owner/name to the room topic, then invite again.`,
+    `Fix: add your project's github.com/owner/name to the room topic, then invite again (only room admins can set the topic, so it proves the room is the project's).`,
     `Project not listed? Ask in #feedbai:matrix.org, read with your own account (feedbai login matrix), or run your own hub: https://feedbai.internet4000.com/docs/hub/`,
   ].join(' ')
 }
