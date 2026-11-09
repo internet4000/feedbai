@@ -13,7 +13,7 @@
  * label (button text), inline (show the form itself, no button), records (also offer "keep it in my Bluesky
  * account", experimental). Docs: https://feedbai.internet4000.com/docs/button/
  */
-export const VERSION = '0.3.0'
+export const VERSION = '0.5.0'
 const DEFAULT_BOT = '@feedbai:matrix.org'
 const BLUESKY_LIMIT = 300 // graphemes in a Bluesky post
 const AUTH = 'https://auth.feedbai.internet4000.com' // sign-in page, on its own origin
