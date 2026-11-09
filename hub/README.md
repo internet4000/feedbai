@@ -4,6 +4,8 @@ Runs feedbai for every project that installed the feedbai GitHub App, so project
 
 Hosted at **https://feedbai.internet4000.com** (Cloudflare Worker, every 10 minutes).
 
+**Invite-only for now.** The hosted hub serves only the projects listed in `FEEDBAI_PROJECTS` ([`wrangler.jsonc`](../wrangler.jsonc)): today, feedbai itself. Want yours added? Ask in [#feedbai](https://matrix.to/#/#feedbai:matrix.org). Everything else stays open to everyone: the CLI with your own accounts, the Feedback button, `feedbai send`, and running your own hub.
+
 The hub is a convenience, not a requirement: it keeps no data that matters, anyone can run one (or do without: [on your own](../docs/on-your-own.md)), and when it's down the CLI says so and shows how to read with your own account (`feedbai login …`), or file from your CI ([feedback → issues](../docs/issues.md)). An hourly check in [`.github/workflows/hub-health.yml`](../.github/workflows/hub-health.yml) opens an issue "feedbai hub is down" when it stops answering, and closes it when it's back.
 
 What it does per channel:
@@ -22,6 +24,7 @@ New channels (GitHub Discussions, Fediverse, …) are added when a project needs
 **For people and agents without accounts**: the CLI reads through the hub's read API when no account of its own is configured. `GET /v1/matrix?room=#room:server[&since=ISO][&limit=n]` (only rooms readable without joining: "world_readable") and `GET /v1/bluesky/search?query=…` return the same items as `feedbai fetch --format json` (cached 60s). Bluesky `mentions` sources are dropped from repo configs in the hub: they would read the hub's own mentions.
 
 **Rules** (any repo can install the App, so its config is untrusted):
+- `FEEDBAI_PROJECTS` (comma-separated `owner/name`; unset: open to all) limits the hub to those projects: the scheduled run and the home page skip other repos even if they installed the App; the bot joins, and stays in, only public rooms whose topic names a listed repository (`github.com/owner/name`), and says why when it declines or leaves; the read API serves only those rooms; Bluesky search and every GitHub Actions request (OIDC) are for listed repositories only. Adding a project is a reviewed change to that line, and a deploy
 - the hub always reads with its own bot account; `accounts` and `join` in a repo's config are ignored
 - the bot joins **public rooms only**: it declines invites to others and leaves rooms that stop being public, so its shared token can't expose private conversations. Private rooms: your own bot ([on your own](../docs/on-your-own.md)); with it, a private room is filed only if its topic names the repo (`github.com/owner/repo`)
 - the read API is rate-limited per client (30 a minute) and only serves rooms readable without joining, or, to a GitHub Actions run proving its repository (OIDC), the rooms whose topic names that repository; `POST /v1/matrix/react` adds ✅ for it there (a project's agent, with no secrets: [an agent in the loop](../docs/issues.md#an-agent-in-the-loop-feedbai-triage))

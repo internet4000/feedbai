@@ -4,7 +4,6 @@
  * steps to set one up. Plain and quiet on purpose (like 4000.radio, joblist.today); the docs stay in Starlight.
  */
 const REPO = 'https://github.com/internet4000/feedbai'
-const BOT = '@feedbai:matrix.org'
 const INSTALL = 'npm i -g @internet4000/feedbai && feedbai'
 const SNIPPET = '<script type="module" src="https://feedbai.internet4000.com/embed.js" data-project="https://github.com/you/repo"></script>'
 const title = 'feedbai: hear your community, act on it'
@@ -65,7 +64,7 @@ const description = 'feedbai gathers what people say about your project, in your
           </li>
           <li class="row">
             <span class="n">2</span>
-            <div><b>Let it listen.</b> Invite the bot to your chat room, and <a href="https://github.com/apps/feedbai">install the GitHub App</a>. <span class="copy"><code>{BOT}</code><button type="button" data-copy={BOT}>Copy</button></span></div>
+            <div><b>Let it listen.</b> Read with your own accounts: <code>feedbai login</code>. Our shared bot and GitHub App are invite-only for now: <a href="https://matrix.to/#/#feedbai:matrix.org">ask in #feedbai</a>, or <a href="/docs/hub/">run your own hub</a>.</div>
           </li>
           <li class="row">
             <span class="n">3</span>

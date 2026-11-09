@@ -31,7 +31,7 @@ Rules that follow from it, enforced in code:
 
 **GitHub Actions** (`.github/workflows/feedbai.yml`). Uses a dedicated bot account from repository secrets and the job's `GITHUB_TOKEN` (`issues: write`, `contents: read`). Secrets are not given to workflows from forks. Actions are pinned to commit SHAs and kept current by Dependabot.
 
-**The hosted hub** (`hub/`, Cloudflare Worker). Any repo can install its GitHub App, so a repo's config is untrusted there: the hub drops accounts, joins and Bluesky mentions from it (`sanitize` in `hub/run.js`) and reads with its own bot only. Its GitHub access is a short-lived installation token per repo (issues write, contents read). Secrets are Worker secrets, set by `hub/setup.js` (a localhost-only page with a per-run token) and never written to disk.
+**The hosted hub** (`hub/`, Cloudflare Worker). Invite-only: it serves only the repositories in `FEEDBAI_PROJECTS` (`wrangler.jsonc`, `hub/allow.js`), so strangers can't use its bot or accounts. Any repo can still install its GitHub App, and a listed repo's config is untrusted too: the hub drops accounts, joins and Bluesky mentions from it (`sanitize` in `hub/run.js`) and reads with its own bot only. Its GitHub access is a short-lived installation token per repo (issues write, contents read). Secrets are Worker secrets, set by `hub/setup.js` (a localhost-only page with a per-run token) and never written to disk.
 
 ### The shared hub bot
 
