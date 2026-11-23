@@ -10,11 +10,11 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/starlight": "0.42.7",
-    "@atproto/oauth-client-browser": "0.5.10",
-    "astro": "7.4.2",
+    "@astrojs/starlight": "0.42.10",
+    "@atproto/oauth-client-browser": "0.5.14",
+    "astro": "7.4.8",
     "astro-mermaid": "2.2.0",
-    "mermaid": "12.2.0",
+    "mermaid": "12.3.0",
     "starlight-links-validator": "0.27.0"
   }
 }
